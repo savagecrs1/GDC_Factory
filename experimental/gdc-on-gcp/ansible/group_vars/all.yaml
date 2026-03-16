@@ -1,0 +1,3 @@
+---
+gdc_user: "gdc"
+gdc_home: "/home/{{ gdc_user }}"

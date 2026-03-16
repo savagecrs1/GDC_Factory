@@ -1,0 +1,59 @@
+---
+- name: Test GDC Template Rendering Setup
+  hosts: localhost
+  gather_facts: false
+  tasks:
+    - name: Add mock gong1
+      add_host:
+        name: gong1
+        vxlan_ip: 10.200.0.3
+
+    - name: Add mock gong2
+      add_host:
+        name: gong2
+        vxlan_ip: 10.200.0.4
+
+    - name: Add mock gong3
+      add_host:
+        name: gong3
+        vxlan_ip: 10.200.0.5
+
+- name: Test GDC Template Rendering Execution
+  hosts: localhost
+  gather_facts: false
+  vars:
+    cluster_name: test-cluster
+    bmctl_version: "1.28.1-gke.46"
+    gcp_project_id: "test-project"
+    gdc_home: "/home/gdc"
+  tasks:
+    - name: Ensure test directory exists
+      file:
+        path: "/tmp/gdc_test"
+        state: directory
+
+    - name: Render cluster configuration template
+      template:
+        src: "../roles/gdc_deploy/templates/cluster.yaml.j2"
+        dest: "/tmp/gdc_test/cluster.yaml"
+
+    - name: Slurp rendered template
+      slurp:
+        src: "/tmp/gdc_test/cluster.yaml"
+      register: rendered_template
+
+    - name: Verify template contents
+      assert:
+        that:
+          - "'name: test-cluster' in (rendered_template['content'] | b64decode)"
+          - "'anthosBareMetalVersion: 1.28.1-gke.46' in (rendered_template['content'] | b64decode)"
+          - "'projectID: test-project' in (rendered_template['content'] | b64decode)"
+          - "'- address: 10.200.0.3' in (rendered_template['content'] | b64decode)"
+          - "'- address: 10.200.0.4' in (rendered_template['content'] | b64decode)"
+          - "'- address: 10.200.0.5' in (rendered_template['content'] | b64decode)"
+        fail_msg: "Template rendering failed one or more assertions."
+
+    - name: Clean up test directory
+      file:
+        path: "/tmp/gdc_test"
+        state: absent

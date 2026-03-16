@@ -1,0 +1,24 @@
+---
+- name: Setup VxLAN on all GCE instances
+  hosts: gdc_nodes
+  become: yes
+  roles:
+    - vxlan
+
+- name: Prepare Administrative Workstation
+  hosts: workstation
+  become: yes
+  roles:
+    - workstation
+
+- name: Setup SSH Access on Cluster Nodes
+  hosts: cluster_nodes
+  become: yes
+  roles:
+    - cluster_nodes
+
+- name: Deploy Google Distributed Cloud Hybrid Cluster
+  hosts: workstation
+  become: yes
+  roles:
+    - gdc_deploy

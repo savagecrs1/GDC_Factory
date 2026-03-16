@@ -1,0 +1,35 @@
+---
+- name: Create cluster configuration template
+  become_user: "{{ gdc_user }}"
+  template:
+    src: cluster.yaml.j2
+    dest: "{{ gdc_home }}/{{ cluster_name }}.yaml"
+
+- name: Create Anthos cluster config directory
+  become_user: "{{ gdc_user }}"
+  command: "bmctl create config -c {{ cluster_name }}"
+  args:
+    chdir: "{{ gdc_home }}"
+    creates: "{{ gdc_home }}/bmctl-workspace/{{ cluster_name }}/{{ cluster_name }}.yaml"
+
+- name: Replace cluster configuration with template
+  become_user: "{{ gdc_user }}"
+  copy:
+    src: "{{ gdc_home }}/{{ cluster_name }}.yaml"
+    dest: "{{ gdc_home }}/bmctl-workspace/{{ cluster_name }}/{{ cluster_name }}.yaml"
+    remote_src: yes
+
+- name: Deploy the GDC Hybrid Cluster
+  become_user: "{{ gdc_user }}"
+  command: "bmctl create cluster -c {{ cluster_name }}"
+  args:
+    chdir: "{{ gdc_home }}"
+    creates: "{{ gdc_home }}/bmctl-workspace/{{ cluster_name }}/{{ cluster_name }}-kubeconfig"
+  environment:
+    GOOGLE_APPLICATION_CREDENTIALS: "{{ gdc_home }}/bm-gcr.json"
+  register: cluster_create
+
+- name: Display cluster creation output
+  debug:
+    var: cluster_create.stdout_lines
+  when: cluster_create is defined and cluster_create.stdout_lines is defined

@@ -1,0 +1,63 @@
+---
+gcrKeyPath: {{ gdc_home }}/bm-gcr.json
+sshPrivateKeyPath: {{ gdc_home }}/.ssh/id_rsa
+gkeConnectAgentServiceAccountKeyPath: {{ gdc_home }}/bm-gcr.json
+gkeConnectRegisterServiceAccountKeyPath: {{ gdc_home }}/bm-gcr.json
+cloudOperationsServiceAccountKeyPath: {{ gdc_home }}/bm-gcr.json
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: cluster-{{ cluster_name }}
+---
+apiVersion: baremetal.cluster.gke.io/v1
+kind: Cluster
+metadata:
+  name: {{ cluster_name }}
+  namespace: cluster-{{ cluster_name }}
+spec:
+  type: hybrid
+  anthosBareMetalVersion: {{ bmctl_version }}
+  nodeAccess:
+    loginUser: {{ gdc_user }}
+  gkeConnect:
+    projectID: {{ gcp_project_id }}
+  controlPlane:
+    nodePoolSpec:
+      clusterName: {{ cluster_name }}
+      nodes:
+      - address: {{ hostvars['gong1'].vxlan_ip }}
+      - address: {{ hostvars['gong2'].vxlan_ip }}
+      - address: {{ hostvars['gong3'].vxlan_ip }}
+  clusterNetwork:
+    pods:
+      cidrBlocks:
+      - 192.168.0.0/16
+    services:
+      cidrBlocks:
+      - 172.26.232.0/24
+  loadBalancer:
+    mode: bundled
+    ports:
+      controlPlaneLBPort: 443
+    vips:
+      controlPlaneVIP: 10.200.0.49
+      ingressVIP: 10.200.0.50
+    addressPools:
+    - name: pool1
+      addresses:
+      - 10.200.0.50-10.200.0.70
+  clusterOperations:
+    location: us-central1
+    projectID: {{ gcp_project_id }}
+  storage:
+    lvpNodeMounts:
+      path: /mnt/localpv-disk
+      storageClassName: node-disk
+    lvpShare:
+      numPVUnderSharedPath: 5
+      path: /mnt/localpv-share
+      storageClassName: local-shared
+  nodeConfig:
+    podDensity:
+      maxPodsPerNode: 250

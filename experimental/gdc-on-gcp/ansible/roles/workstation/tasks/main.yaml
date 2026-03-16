@@ -1,0 +1,102 @@
+---
+- name: Ensure standard user exists
+  user:
+    name: "{{ gdc_user }}"
+    state: present
+    shell: /bin/bash
+
+- name: Configure GOOGLE_APPLICATION_CREDENTIALS for the user
+  lineinfile:
+    path: "{{ gdc_home }}/.bashrc"
+    line: "export GOOGLE_APPLICATION_CREDENTIALS={{ gdc_home }}/bm-gcr.json"
+    create: yes
+    owner: "{{ gdc_user }}"
+    group: "{{ gdc_user }}"
+
+- name: Download kubectl
+  get_url:
+    url: "https://storage.googleapis.com/kubernetes-release/release/v1.30.0/bin/linux/amd64/kubectl"
+    dest: /usr/local/sbin/kubectl
+    mode: '0755'
+
+- name: Create baremetal directory
+  file:
+    path: "{{ gdc_home }}/baremetal"
+    state: directory
+    owner: "{{ gdc_user }}"
+    group: "{{ gdc_user }}"
+
+- name: Download bmctl
+  command: "gcloud storage cp gs://anthos-baremetal-release/bmctl/{{ bmctl_version }}/linux-amd64/bmctl /usr/local/sbin/bmctl"
+  args:
+    creates: /usr/local/sbin/bmctl
+
+- name: Make bmctl executable
+  file:
+    path: /usr/local/sbin/bmctl
+    mode: '0755'
+
+- name: Check if Docker is installed
+  command: docker --version
+  register: docker_check
+  ignore_errors: yes
+
+- name: Install Docker
+  shell: |
+    curl -fsSL https://get.docker.com -o /tmp/get-docker.sh
+    sh /tmp/get-docker.sh
+  when: docker_check.rc != 0
+
+- name: Add user to docker group
+  user:
+    name: "{{ gdc_user }}"
+    groups: docker
+    append: yes
+
+- name: Ensure .ssh directory exists
+  file:
+    path: "{{ gdc_home }}/.ssh"
+    state: directory
+    owner: "{{ gdc_user }}"
+    group: "{{ gdc_user }}"
+    mode: '0700'
+
+- name: Generate SSH keypair for standard user
+  openssh_keypair:
+    path: "{{ gdc_home }}/.ssh/id_rsa"
+    type: rsa
+    size: 2048
+    owner: "{{ gdc_user }}"
+    group: "{{ gdc_user }}"
+
+- name: Fetch standard user public key from workstation
+  fetch:
+    src: "{{ gdc_home }}/.ssh/id_rsa.pub"
+    dest: /tmp/ws_id_rsa.pub
+    flat: yes
+
+- name: Generate Anthos Service Account Key dynamically
+  delegate_to: localhost
+  become: no
+  command: >
+    gcloud iam service-accounts keys create /tmp/bm-gcr.json
+    --iam-account=baremetal-gcr@{{ gcp_project_id }}.iam.gserviceaccount.com
+    --project={{ gcp_project_id }}
+    --impersonate-service-account=tf-provisioner@{{ gcp_project_id }}.iam.gserviceaccount.com
+  args:
+    creates: /tmp/bm-gcr.json
+
+- name: Copy Anthos Service Account Key to workstation
+  copy:
+    src: /tmp/bm-gcr.json
+    dest: "{{ gdc_home }}/bm-gcr.json"
+    owner: "{{ gdc_user }}"
+    group: "{{ gdc_user }}"
+    mode: '0600'
+
+- name: Clean up local Anthos Service Account Key
+  delegate_to: localhost
+  become: no
+  file:
+    path: /tmp/bm-gcr.json
+    state: absent

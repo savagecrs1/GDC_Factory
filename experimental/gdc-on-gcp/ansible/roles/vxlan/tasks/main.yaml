@@ -1,0 +1,25 @@
+---
+- name: Install required packages
+  apt:
+    name: jq
+    state: present
+    update_cache: yes
+
+- name: Create vxlan0 interface
+  shell: |
+    ip link add vxlan0 type vxlan id 42 dev ens4 dstport 0 || true
+  register: vxlan_create
+  changed_when: "'File exists' not in vxlan_create.stderr"
+
+- name: Append FDB entries for other nodes
+  shell: |
+    bridge fdb append to 00:00:00:00:00:00 dst {{ hostvars[item].internal_ip }} dev vxlan0 || true
+  loop: "{{ groups['gdc_nodes'] }}"
+  when: "item != inventory_hostname"
+
+- name: Assign IP address to vxlan0 and bring interface up
+  shell: |
+    ip addr add {{ vxlan_ip }}/24 dev vxlan0 || true
+    ip link set up dev vxlan0
+  register: ip_assign
+  changed_when: "'File exists' not in ip_assign.stderr"
