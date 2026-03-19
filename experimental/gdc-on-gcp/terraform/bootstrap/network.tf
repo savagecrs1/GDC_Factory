@@ -29,6 +29,7 @@ resource "google_compute_firewall" "gdc_allow_internal" {
   }
 
   source_ranges = [var.gce_subnetwork_cidr]
+  target_tags   = ["http-server", "https-server"]
 }
 
 resource "google_compute_firewall" "gdc_allow_ssh" {

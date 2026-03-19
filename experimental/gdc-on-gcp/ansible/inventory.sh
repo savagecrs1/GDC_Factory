@@ -24,18 +24,19 @@ fi
 GCP_PROJECT=$(terraform output -raw project_id 2>/dev/null || echo "")
 GCP_ZONE=$(terraform output -raw zone 2>/dev/null || echo "")
 
-WS_NAME=$(terraform output -raw workstation_name 2>/dev/null || echo "")
+GONG_WS_NAME=$(terraform output -raw workstation_name 2>/dev/null || echo "")
+GONG_WS_INTERNAL_IP=$(terraform output -raw workstation_ip 2>/dev/null || echo "")
+
 GONG1_NAME=$(terraform output -json cluster_nodes_names 2>/dev/null | jq -r '.gong1' || echo "")
 GONG2_NAME=$(terraform output -json cluster_nodes_names 2>/dev/null | jq -r '.gong2' || echo "")
 GONG3_NAME=$(terraform output -json cluster_nodes_names 2>/dev/null | jq -r '.gong3' || echo "")
 
-WS_INTERNAL_IP=$(terraform output -raw workstation_ip 2>/dev/null || echo "")
 GONG1_INTERNAL_IP=$(terraform output -json cluster_nodes_ips 2>/dev/null | jq -r '.gong1' || echo "")
 GONG2_INTERNAL_IP=$(terraform output -json cluster_nodes_ips 2>/dev/null | jq -r '.gong2' || echo "")
 GONG3_INTERNAL_IP=$(terraform output -json cluster_nodes_ips 2>/dev/null | jq -r '.gong3' || echo "")
 
-# Find the OS Login username for SSH
-GCP_USER=$(gcloud compute os-login describe-profile --format="value(posixAccounts[0].username)" 2>/dev/null || echo "")
+# Use standard SSH user since OS Login is disabled
+GCP_USER="${USER:-$(whoami)}"
 
 # Build JSON inventory
 cat <<EOF
@@ -51,7 +52,7 @@ cat <<EOF
     }
   },
   "workstation": {
-    "hosts": ["ws"]
+    "hosts": ["gong_ws"]
   },
   "cluster_nodes": {
     "hosts": ["gong1", "gong2", "gong3"]
@@ -61,25 +62,25 @@ cat <<EOF
   },
   "_meta": {
     "hostvars": {
-      "ws": {
-        "ansible_host": "${WS_NAME}",
-        "internal_ip": "${WS_INTERNAL_IP}",
-        "vxlan_ip": "10.200.0.2"
+      "gong_ws": {
+        "ansible_host": "${GONG_WS_NAME}",
+        "internal_ip": "${GONG_WS_INTERNAL_IP}",
+        "vxlan_ip": "10.200.0.100"
       },
       "gong1": {
         "ansible_host": "${GONG1_NAME}",
         "internal_ip": "${GONG1_INTERNAL_IP}",
-        "vxlan_ip": "10.200.0.3"
+        "vxlan_ip": "10.200.0.2"
       },
       "gong2": {
         "ansible_host": "${GONG2_NAME}",
         "internal_ip": "${GONG2_INTERNAL_IP}",
-        "vxlan_ip": "10.200.0.4"
+        "vxlan_ip": "10.200.0.3"
       },
       "gong3": {
         "ansible_host": "${GONG3_NAME}",
         "internal_ip": "${GONG3_INTERNAL_IP}",
-        "vxlan_ip": "10.200.0.5"
+        "vxlan_ip": "10.200.0.4"
       }
     }
   }

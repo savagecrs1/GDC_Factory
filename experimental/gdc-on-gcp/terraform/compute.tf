@@ -1,6 +1,5 @@
 locals {
   vms = {
-    ws    = "${var.cluster_name}-ws"
     gong1 = "${var.cluster_name}-gong1"
     gong2 = "${var.cluster_name}-gong2"
     gong3 = "${var.cluster_name}-gong3"
@@ -33,8 +32,8 @@ resource "google_compute_instance" "gdc_vms" {
   }
 
   network_interface {
-    network    = google_compute_network.gdc_vpc.self_link
-    subnetwork = google_compute_subnetwork.gdc_subnet.self_link
+    network    = data.google_compute_network.gdc_vpc.self_link
+    subnetwork = data.google_compute_subnetwork.gdc_subnet.self_link
   }
 
   can_ip_forward = true
@@ -50,13 +49,12 @@ resource "google_compute_instance" "gdc_vms" {
   }
 
   metadata = {
-    cluster_id    = var.cluster_name
-    bmctl_version = var.bmctl_version
+    cluster_id     = var.cluster_name
+    bmctl_version  = var.bmctl_version
+    enable-oslogin = "FALSE"
   }
 
   service_account {
     scopes = ["cloud-platform"]
   }
-
-  depends_on = [google_project_service.apis]
 }

@@ -1,13 +1,16 @@
 ---
 - name: Install required packages
   apt:
-    name: jq
+    name:
+      - jq
+      - acl
     state: present
     update_cache: yes
 
 - name: Create vxlan0 interface
   shell: |
-    ip link add vxlan0 type vxlan id 42 dev ens4 dstport 0 || true
+    ip link add vxlan0 type vxlan id 42 dev ens4 dstport 4789 || true
+    ip link set dev vxlan0 mtu 1410 || true
   register: vxlan_create
   changed_when: "'File exists' not in vxlan_create.stderr"
 

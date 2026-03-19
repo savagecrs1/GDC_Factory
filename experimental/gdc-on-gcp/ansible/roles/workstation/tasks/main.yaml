@@ -37,9 +37,10 @@
     mode: '0755'
 
 - name: Check if Docker is installed
-  command: docker --version
+  command: which docker
   register: docker_check
-  ignore_errors: yes
+  failed_when: false
+  changed_when: false
 
 - name: Install Docker
   shell: |

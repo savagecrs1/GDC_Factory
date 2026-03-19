@@ -1,5 +1,5 @@
 #!/bin/bash
-# setup-provisioning-sa.sh
+# project-setup.sh
 # Creates a dedicated service account for provisioning and grants it the necessary permissions.
 
 set -euo pipefail
@@ -53,25 +53,45 @@ gcloud iam service-accounts add-iam-policy-binding "${PROVISIONING_SA_EMAIL}" \
 
 echo "✅ Provisioning Service Account setup complete."
 
-echo "🔄 Generating terraform.tfvars file..."
+echo "🔄 Generating terraform.tfvars files..."
+cat <<EOF > terraform/bootstrap/terraform.tfvars
+project_id            = "${PROJECT_ID}"
+EOF
+
 cat <<EOF > terraform/terraform.tfvars
 project_id            = "${PROJECT_ID}"
 provisioning_sa_email = "${PROVISIONING_SA_EMAIL}"
 EOF
-echo "✅ terraform/terraform.tfvars created successfully."
+echo "✅ terraform.tfvars created successfully."
 
 echo "🔄 Creating Terraform state bucket..."
 gcloud storage buckets create "gs://gdc-on-gcp-${PROJECT_ID}-tfstate" --project="${PROJECT_ID}" --location="us-central1" || true
 gcloud storage buckets update "gs://gdc-on-gcp-${PROJECT_ID}-tfstate" --versioning || true
 
-echo "🔄 Generating backend.tf file..."
-cat <<EOF > terraform/backend.tf
+echo "🔄 Generating backend.tf files..."
+cat <<EOF > terraform/bootstrap/backend.tf
 terraform {
   backend "gcs" {
     bucket                      = "gdc-on-gcp-${PROJECT_ID}-tfstate"
-    prefix                      = "terraform/state"
+    prefix                      = "terraform/bootstrap/state"
     impersonate_service_account = "${PROVISIONING_SA_EMAIL}"
   }
 }
 EOF
-echo "✅ terraform/backend.tf created successfully. Terraform will automatically use GCS for remote state!"
+
+cat <<EOF > terraform/backend.tf
+terraform {
+  backend "gcs" {
+    bucket                      = "gdc-on-gcp-${PROJECT_ID}-tfstate"
+    prefix                      = "terraform/cluster/state"
+    impersonate_service_account = "${PROVISIONING_SA_EMAIL}"
+  }
+}
+EOF
+echo "✅ backend.tf created successfully. Terraform will automatically use GCS for remote state!"
+
+echo "=========================================================================================="
+echo "🚀 Bootstrap complete! Please follow these steps to deploy your environment:"
+echo "1. Deploy the foundation: cd terraform/bootstrap && terraform init && terraform apply"
+echo "2. Deploy the cluster VMs: cd ../ && terraform init && terraform apply -var='cluster_name=abm-cluster-1'"
+echo "=========================================================================================="

@@ -22,17 +22,17 @@ run "validate_vm_count_and_config" {
   command = plan
 
   assert {
-    condition     = length(google_compute_instance.gdc_vms) == 4
-    error_message = "Should provision exactly 4 VMs."
+    condition     = length(google_compute_instance.gdc_vms) == 3
+    error_message = "Should provision exactly 3 VMs."
   }
 
   assert {
-    condition     = google_compute_instance.gdc_vms["ws"].machine_type == "n1-standard-8"
+    condition     = google_compute_instance.gdc_vms["gong1"].machine_type == "n1-standard-8"
     error_message = "Workstation VM has wrong machine type."
   }
 
   assert {
-    condition     = google_compute_instance.gdc_vms["ws"].advanced_machine_features[0].enable_nested_virtualization == true
+    condition     = google_compute_instance.gdc_vms["gong1"].advanced_machine_features[0].enable_nested_virtualization == true
     error_message = "Nested virtualization should be enabled."
   }
 }

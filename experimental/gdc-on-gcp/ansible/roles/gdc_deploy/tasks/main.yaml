@@ -27,6 +27,8 @@
     creates: "{{ gdc_home }}/bmctl-workspace/{{ cluster_name }}/{{ cluster_name }}-kubeconfig"
   environment:
     GOOGLE_APPLICATION_CREDENTIALS: "{{ gdc_home }}/bm-gcr.json"
+  async: 3600
+  poll: 60
   register: cluster_create
 
 - name: Display cluster creation output
