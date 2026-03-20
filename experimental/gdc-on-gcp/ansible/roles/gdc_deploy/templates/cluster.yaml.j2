@@ -16,7 +16,8 @@ metadata:
   name: {{ cluster_name }}
   namespace: cluster-{{ cluster_name }}
 spec:
-  type: hybrid
+  type: standalone
+  profile: default
   anthosBareMetalVersion: {{ bmctl_version }}
   nodeAccess:
     loginUser: {{ gdc_user }}
@@ -32,21 +33,21 @@ spec:
   clusterNetwork:
     pods:
       cidrBlocks:
-      - 192.168.0.0/16
+      - {{ pod_cidrBlocks }}
     services:
       cidrBlocks:
-      - 172.26.232.0/24
+      - {{ services_cidrBlocks }}
   loadBalancer:
     mode: bundled
     ports:
       controlPlaneLBPort: 443
     vips:
-      controlPlaneVIP: 10.200.0.49
-      ingressVIP: 10.200.0.50
+      controlPlaneVIP: {{ vxlan_base_ip }}.49
+      ingressVIP: {{ vxlan_base_ip }}.50
     addressPools:
     - name: pool1
       addresses:
-      - 10.200.0.50-10.200.0.70
+      - {{ vxlan_base_ip }}.50-{{ vxlan_base_ip }}.70
   clusterOperations:
     location: us-central1
     projectID: {{ gcp_project_id }}
@@ -60,4 +61,4 @@ spec:
       storageClassName: local-shared
   nodeConfig:
     podDensity:
-      maxPodsPerNode: 250
+      maxPodsPerNode: {{ maxPodsPerNode }}

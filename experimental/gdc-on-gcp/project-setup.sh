@@ -71,27 +71,32 @@ gcloud storage buckets update "gs://gdc-on-gcp-${PROJECT_ID}-tfstate" --versioni
 echo "🔄 Generating backend.tf files..."
 cat <<EOF > terraform/bootstrap/backend.tf
 terraform {
-  backend "gcs" {
-    bucket                      = "gdc-on-gcp-${PROJECT_ID}-tfstate"
-    prefix                      = "terraform/bootstrap/state"
-    impersonate_service_account = "${PROVISIONING_SA_EMAIL}"
-  }
+  backend "gcs" {}
 }
 EOF
 
 cat <<EOF > terraform/backend.tf
 terraform {
-  backend "gcs" {
-    bucket                      = "gdc-on-gcp-${PROJECT_ID}-tfstate"
-    prefix                      = "terraform/cluster/state"
-    impersonate_service_account = "${PROVISIONING_SA_EMAIL}"
-  }
+  backend "gcs" {}
 }
 EOF
 echo "✅ backend.tf created successfully. Terraform will automatically use GCS for remote state!"
 
 echo "=========================================================================================="
 echo "🚀 Bootstrap complete! Please follow these steps to deploy your environment:"
-echo "1. Deploy the foundation: cd terraform/bootstrap && terraform init && terraform apply"
-echo "2. Deploy the cluster VMs: cd ../ && terraform init && terraform apply -var='cluster_name=abm-cluster-1'"
+echo "1. Deploy the foundation:"
+echo "   cd terraform/bootstrap"
+echo "   terraform init -backend-config=\"bucket=gdc-on-gcp-\${PROJECT_ID}-tfstate\" \\"
+echo "                  -backend-config=\"prefix=terraform/bootstrap/state\" \\"
+echo "                  -backend-config=\"impersonate_service_account=\${PROVISIONING_SA_EMAIL}\""
+echo "   terraform apply"
+echo ""
+echo "2. Set your cluster name: export CLUSTER_NAME='abm-cluster-1'"
+echo ""
+echo "3. Deploy the cluster VMs:"
+echo "   cd ../"
+echo "   terraform init -backend-config=\"bucket=gdc-on-gcp-\${PROJECT_ID}-tfstate\" \\"
+echo "                  -backend-config=\"prefix=clusters/\${CLUSTER_NAME}/state\" \\"
+echo "                  -backend-config=\"impersonate_service_account=\${PROVISIONING_SA_EMAIL}\""
+echo "   terraform apply -var=\"cluster_name=\${CLUSTER_NAME}\""
 echo "=========================================================================================="

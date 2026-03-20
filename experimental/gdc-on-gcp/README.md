@@ -38,9 +38,15 @@ Deploy the permanent networking and the dedicated Admin Workstation (`gong-ws`).
    ```bash
    cd terraform/bootstrap
    ```
-2. Initialize and apply:
+2. Initialize with partial configuration and apply:
    ```bash
-   terraform init
+   export PROVISIONING_SA_EMAIL="tf-provisioner@${PROJECT_ID}.iam.gserviceaccount.com"
+   
+   terraform init \
+     -backend-config="bucket=gdc-on-gcp-${PROJECT_ID}-tfstate" \
+     -backend-config="prefix=terraform/bootstrap/state" \
+     -backend-config="impersonate_service_account=${PROVISIONING_SA_EMAIL}"
+
    terraform apply
    ```
 
@@ -48,14 +54,29 @@ Deploy the permanent networking and the dedicated Admin Workstation (`gong-ws`).
 
 Deploy a 3-node virtual hardware footprint for your new cluster. Because this uses a separate state file, you can destroy these VMs later without deleting your shared admin workstation.
 
+Before running Terraform, set an environment variable with your desired cluster name. You must use this variable when initializing Terraform so that each cluster gets its own dedicated state file in the Google Cloud Storage bucket.
+
 1. Navigate to the cluster directory:
    ```bash
    cd ../../terraform
    ```
-2. Initialize and apply (you can override the cluster name if you want to deploy multiple side-by-side):
+2. Export your cluster name:
    ```bash
-   terraform init
-   terraform apply -var="cluster_name=abm-cluster-1"
+   export CLUSTER_NAME="my-gdc-on-gcp-cluster"
+   ```
+3. Initialize Terraform with a parameterized state prefix (clearing the cache first ensures you don't conflict with previous deployments):
+   ```bash
+   export PROVISIONING_SA_EMAIL="tf-provisioner@${PROJECT_ID}.iam.gserviceaccount.com"
+   rm -rf .terraform
+
+   terraform init \
+     -backend-config="bucket=gdc-on-gcp-${PROJECT_ID}-tfstate" \
+     -backend-config="prefix=clusters/${CLUSTER_NAME}/state" \
+     -backend-config="impersonate_service_account=${PROVISIONING_SA_EMAIL}"
+   ```
+4. Apply the infrastructure:
+   ```bash
+   terraform apply -var="cluster_name=${CLUSTER_NAME}"
    ```
 
 ## 4. Configuration & Deployment (Ansible)
@@ -86,12 +107,12 @@ gcloud compute ssh gong-ws --tunnel-through-iap
 # Switch to the dedicated Anthos service user
 sudo su - gdc
 
-# Tail the active deployment logs (replace cluster name if you changed it)
-tail -f ~/bmctl-workspace/abm-cluster-1/log/create-cluster-*/create-cluster.log
+# Tail the active deployment logs
+tail -f ~/bmctl-workspace/${CLUSTER_NAME}/log/create-cluster-*/create-cluster.log
 ```
 
 Once the installation finishes, you can use the generated `kubeconfig` file on that same workstation to interact with your new cluster:
 
 ```bash
-kubectl get nodes --kubeconfig /home/gdc/bmctl-workspace/abm-cluster-1/abm-cluster-1-kubeconfig
+kubectl get nodes --kubeconfig /home/gdc/bmctl-workspace/${CLUSTER_NAME}/${CLUSTER_NAME}-kubeconfig
 ```

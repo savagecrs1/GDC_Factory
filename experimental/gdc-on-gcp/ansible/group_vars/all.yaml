@@ -1,3 +1,6 @@
 ---
 gdc_user: "gdc"
 gdc_home: "/home/{{ gdc_user }}"
+pod_cidrBlocks: "10.0.0.0/17"
+services_cidrBlocks: "10.96.0.0/12"
+maxPodsPerNode: 250
