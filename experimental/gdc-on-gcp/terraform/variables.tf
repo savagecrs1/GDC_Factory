@@ -41,3 +41,14 @@ variable "gce_subnetwork" {
   type    = string
   default = "gdc-so-subnet"
 }
+
+variable "gdc_user" {
+  type    = string
+  default = "gdc"
+}
+
+variable "ssh_public_key" {
+  type        = string
+  description = "The public SSH key to add to the gdc user's authorized_keys."
+  default     = ""
+}

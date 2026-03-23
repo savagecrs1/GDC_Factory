@@ -11,7 +11,7 @@
   roles:
     - workstation
 
-- name: Setup SSH Access on Cluster Nodes
+- name: Setup SSH Access and Base OS on Cluster Nodes
   hosts: cluster_nodes
   become: yes
   roles:

@@ -51,6 +51,10 @@
         src: "/tmp/gdc_test/cluster.yaml"
       register: rendered_template
 
+    - name: Debug rendered template
+      debug:
+        msg: "{{ rendered_template['content'] | b64decode }}"
+
     - name: Verify template contents
       assert:
         that:

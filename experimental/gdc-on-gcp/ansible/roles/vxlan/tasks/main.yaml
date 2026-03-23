@@ -1,12 +1,4 @@
 ---
-- name: Install required packages
-  apt:
-    name:
-      - jq
-      - acl
-    state: present
-    update_cache: yes
-
 - name: Ensure clean state by deleting existing vxlan0
   shell: ip link delete vxlan0
   failed_when: false

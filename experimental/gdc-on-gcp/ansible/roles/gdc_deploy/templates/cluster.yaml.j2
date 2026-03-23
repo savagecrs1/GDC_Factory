@@ -41,13 +41,13 @@ spec:
       - address: {{ hostvars['node3'].vxlan_ip }}
       operatingSystem: linux
       taints:
-      {% for taint in cluster_node_taints %}
+{% for taint in cluster_node_taints %}
       - key: {{ taint.key }}
-        {% if taint.value is defined %}
+{% if taint.value is defined %}
         value: {{ taint.value }}
-        {% endif %}
+{% endif %}
         effect: {{ taint.effect }}
-      {% endfor %}
+{% endfor %}
   clusterNetwork:
     pods:
       cidrBlocks:
