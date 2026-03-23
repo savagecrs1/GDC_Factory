@@ -23,18 +23,18 @@ fi
 # Get outputs
 GCP_PROJECT=$(terraform output -raw project_id 2>/dev/null || echo "")
 GCP_ZONE=$(terraform output -raw zone 2>/dev/null || echo "")
-
 GONG_WS_NAME=$(terraform output -raw workstation_name 2>/dev/null || echo "")
 GONG_WS_INTERNAL_IP=$(terraform output -raw workstation_ip 2>/dev/null || echo "")
 
-GONG1_NAME=$(terraform output -json cluster_nodes_names 2>/dev/null | jq -r '.gong1' || echo "")
-GONG2_NAME=$(terraform output -json cluster_nodes_names 2>/dev/null | jq -r '.gong2' || echo "")
-GONG3_NAME=$(terraform output -json cluster_nodes_names 2>/dev/null | jq -r '.gong3' || echo "")
+NODE1_NAME=$(terraform output -json cluster_nodes_names 2>/dev/null | jq -r '.node1' || echo "")
+NODE2_NAME=$(terraform output -json cluster_nodes_names 2>/dev/null | jq -r '.node2' || echo "")
+NODE3_NAME=$(terraform output -json cluster_nodes_names 2>/dev/null | jq -r '.node3' || echo "")
 
-GONG1_INTERNAL_IP=$(terraform output -json cluster_nodes_ips 2>/dev/null | jq -r '.gong1' || echo "")
-GONG2_INTERNAL_IP=$(terraform output -json cluster_nodes_ips 2>/dev/null | jq -r '.gong2' || echo "")
-GONG3_INTERNAL_IP=$(terraform output -json cluster_nodes_ips 2>/dev/null | jq -r '.gong3' || echo "")
+NODE1_INTERNAL_IP=$(terraform output -json cluster_nodes_ips 2>/dev/null | jq -r '.node1' || echo "")
+NODE2_INTERNAL_IP=$(terraform output -json cluster_nodes_ips 2>/dev/null | jq -r '.node2' || echo "")
+NODE3_INTERNAL_IP=$(terraform output -json cluster_nodes_ips 2>/dev/null | jq -r '.node3' || echo "")
 
+# Use standard SSH user since OS Login is disabled
 CLUSTER_NAME="$(terraform output -raw cluster_name 2>/dev/null || echo 'abm-cluster-1')"
 
 # Deterministic Hashing Scheme for Network Isolation
@@ -66,7 +66,7 @@ cat <<EOF
     "hosts": ["gong_ws"]
   },
   "cluster_nodes": {
-    "hosts": ["gong1", "gong2", "gong3"]
+    "hosts": ["node1", "node2", "node3"]
   },
   "gdc_nodes": {
     "children": ["workstation", "cluster_nodes"]
@@ -78,19 +78,19 @@ cat <<EOF
         "internal_ip": "${GONG_WS_INTERNAL_IP}",
         "vxlan_ip": "${VXLAN_BASE}.100"
       },
-      "gong1": {
-        "ansible_host": "${GONG1_NAME}",
-        "internal_ip": "${GONG1_INTERNAL_IP}",
+      "node1": {
+        "ansible_host": "${NODE1_NAME}",
+        "internal_ip": "${NODE1_INTERNAL_IP}",
         "vxlan_ip": "${VXLAN_BASE}.2"
       },
-      "gong2": {
-        "ansible_host": "${GONG2_NAME}",
-        "internal_ip": "${GONG2_INTERNAL_IP}",
+      "node2": {
+        "ansible_host": "${NODE2_NAME}",
+        "internal_ip": "${NODE2_INTERNAL_IP}",
         "vxlan_ip": "${VXLAN_BASE}.3"
       },
-      "gong3": {
-        "ansible_host": "${GONG3_NAME}",
-        "internal_ip": "${GONG3_INTERNAL_IP}",
+      "node3": {
+        "ansible_host": "${NODE3_NAME}",
+        "internal_ip": "${NODE3_INTERNAL_IP}",
         "vxlan_ip": "${VXLAN_BASE}.4"
       }
     }

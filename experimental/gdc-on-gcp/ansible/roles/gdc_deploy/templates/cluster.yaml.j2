@@ -26,10 +26,28 @@ spec:
   controlPlane:
     nodePoolSpec:
       clusterName: {{ cluster_name }}
+      kubeletConfig:
+        kubeReserved:
+          cpu: 2400m
+          memory: 10240Mi
+        #shutdownGracePeriod: 30s
+        #shutdownGracePeriodCriticalPods: 10s
+        systemReserved:
+          cpu: 2400m
+          memory: 10240Mi
       nodes:
-      - address: {{ hostvars['gong1'].vxlan_ip }}
-      - address: {{ hostvars['gong2'].vxlan_ip }}
-      - address: {{ hostvars['gong3'].vxlan_ip }}
+      - address: {{ hostvars['node1'].vxlan_ip }}
+      - address: {{ hostvars['node2'].vxlan_ip }}
+      - address: {{ hostvars['node3'].vxlan_ip }}
+      operatingSystem: linux
+      taints:
+      {% for taint in cluster_node_taints %}
+      - key: {{ taint.key }}
+        {% if taint.value is defined %}
+        value: {{ taint.value }}
+        {% endif %}
+        effect: {{ taint.effect }}
+      {% endfor %}
   clusterNetwork:
     pods:
       cidrBlocks:

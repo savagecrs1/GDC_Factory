@@ -1,16 +1,16 @@
 output "cluster_nodes_ips" {
   value = {
-    gong1 = google_compute_instance.gdc_vms["gong1"].network_interface[0].network_ip
-    gong2 = google_compute_instance.gdc_vms["gong2"].network_interface[0].network_ip
-    gong3 = google_compute_instance.gdc_vms["gong3"].network_interface[0].network_ip
+    node1 = google_compute_instance.gdc_vms["node1"].network_interface[0].network_ip
+    node2 = google_compute_instance.gdc_vms["node2"].network_interface[0].network_ip
+    node3 = google_compute_instance.gdc_vms["node3"].network_interface[0].network_ip
   }
 }
 
 output "cluster_nodes_names" {
   value = {
-    gong1 = google_compute_instance.gdc_vms["gong1"].name
-    gong2 = google_compute_instance.gdc_vms["gong2"].name
-    gong3 = google_compute_instance.gdc_vms["gong3"].name
+    node1 = google_compute_instance.gdc_vms["node1"].name
+    node2 = google_compute_instance.gdc_vms["node2"].name
+    node3 = google_compute_instance.gdc_vms["node3"].name
   }
 }
 

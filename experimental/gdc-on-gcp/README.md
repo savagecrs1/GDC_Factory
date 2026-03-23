@@ -7,7 +7,7 @@ This project provisions a Google Distributed Cloud Software-Only (GDCSO) Hybrid 
 This project uses an enterprise **Two-Tier (Foundation / Cluster) Architecture** to ensure you can scale to hundreds of ephemeral clusters without destroying your shared management infrastructure.
 
 1. **The Foundation (`terraform/bootstrap`):** This layer provisions the permanent, shared infrastructure: the core VPC network, Cloud NAT, Service Accounts, and a dedicated, decoupled Admin Workstation (`gong-ws`). This workstation is used to safely orchestrate Anthos installations.
-2. **Ephemeral Clusters (`terraform/`):** This layer is used as a template to rapidly stamp out ephemeral 3-node GDCSO cluster footprints (`gong1`, `gong2`, `gong3`). It uses data sources to automatically attach these new nodes to the shared foundation.
+2. **Ephemeral Clusters (`terraform/`):** This layer is used as a template to rapidly stamp out ephemeral 3-node GDCSO cluster footprints (`node1`, `node2`, `node3`). It uses data sources to automatically attach these new nodes to the shared foundation.
 
 ## Prerequisites
 - Google Cloud SDK (`gcloud`) installed and authenticated.

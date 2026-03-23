@@ -27,12 +27,12 @@ run "validate_vm_count_and_config" {
   }
 
   assert {
-    condition     = google_compute_instance.gdc_vms["gong1"].machine_type == "n1-standard-8"
+    condition     = google_compute_instance.gdc_vms["node1"].machine_type == "n1-standard-8"
     error_message = "Workstation VM has wrong machine type."
   }
 
   assert {
-    condition     = google_compute_instance.gdc_vms["gong1"].advanced_machine_features[0].enable_nested_virtualization == true
+    condition     = google_compute_instance.gdc_vms["node1"].advanced_machine_features[0].enable_nested_virtualization == true
     error_message = "Nested virtualization should be enabled."
   }
 }

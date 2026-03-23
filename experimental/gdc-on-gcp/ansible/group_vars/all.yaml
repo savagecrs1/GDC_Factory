@@ -4,3 +4,8 @@ gdc_home: "/home/{{ gdc_user }}"
 pod_cidrBlocks: "10.0.0.0/17"
 services_cidrBlocks: "10.96.0.0/12"
 maxPodsPerNode: 250
+cluster_node_taints:
+  - key: "node-role.kubernetes.io/master"
+    effect: "PreferNoSchedule"
+  - key: "node-role.kubernetes.io/control-plane"
+    effect: "PreferNoSchedule"

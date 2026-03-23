@@ -1,8 +1,8 @@
 locals {
   vms = {
-    gong1 = "${var.cluster_name}-gong1"
-    gong2 = "${var.cluster_name}-gong2"
-    gong3 = "${var.cluster_name}-gong3"
+    node1 = "cluster-${var.cluster_name}-node-1"
+    node2 = "cluster-${var.cluster_name}-node-2"
+    node3 = "cluster-${var.cluster_name}-node-3"
   }
 }
 
