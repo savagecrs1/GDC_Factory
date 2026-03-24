@@ -24,12 +24,14 @@ variable "cluster_name" {
 
 variable "bmctl_version" {
   type    = string
-  default = "1.28.1400-gke.79"
+  default = "1.32.100-gke.107"
 }
 
 variable "machine_type" {
-  type    = string
-  default = "n1-standard-8"
+  type = string
+  # 32 vCPU, 128GB RAM
+  default = "n2-standard-32"
+
 }
 
 variable "gce_network" {

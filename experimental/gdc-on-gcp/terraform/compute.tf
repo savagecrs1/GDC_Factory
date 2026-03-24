@@ -18,8 +18,8 @@ resource "google_compute_instance" "gdc_vms" {
   zone         = var.zone
   project      = var.project_id
 
-  # Nested virtualization requires Intel Haswell or newer
-  min_cpu_platform = "Intel Haswell"
+  # Match GDCc Ice Lake CPU platform
+  min_cpu_platform = "Intel Ice Lake"
 
   tags = ["http-server", "https-server"]
 

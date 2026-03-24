@@ -26,15 +26,22 @@
     owner: "{{ gdc_user }}"
     group: "{{ gdc_user }}"
 
-- name: Download bmctl
-  command: "gcloud storage cp gs://anthos-baremetal-release/bmctl/{{ bmctl_version }}/linux-amd64/bmctl /usr/local/sbin/bmctl"
+- name: Download bmctl version {{ bmctl_version }}
+  command: "gcloud storage cp gs://anthos-baremetal-release/bmctl/{{ bmctl_version }}/linux-amd64/bmctl /usr/local/sbin/bmctl-{{ bmctl_version }}"
   args:
-    creates: /usr/local/sbin/bmctl
+    creates: /usr/local/sbin/bmctl-{{ bmctl_version }}
 
 - name: Make bmctl executable
   file:
-    path: /usr/local/sbin/bmctl
+    path: /usr/local/sbin/bmctl-{{ bmctl_version }}
     mode: '0755'
+
+- name: Symlink bmctl to correct version
+  file:
+    src: /usr/local/sbin/bmctl-{{ bmctl_version }}
+    dest: /usr/local/sbin/bmctl
+    state: link
+    force: yes
 
 - name: Check if Docker is installed
   command: which docker
