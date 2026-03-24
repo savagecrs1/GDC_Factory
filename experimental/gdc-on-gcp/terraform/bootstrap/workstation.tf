@@ -9,13 +9,16 @@ resource "google_compute_instance" "admin_ws" {
   zone         = var.zone
   project      = var.project_id
 
+  can_ip_forward      = true
+  deletion_protection = true
+
   tags = ["http-server", "https-server"]
 
   boot_disk {
     initialize_params {
       image = data.google_compute_image.ubuntu.self_link
-      size  = 100
-      type  = "pd-ssd"
+      size  = 50
+      type  = "pd-balanced"
     }
   }
 
@@ -23,8 +26,6 @@ resource "google_compute_instance" "admin_ws" {
     network    = google_compute_network.gdc_vpc.self_link
     subnetwork = google_compute_subnetwork.gdc_subnet.self_link
   }
-
-  can_ip_forward = true
 
   shielded_instance_config {
     enable_secure_boot          = true
