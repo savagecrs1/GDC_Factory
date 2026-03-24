@@ -89,7 +89,7 @@ Navigate to the `ansible` directory to run the orchestration playbook. This will
    ```
 2. Run the Ansible playbook:
    ```bash
-   ansible-playbook playbook.yaml
+   ansible-playbook create-cluster.yaml
    ```
 
 ---
@@ -116,3 +116,32 @@ Once the installation finishes, you can use the generated `kubeconfig` file on t
 ```bash
 kubectl get nodes --kubeconfig /home/gdc/bmctl-workspace/${CLUSTER_NAME}/${CLUSTER_NAME}-kubeconfig
 ```
+
+---
+
+## 5. Deleting a Cluster
+
+To safely delete an individual cluster, you must first unregister it from Google Cloud before destroying its VMs. This ensures a clean state for your GCP project and prevents orphan resources.
+
+1. **Step 1: Unregister with Ansible**
+   Navigate to the `ansible` directory and run the cleanup playbook:
+   ```bash
+   cd ansible
+   ansible-playbook cleanup.yaml -e "cluster_name=${CLUSTER_NAME}"
+   ```
+   *This command runs `bmctl reset` from the Admin Workstation to unregister the cluster from GKE Hub and clean up its nodes.*
+
+2. **Step 2: Destroy with Terraform**
+   Navigate to the `terraform` directory and destroy the specific cluster's VMs:
+   ```bash
+   cd ../terraform
+   
+   # Re-initialize to the correct state for this specific cluster
+   terraform init \
+     -backend-config="bucket=gdc-on-gcp-${PROJECT_ID}-tfstate" \
+     -backend-config="prefix=clusters/${CLUSTER_NAME}/state" \
+     -backend-config="impersonate_service_account=${PROVISIONING_SA_EMAIL}"
+   
+   # Destroy the resources
+   terraform destroy -var="cluster_name=${CLUSTER_NAME}"
+   ```
