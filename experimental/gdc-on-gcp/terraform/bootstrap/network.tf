@@ -29,6 +29,7 @@ resource "google_compute_firewall" "gdc_allow_internal" {
   }
 
   source_ranges = [var.gce_subnetwork_cidr]
+  # Targets VMs with these specific tags
   target_tags   = ["http-server", "https-server"]
 }
 
@@ -43,6 +44,7 @@ resource "google_compute_firewall" "gdc_allow_ssh" {
   }
 
   source_ranges = ["35.235.240.0/20"] # IAP Range
+  # Targets VMs with these specific tags
   target_tags   = ["http-server", "https-server"]
 }
 

@@ -11,6 +11,15 @@ data "google_compute_image" "ubuntu" {
   project = "ubuntu-os-cloud"
 }
 
+resource "google_compute_disk" "gdc_data_disks" {
+  for_each = local.vms
+  name     = "${each.value}-data"
+  type     = "pd-ssd"
+  zone     = var.zone
+  size     = 1400
+  project  = var.project_id
+}
+
 resource "google_compute_instance" "gdc_vms" {
   for_each     = local.vms
   name         = each.value
@@ -21,14 +30,20 @@ resource "google_compute_instance" "gdc_vms" {
   # Match GDCc Ice Lake CPU platform
   min_cpu_platform = "Intel Ice Lake"
 
+  # Applies default GCP firewall rules to allow inbound traffic on ports 80 and 443
   tags = ["http-server", "https-server"]
 
   boot_disk {
     initialize_params {
       image = data.google_compute_image.ubuntu.self_link
-      size  = 200
+      size  = 50
       type  = "pd-ssd"
     }
+  }
+
+  attached_disk {
+    source      = google_compute_disk.gdc_data_disks[each.key].id
+    device_name = "data"
   }
 
   network_interface {
@@ -52,6 +67,22 @@ resource "google_compute_instance" "gdc_vms" {
     cluster_id     = var.cluster_name
     bmctl_version  = var.bmctl_version
     enable-oslogin = "FALSE"
+    user-data      = <<-EOF
+#cloud-config
+bootcmd:
+  # Initialize the secondary disk with a GPT label
+  - parted -s /dev/disk/by-id/google-data mklabel gpt
+  # Create a 100GB partition for node_storage (leaves 1300GB unpartitioned for Robin SDS)
+  - parted -s /dev/disk/by-id/google-data mkpart node_storage ext4 0% 100GB
+runcmd:
+  # Wait for the partition to populate in /dev
+  - sleep 5
+  # Format and mount the node_storage partition (Partition 1 of the secondary disk)
+  - mkfs.ext4 -F /dev/disk/by-id/google-data-part1
+  - mkdir -p /mnt/node_storage
+  - mount /dev/disk/by-id/google-data-part1 /mnt/node_storage
+  - echo "UUID=$(blkid -s UUID -o value /dev/disk/by-id/google-data-part1) /mnt/node_storage ext4 defaults 0 2" >> /etc/fstab
+EOF
   }
 
   service_account {

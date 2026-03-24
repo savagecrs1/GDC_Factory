@@ -12,6 +12,7 @@ resource "google_compute_instance" "admin_ws" {
   can_ip_forward      = true
   deletion_protection = true
 
+  # Applies default GCP firewall rules to allow inbound traffic on ports 80 and 443
   tags = ["http-server", "https-server"]
 
   boot_disk {
