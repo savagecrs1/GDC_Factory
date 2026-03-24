@@ -20,5 +20,7 @@
 - name: Deploy Google Distributed Cloud Hybrid Cluster
   hosts: workstation
   become: yes
+  vars:
+    cluster_name: "{{ tf_cluster_name }}"
   roles:
     - gdc_deploy

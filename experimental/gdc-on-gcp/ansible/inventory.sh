@@ -56,7 +56,7 @@ cat <<EOF
       "ansible_python_interpreter": "/usr/bin/python3",
       "ansible_user": "${GCP_USER}",
       "gcp_project_id": "${GCP_PROJECT}",
-      "cluster_name": "${CLUSTER_NAME}",
+      "tf_cluster_name": "${CLUSTER_NAME}",
       "bmctl_version": "$(terraform output -raw bmctl_version 2>/dev/null || echo '')",
       "vxlan_id": "${VXLAN_ID}",
       "vxlan_base_ip": "${VXLAN_BASE}"

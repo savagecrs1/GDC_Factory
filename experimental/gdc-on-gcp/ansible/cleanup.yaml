@@ -5,9 +5,13 @@
   become_user: "{{ gdc_user }}"
   vars:
     # Ensure these are passed via --extra-vars or defined in group_vars
-    cluster_name: "{{ cluster_name }}"
-    kubeconfig_path: "{{ gdc_home }}/bmctl-workspace/{{ cluster_name }}/{{ cluster_name }}-kubeconfig"
+    kubeconfig_path: "{{ gdc_home }}/bmctl-workspace/{{ cluster_name | default('UNSET') }}/{{ cluster_name | default('UNSET') }}-kubeconfig"
   tasks:
+    - name: Ensure cluster_name is provided
+      fail:
+        msg: "The 'cluster_name' variable is required. Please pass it via --extra-vars (e.g. -e 'cluster_name=my-cluster')"
+      when: cluster_name is undefined or cluster_name | length == 0
+
     - name: Check if kubeconfig exists
       stat:
         path: "{{ kubeconfig_path }}"
