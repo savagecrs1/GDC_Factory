@@ -6,7 +6,7 @@ services_cidrBlocks: "10.96.0.0/12"
 maxPodsPerNode: 250
 
 # GCP Service Account to grant cluster-admin access via GKE Connect Gateway
-gcp_cluster_admin_sa: "gong-cluster-admin@{{ gcp_project_id }}.gserviceaccount.com"
+gcp_cluster_admin_sa: "gong-cluster-admin@{{ gcp_project_id }}.iam.gserviceaccount.com"
 
 cluster_node_taints:
   - key: "node-role.kubernetes.io/master"
