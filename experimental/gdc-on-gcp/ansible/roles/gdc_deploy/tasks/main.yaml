@@ -1,23 +1,17 @@
 ---
-- name: Create cluster configuration template
+- name: Create Anthos cluster workspace directory
+  become_user: "{{ gdc_user }}"
+  file:
+    path: "{{ gdc_home }}/bmctl-workspace/{{ cluster_name }}"
+    state: directory
+    owner: "{{ gdc_user }}"
+    group: "{{ gdc_user }}"
+
+- name: Create cluster configuration template in workspace
   become_user: "{{ gdc_user }}"
   template:
     src: cluster.yaml.j2
-    dest: "{{ gdc_home }}/{{ cluster_name }}.yaml"
-
-- name: Create Anthos cluster config directory
-  become_user: "{{ gdc_user }}"
-  command: "bmctl create config -c {{ cluster_name }}"
-  args:
-    chdir: "{{ gdc_home }}"
-    creates: "{{ gdc_home }}/bmctl-workspace/{{ cluster_name }}/{{ cluster_name }}.yaml"
-
-- name: Replace cluster configuration with template
-  become_user: "{{ gdc_user }}"
-  copy:
-    src: "{{ gdc_home }}/{{ cluster_name }}.yaml"
     dest: "{{ gdc_home }}/bmctl-workspace/{{ cluster_name }}/{{ cluster_name }}.yaml"
-    remote_src: yes
 
 - name: Deploy the GDC Hybrid Cluster
   become_user: "{{ gdc_user }}"
