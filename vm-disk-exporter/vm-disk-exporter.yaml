@@ -6,29 +6,29 @@ metadata:
     gdce.baremetal.cluster.gke.io/cache-image: "true"
 spec:
   containers:
-  - name: vm-disk-explorer
-    image: imageNamePlaceholder
-    command: ["sleep", "infinity"]
-    imagePullPolicy: IfNotPresent
-    resources: {}
-    volumeDevices:
-    - name: virtualmachine-volume
-      devicePath: /dev/vmdisk
-    volumeMounts:
-    - name: rclone-config
-      mountPath: "/root/.config/rclone/"
-      readOnly: true
-    env:
-    - name: RCLONE_LOG_LEVEL
-      value: INFO
+    - name: vm-disk-explorer
+      image: imageNamePlaceholder
+      command: ["sleep", "infinity"]
+      imagePullPolicy: IfNotPresent
+      resources: {}
+      volumeDevices:
+        - name: virtualmachine-volume
+          devicePath: /dev/vmdisk
+      volumeMounts:
+        - name: rclone-config
+          mountPath: "/root/.config/rclone/"
+          readOnly: true
+      env:
+        - name: RCLONE_LOG_LEVEL
+          value: INFO
 
   imagePullSecrets:
-        - name: artifact-registry
+    - name: artifact-registry
 
   volumes:
-  - name: virtualmachine-volume
-    persistentVolumeClaim:
-      claimName: ""
-  - name: rclone-config
-    configMap:
-      name: rclone-config
+    - name: virtualmachine-volume
+      persistentVolumeClaim:
+        claimName: ""
+    - name: rclone-config
+      configMap:
+        name: rclone-config
