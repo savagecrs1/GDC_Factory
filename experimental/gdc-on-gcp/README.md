@@ -117,6 +117,27 @@ Once the installation finishes, you can use the generated `kubeconfig` file on t
 kubectl get nodes --kubeconfig /home/gdc/bmctl-workspace/${CLUSTER_NAME}/${CLUSTER_NAME}-kubeconfig
 ```
 
+### Local Access via GKE Connect Gateway
+
+You can also access the cluster from your local machine using standard GCP IAM identities via the GKE Connect Gateway. This requires impersonating the `gong-cluster-admin` service account.
+
+1. Configure `gcloud` to impersonate the cluster admin service account:
+   ```bash
+   gcloud config set auth/impersonate_service_account gong-cluster-admin@gdc-on-gcp2.iam.gserviceaccount.com
+   ```
+2. Get the cluster credentials:
+   ```bash
+   gcloud container fleet memberships get-credentials ${CLUSTER_NAME}
+   ```
+3. You can now use `kubectl` locally:
+   ```bash
+   kubectl get nodes
+   ```
+4. To stop impersonating the service account:
+   ```bash
+   gcloud config unset auth/impersonate_service_account
+   ```
+
 ---
 
 ## 5. Deleting a Cluster

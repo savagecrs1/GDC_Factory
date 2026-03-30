@@ -36,7 +36,7 @@ resource "google_compute_instance" "gdc_vms" {
   boot_disk {
     initialize_params {
       image = data.google_compute_image.ubuntu.self_link
-      size  = 50
+      size  = 100
       type  = "pd-ssd"
     }
   }

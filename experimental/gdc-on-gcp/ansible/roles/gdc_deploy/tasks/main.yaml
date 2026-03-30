@@ -35,3 +35,22 @@
   debug:
     var: cluster_create.stdout_lines
   when: cluster_create is defined and cluster_create.stdout_lines is defined
+
+- name: Create ClusterRoleBinding for GKE Connect Gateway access
+  become_user: "{{ gdc_user }}"
+  shell: |
+    cat <<EOF | kubectl --kubeconfig {{ gdc_home }}/bmctl-workspace/{{ cluster_name }}/{{ cluster_name }}-kubeconfig apply -f -
+    apiVersion: rbac.authorization.k8s.io/v1
+    kind: ClusterRoleBinding
+    metadata:
+      name: gcp-sa-cluster-admin-binding
+    subjects:
+    - kind: User
+      name: {{ gcp_cluster_admin_sa }}
+    roleRef:
+      kind: ClusterRole
+      name: cluster-admin
+      apiGroup: rbac.authorization.k8s.io
+    EOF
+  when: cluster_create is not failed
+
