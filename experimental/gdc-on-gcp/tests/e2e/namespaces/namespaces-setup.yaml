@@ -1,0 +1,202 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  labels:
+    testsuite: "true"
+  name: ai-system
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  labels:
+    testsuite: "true"
+  name: ai-speech-system
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  labels:
+    testsuite: "true"
+  name: ai-ocr-system
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  labels:
+    testsuite: "true"
+  name: ai-translation-system
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  labels:
+    testsuite: "true"
+  name: anthos-identity-service
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  labels:
+    testsuite: "true"
+  name: cert-manager
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  labels:
+    testsuite: "true"
+  name: dataproc-system
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  labels:
+    testsuite: "true"
+  name: dns-system
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  labels:
+    testsuite: "true"
+  name: g-istio-system
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  labels:
+    testsuite: "true"
+  name: gke-connect
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  labels:
+    testsuite: "true"
+  name: gke-managed-metrics-server
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  labels:
+    testsuite: "true"
+  name: gke-operators
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  labels:
+    testsuite: "true"
+  name: gke-system
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  labels:
+    testsuite: "true"
+  name: gpc-backup-system
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  labels:
+    testsuite: "true"
+  name: iam-system
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  labels:
+    testsuite: "true"
+  name: kube-node-lease
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  labels:
+    testsuite: "true"
+  name: kube-public
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  labels:
+    testsuite: "true"
+  name: kube-system
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  labels:
+    testsuite: "true"
+  name: metallb-system
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  labels:
+    testsuite: "true"
+  name: nf-operator
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  labels:
+    testsuite: "true"
+  name: oclcm-system
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  labels:
+    testsuite: "true"
+  name: prediction
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  labels:
+    testsuite: "true"
+  name: rm-system
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  labels:
+    testsuite: "true"
+  name: robinio
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  labels:
+    testsuite: "true"
+  name: saas-system
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  labels:
+    testsuite: "true"
+  name: vm-system
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  labels:
+    testsuite: "true"
+  name: g-ospf-servicecontrol-system
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  labels:
+    testsuite: "true"
+  name: g-ospf-system
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  labels:
+    testsuite: "true"
+  name: g-pspf-system

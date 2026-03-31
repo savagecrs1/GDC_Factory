@@ -1,0 +1,54 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dummy-deploy
+  namespace: ai-system
+  labels:
+    testsuite: "true"
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: dummy
+  template:
+    metadata:
+      labels:
+        app: dummy
+    spec:
+      containers:
+      - name: nginx
+        image: nginx
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: dummy-sts
+  namespace: kube-system
+  labels:
+    testsuite: "true"
+spec:
+  serviceName: "dummy"
+  replicas: 1
+  selector:
+    matchLabels:
+      app: dummy-sts
+  template:
+    metadata:
+      labels:
+        app: dummy-sts
+    spec:
+      containers:
+      - name: nginx
+        image: nginx
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: dummy-pod
+  namespace: gke-system
+  labels:
+    testsuite: "true"
+spec:
+  containers:
+  - name: nginx
+    image: nginx

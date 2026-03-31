@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  labels:
+    testsuite: "true"
+  name: forbidden-hostpath-tdd
+spec:
+  containers:
+  - name: nginx
+    image: nginx
+    volumeMounts:
+    - mountPath: /etc-k8s
+      name: etc-k8s
+  volumes:
+  - name: etc-k8s
+    hostPath:
+      path: /etc/kubernetes

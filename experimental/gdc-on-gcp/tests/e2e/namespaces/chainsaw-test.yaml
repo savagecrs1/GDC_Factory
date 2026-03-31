@@ -1,0 +1,51 @@
+apiVersion: chainsaw.kyverno.io/v1alpha1
+kind: Test
+metadata:
+  name: restricted-namespaces
+spec:
+  steps:
+  - try:
+    - command:
+        entrypoint: kubectl
+        args: ["apply", "-f", "namespaces-setup.yaml"]
+    - command:
+        entrypoint: kubectl
+        args: ["apply", "-f", "workloads-setup.yaml"]
+    
+    # 1. Scaling Restrictions
+    - command:
+        entrypoint: kubectl
+        args: ["scale", "deployment", "dummy-deploy", "--replicas=2", "-n", "ai-system"]
+        check:
+          (contains($stderr, 'is forbidden') || contains($stderr, 'denied by admission webhook')): true
+    - command:
+        entrypoint: kubectl
+        args: ["scale", "statefulset", "dummy-sts", "--replicas=2", "-n", "kube-system"]
+        check:
+          (contains($stderr, 'is forbidden') || contains($stderr, 'denied by admission webhook')): true
+
+    # 2. Deletion Restrictions
+    - command:
+        entrypoint: kubectl
+        args: ["delete", "pod", "dummy-pod", "-n", "gke-system"]
+        check:
+          (contains($stderr, 'is forbidden') || contains($stderr, 'denied by admission webhook')): true
+
+    # 3. Log Viewing Restrictions
+    - command:
+        entrypoint: kubectl
+        args: ["logs", "dummy-pod", "-n", "gke-system"]
+        check:
+          (contains($stderr, 'is forbidden') || contains($stderr, 'denied by admission webhook')): true
+
+    # 4. Standard Creation Restrictions (Existing)
+    - command:
+        entrypoint: kubectl
+        args: ["run", "forbidden-ai-system-tdd", "--image=nginx", "-n", "ai-system", "--dry-run=server"]
+        check:
+          (contains($stderr, 'is forbidden') || contains($stderr, 'denied by admission webhook')): true
+    - command:
+        entrypoint: kubectl
+        args: ["run", "forbidden-kube-system-tdd", "--image=nginx", "-n", "kube-system", "--dry-run=server"]
+        check:
+          (contains($stderr, 'is forbidden') || contains($stderr, 'denied by admission webhook')): true

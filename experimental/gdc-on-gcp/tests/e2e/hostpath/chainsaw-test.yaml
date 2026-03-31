@@ -1,0 +1,19 @@
+apiVersion: chainsaw.kyverno.io/v1alpha1
+kind: Test
+metadata:
+  name: hostpath-restriction
+spec:
+  steps:
+  - try:
+    # Negative Test: Forbidden path
+    - command:
+        entrypoint: kubectl
+        args: ["apply", "-f", "pod-forbidden.yaml"]
+        check:
+          (contains($stderr, 'is forbidden') || contains($stderr, 'denied by admission webhook')): true
+    # Positive Test: Allowed path (Expected to succeed)
+    - command:
+        entrypoint: kubectl
+        args: ["apply", "-f", "pod-allowed.yaml"]
+        check:
+          (size($stderr) == 0): true

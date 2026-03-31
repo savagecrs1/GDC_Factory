@@ -166,3 +166,24 @@ To safely delete an individual cluster, you must first unregister it from Google
    # Destroy the resources
    terraform destroy -var="cluster_name=${CLUSTER_NAME}"
    ```
+
+---
+
+## 6. Validation & Compliance (TDD)
+
+This project includes a comprehensive E2E validation suite using **[Kyverno Chainsaw](https://kyverno.github.io/chainsaw/)** to ensure your ABM cluster accurately emulates the workload restrictions of GDC Connected Servers.
+
+### Running the Tests
+Ensure you have the Chainsaw CLI installed and your `kubectl` context is pointed to the target cluster (either directly or via the GKE Connect Gateway).
+
+1. From the project root, run the test suite:
+   ```bash
+   chainsaw test tests/e2e --config tests/e2e/chainsaw-configuration.yaml
+   ```
+
+### Manual Cleanup
+All resources created by the test suite are labeled with `testsuite: "true"`. If a test run is interrupted, you can manually purge all test resources:
+
+```bash
+kubectl delete pods,namespaces -l testsuite=true --all-namespaces
+```

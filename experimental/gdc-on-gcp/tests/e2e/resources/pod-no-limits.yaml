@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: forbidden-no-limits-tdd
+  labels:
+    testsuite: "true"
+spec:
+  containers:
+  - name: nginx
+    image: nginx
+    resources:
+      requests:
+        cpu: 100m
+        memory: 128Mi
+      # Missing limits
