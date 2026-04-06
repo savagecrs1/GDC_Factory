@@ -68,6 +68,21 @@
     groups: docker
     append: yes
 
+- name: Configure Docker daemon MTU for VxLAN overlay
+  copy:
+    dest: /etc/docker/daemon.json
+    content: |
+      {
+        "mtu": 1410
+      }
+  register: docker_mtu_config
+
+- name: Restart Docker service
+  systemd:
+    name: docker
+    state: restarted
+  when: docker_mtu_config.changed
+
 - name: Ensure .ssh directory exists
   file:
     path: "{{ gdc_home }}/.ssh"
