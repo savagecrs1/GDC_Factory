@@ -1,4 +1,11 @@
 ---
+- name: Ensure required packages are installed
+  apt:
+    name:
+      - acl
+    state: present
+    update_cache: yes
+
 - name: Ensure standard user exists
   user:
     name: "{{ gdc_user }}"
