@@ -1,0 +1,14 @@
+lvmd:
+  managed: true
+  deviceClasses:
+    - name: gdc-storage
+      volume-group: topolvm-vg
+      default: true
+      spare-gb: 10
+
+# Disable the default StorageClass creation so you can define your own
+storageClasses: []
+
+webhook:
+  podMutatingWebhook:
+    enabled: true

@@ -1,0 +1,29 @@
+apiVersion: chainsaw.kyverno.io/v1alpha1
+kind: Test
+metadata:
+  name: storage-restrictions
+spec:
+  steps:
+  - try:
+    # Negative Test: Forbidden ReadWriteMany PVC
+    - command:
+        entrypoint: kubectl
+        args: ["apply", "-f", "pvc-rwx-forbidden.yaml"]
+        check:
+          (contains($stderr, 'is forbidden') || contains($stderr, 'denied by admission webhook')): true
+    
+    # Positive Test: Allowed ReadWriteOnce PVC
+    - command:
+        entrypoint: kubectl
+        args: ["apply", "-f", "pvc-rwo-allowed.yaml"]
+        check:
+          (size($stderr) == 0): true
+
+    # Positive Test: OPA Gatekeeper Robin Storage Mutation
+    - command:
+        entrypoint: kubectl
+        args: ["apply", "-f", "sc-robin-emulation.yaml"]
+        check:
+          (size($stderr) == 0): true
+    - assert:
+        file: sc-robin-assert.yaml

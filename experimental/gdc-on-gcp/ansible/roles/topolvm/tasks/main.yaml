@@ -1,0 +1,31 @@
+---
+- name: Create TopoLVM configuration directory
+  file:
+    path: "{{ gdc_home }}/topolvm"
+    state: directory
+    owner: "{{ gdc_user }}"
+    group: "{{ gdc_user }}"
+
+- name: Render TopoLVM values
+  template:
+    src: topolvm-values.yaml.j2
+    dest: "{{ gdc_home }}/topolvm/values.yaml"
+    owner: "{{ gdc_user }}"
+    group: "{{ gdc_user }}"
+
+- name: Add TopoLVM Helm repository
+  become_user: "{{ gdc_user }}"
+  command: helm repo add topolvm https://topolvm.github.io/topolvm
+
+- name: Update Helm repositories
+  become_user: "{{ gdc_user }}"
+  command: helm repo update
+
+- name: Deploy TopoLVM via Helm
+  become_user: "{{ gdc_user }}"
+  command: >
+    helm upgrade --install topolvm topolvm/topolvm
+    --namespace topolvm-system
+    --create-namespace
+    -f {{ gdc_home }}/topolvm/values.yaml
+    --kubeconfig {{ gdc_home }}/bmctl-workspace/{{ cluster_name }}/{{ cluster_name }}-kubeconfig

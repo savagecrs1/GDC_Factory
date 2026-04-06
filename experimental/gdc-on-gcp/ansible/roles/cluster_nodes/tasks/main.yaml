@@ -9,8 +9,27 @@
       - conntrack
       - ipset
       - bridge-utils
+      - lvm2
     state: present
     update_cache: yes
+
+- name: Create TopoLVM partition (remaining 1300GB)
+  shell:
+    cmd: |
+      # Only create partition 2 if it doesn't already exist
+      if ! parted -s /dev/disk/by-id/google-data print | grep -q "^ 2"; then
+        parted -s /dev/disk/by-id/google-data mkpart topolvm 100GB 100%
+        sleep 2 # Wait for udev to populate the partition device
+      fi
+  become: yes
+
+- name: Create Volume Group topolvm-vg
+  shell:
+    cmd: |
+      if ! vgs topolvm-vg >/dev/null 2>&1; then
+        vgcreate -y topolvm-vg /dev/disk/by-id/google-data-part2
+      fi
+  become: yes
 
 - name: Ensure standard user exists
   user:

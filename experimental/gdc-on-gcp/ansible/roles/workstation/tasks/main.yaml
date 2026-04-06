@@ -26,6 +26,14 @@
     dest: /usr/local/sbin/kubectl
     mode: '0755'
 
+- name: Download and install Helm
+  shell: |
+    curl -fsSL -o /tmp/get_helm.sh https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3
+    chmod 700 /tmp/get_helm.sh
+    /tmp/get_helm.sh
+  args:
+    creates: /usr/local/bin/helm
+
 - name: Create baremetal directory
   file:
     path: "{{ gdc_home }}/baremetal"
@@ -82,6 +90,15 @@
     name: docker
     state: restarted
   when: docker_mtu_config.changed
+
+# The bmctl installer runs a local KinD cluster that attempts to send packets
+# at the default Docker MTU (1500). Because our custom VxLAN overlay has an MTU of 1410,
+# large API server payloads (like TLS handshakes) get dropped, causing EOF errors.
+# This iptables rule dynamically shrinks the TCP MSS of traffic exiting the workstation
+# onto the vxlan0 interface to fit within the Path MTU limit.
+- name: Clamp MSS to PMTU for vxlan0 to fix KinD MTU issues
+  command: iptables -t mangle -A POSTROUTING -p tcp --tcp-flags SYN,RST SYN -o vxlan0 -j TCPMSS --clamp-mss-to-pmtu
+  become: yes
 
 - name: Ensure .ssh directory exists
   file:

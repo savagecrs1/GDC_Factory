@@ -1,0 +1,8 @@
+---
+- name: Deploy Storage
+  hosts: workstation
+  become: yes
+  vars:
+    cluster_name: "storagetest"
+  roles:
+    - topolvm
