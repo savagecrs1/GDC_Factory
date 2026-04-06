@@ -3,7 +3,7 @@ terraform {
   required_providers {
     google = {
       source  = "hashicorp/google"
-      version = "~> 5.0"
+      version = "~> 7.26.0"
     }
   }
 }
@@ -17,25 +17,25 @@ provider "google" {
 # Essential APIs
 resource "google_project_service" "apis" {
   for_each = toset([
-    "compute.googleapis.com",
-    "cloudresourcemanager.googleapis.com",
-    "serviceusage.googleapis.com",
     "anthos.googleapis.com",
+    "anthosaudit.googleapis.com",
     "anthosgke.googleapis.com",
-    "gkehub.googleapis.com",
-    "gkeconnect.googleapis.com",
+    "cloudresourcemanager.googleapis.com",
+    "compute.googleapis.com",
     "connectgateway.googleapis.com",
-    "logging.googleapis.com",
-    "monitoring.googleapis.com",
-    "opsconfigmonitoring.googleapis.com",
-    "stackdriver.googleapis.com",
+    "container.googleapis.com",
+    "gkeconnect.googleapis.com",
+    "gkehub.googleapis.com",
+    "gkeonprem.googleapis.com",
     "iam.googleapis.com",
     "iap.googleapis.com",
-    "anthosaudit.googleapis.com",
     "kubernetesmetadata.googleapis.com",
-    "container.googleapis.com",
+    "logging.googleapis.com",
+    "monitoring.googleapis.com",
     "networkmanagement.googleapis.com",
-    "gkeonprem.googleapis.com"
+    "opsconfigmonitoring.googleapis.com",
+    "serviceusage.googleapis.com",
+    "stackdriver.googleapis.com"
   ])
   project            = var.project_id
   service            = each.value
