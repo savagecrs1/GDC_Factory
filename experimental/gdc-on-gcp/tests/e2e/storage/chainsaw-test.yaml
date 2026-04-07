@@ -6,11 +6,8 @@ spec:
   steps:
   - try:
     # Positive Test: OPA Gatekeeper RWX to RWO Mutation
-    - command:
-        entrypoint: kubectl
-        args: ["apply", "-f", "pvc-rwx-emulation.yaml"]
-        check:
-          (size($stderr) == 0): true
+    - apply:
+        file: pvc-rwx-emulation.yaml
     - assert:
         file: pvc-rwx-assert.yaml
     
@@ -19,13 +16,13 @@ spec:
         entrypoint: kubectl
         args: ["apply", "-f", "pvc-rwo-allowed.yaml"]
         check:
-          (size($stderr) == 0): true
+          ($stderr == ''): true
 
     # Positive Test: OPA Gatekeeper Robin Storage Mutation
     - command:
         entrypoint: kubectl
         args: ["apply", "-f", "sc-robin-emulation.yaml"]
         check:
-          (size($stderr) == 0): true
+          ($stderr == ''): true
     - assert:
         file: sc-robin-assert.yaml

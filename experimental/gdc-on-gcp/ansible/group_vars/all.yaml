@@ -13,3 +13,6 @@ cluster_node_taints:
     effect: "PreferNoSchedule"
   - key: "node-role.kubernetes.io/control-plane"
     effect: "PreferNoSchedule"
+
+# OPA Gatekeeper release version for validation and mutation
+gatekeeper_version: "v3.22.0"

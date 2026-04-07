@@ -25,3 +25,4 @@
   roles:
     - gdc_deploy
     - topolvm
+    - gatekeeper

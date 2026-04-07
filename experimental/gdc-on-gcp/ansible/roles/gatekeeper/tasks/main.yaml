@@ -1,0 +1,13 @@
+---
+- name: Deploy OPA Gatekeeper using the raw manifest
+  command: >
+    kubectl --kubeconfig {{ gdc_home }}/bmctl-workspace/{{ cluster_name }}/{{ cluster_name }}-kubeconfig
+    apply -f https://raw.githubusercontent.com/open-policy-agent/gatekeeper/{{ gatekeeper_version }}/deploy/gatekeeper.yaml
+  register: gatekeeper_deploy
+  changed_when: '"created" in gatekeeper_deploy.stdout or "configured" in gatekeeper_deploy.stdout'
+
+- name: Wait for Gatekeeper Webhook service to be ready
+  command: >
+    kubectl --kubeconfig {{ gdc_home }}/bmctl-workspace/{{ cluster_name }}/{{ cluster_name }}-kubeconfig
+    wait --for=condition=ready pod -n gatekeeper-system -l control-plane=controller-manager --timeout=300s
+  changed_when: false
