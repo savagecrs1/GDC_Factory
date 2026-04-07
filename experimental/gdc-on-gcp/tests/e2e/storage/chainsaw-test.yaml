@@ -5,12 +5,14 @@ metadata:
 spec:
   steps:
   - try:
-    # Negative Test: Forbidden ReadWriteMany PVC
+    # Positive Test: OPA Gatekeeper RWX to RWO Mutation
     - command:
         entrypoint: kubectl
-        args: ["apply", "-f", "pvc-rwx-forbidden.yaml"]
+        args: ["apply", "-f", "pvc-rwx-emulation.yaml"]
         check:
-          (contains($stderr, 'is forbidden') || contains($stderr, 'denied by admission webhook')): true
+          (size($stderr) == 0): true
+    - assert:
+        file: pvc-rwx-assert.yaml
     
     # Positive Test: Allowed ReadWriteOnce PVC
     - command:

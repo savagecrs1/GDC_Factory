@@ -9,6 +9,14 @@ lvmd:
 # Disable the default StorageClass creation so you can define your own
 storageClasses: []
 
+# Disable the pod mutating webhook.
+# By default, TopoLVM injects a fake resource request (topolvm.io/capacity: 1)
+# into any pod requesting a TopoLVM PVC to force the scheduler to place the pod
+# on a node with available TopoLVM capacity. However, in this GDC emulation environment
+# using ABM and containerd, the device plugin fails to advertise this fake capacity
+# to the kubelet, causing all pods to be stuck in Pending (FailedScheduling).
+# Disabling this allows the native WaitForFirstConsumer volume binding mode to
+# handle placement correctly.
 webhook:
   podMutatingWebhook:
-    enabled: true
+    enabled: false

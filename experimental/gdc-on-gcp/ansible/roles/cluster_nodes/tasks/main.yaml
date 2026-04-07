@@ -69,6 +69,14 @@
       overlay
       br_netfilter
 
+- name: Increase inotify limits for storage providers (TopoLVM)
+  sysctl:
+    name: fs.inotify.max_user_instances
+    value: "8192"
+    sysctl_file: /etc/sysctl.d/99-inotify.conf
+    state: present
+    reload: yes
+
 - name: Load kernel modules immediately
   modprobe:
     name: "{{ item }}"
