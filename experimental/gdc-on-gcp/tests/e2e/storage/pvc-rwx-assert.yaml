@@ -1,0 +1,9 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: emulate-rwx-pvc-tdd
+  labels:
+    testsuite: "true"
+spec:
+  accessModes:
+    - ReadWriteOnce
