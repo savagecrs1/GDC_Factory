@@ -1,0 +1,10 @@
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: topo-vm-block
+provisioner: topolvm.io
+parameters:
+  "csi.storage.k8s.io/fstype": "ext4"
+  "topolvm.io/device-class": "gdc-storage"
+volumeBindingMode: WaitForFirstConsumer
+allowVolumeExpansion: true

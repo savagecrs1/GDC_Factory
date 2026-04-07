@@ -1,0 +1,8 @@
+apiVersion: vm.cluster.gke.io/v1
+kind: VirtualMachineDisk
+metadata:
+  name: test-pvc-mutation-only
+  namespace: vms
+spec:
+  size: 5Gi
+  storageClassName: topo-vm-block

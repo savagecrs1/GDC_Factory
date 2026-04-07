@@ -1,0 +1,18 @@
+apiVersion: mutations.gatekeeper.sh/v1beta1
+kind: Assign
+metadata:
+  name: emulate-robin-storage
+spec:
+  applyTo:
+  - groups: ["storage.k8s.io"]
+    kinds: ["StorageClass"]
+    versions: ["v1"]
+  match:
+    name: "*robin*"
+    kinds:
+    - apiGroups: ["storage.k8s.io"]
+      kinds: ["StorageClass"]
+  location: "provisioner"
+  parameters:
+    assign:
+      value: "topolvm.io"

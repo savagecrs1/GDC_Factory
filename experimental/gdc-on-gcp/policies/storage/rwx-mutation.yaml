@@ -1,0 +1,31 @@
+apiVersion: mutations.gatekeeper.sh/v1beta1
+kind: ModifySet
+metadata:
+  name: emulate-robin-rwx-access-prune
+spec:
+  applyTo:
+  - groups: [""]
+    kinds: ["PersistentVolumeClaim"]
+    versions: ["v1"]
+  location: "spec.accessModes"
+  parameters:
+    operation: prune
+    values:
+      fromList:
+        - "ReadWriteMany"
+---
+apiVersion: mutations.gatekeeper.sh/v1beta1
+kind: ModifySet
+metadata:
+  name: emulate-robin-rwx-access-merge
+spec:
+  applyTo:
+  - groups: [""]
+    kinds: ["PersistentVolumeClaim"]
+    versions: ["v1"]
+  location: "spec.accessModes"
+  parameters:
+    operation: merge
+    values:
+      fromList:
+        - "ReadWriteOnce"
