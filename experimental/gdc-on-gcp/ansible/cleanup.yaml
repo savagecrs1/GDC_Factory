@@ -26,6 +26,7 @@
       when: kubeconfig_stat.stat.exists
       async: 1200
       poll: 30
+      ignore_errors: yes
       register: reset_output
 
     - name: Display reset output
@@ -37,4 +38,3 @@
       file:
         path: "{{ gdc_home }}/bmctl-workspace/{{ cluster_name }}"
         state: absent
-      when: reset_output is not failed
