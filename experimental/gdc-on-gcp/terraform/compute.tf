@@ -54,7 +54,7 @@ resource "google_compute_instance" "gdc_vms" {
   can_ip_forward = true
 
   shielded_instance_config {
-    enable_secure_boot          = true
+    enable_secure_boot          = false
     enable_vtpm                 = true
     enable_integrity_monitoring = true
   }
