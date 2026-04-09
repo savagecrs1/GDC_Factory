@@ -8,6 +8,7 @@ This project uses an enterprise **Two-Tier (Foundation / Cluster) Architecture**
 
 1. **The Foundation (`terraform/bootstrap`):** This layer provisions the permanent, shared infrastructure: the core VPC network, Cloud NAT, Service Accounts, and a dedicated, decoupled Admin Workstation (`gem-admin-ws`). This workstation is used to safely orchestrate Anthos installations.
 2. **Ephemeral Clusters (`terraform/`):** This layer is used as a template to rapidly stamp out ephemeral 3-node GDCSO cluster footprints (`node1`, `node2`, `node3`). It uses data sources to automatically attach these new nodes to the shared foundation.
+3. **The Edge Router (`terraform/edge-router`):** This layer provides an optional, dedicated ingress VM (`e2-small`) that participates in all emulated secondary networks (VXLANs). It allows you to route traffic from your local workstation directly into isolated cluster VLANs (like MetalLB VIPs) using tools like Traefik or a SOCKS5 proxy, bypassing the Kubernetes control plane.
 
 ## Prerequisites
 - Google Cloud SDK (`gcloud`) installed and authenticated.
@@ -50,7 +51,27 @@ Deploy the permanent networking and the dedicated Admin Workstation (`gem-admin-
    terraform apply
    ```
 
-## 3. Provision a Cluster Footprint
+## 3. Deploy the Edge Router (Optional)
+
+If you plan on accessing secondary networks (Island Mode) from your local workstation, deploy the Edge Router. This creates a dedicated VM that sits on the VXLAN fabric and proxies incoming traffic.
+
+1. Navigate to the edge-router directory:
+   ```bash
+   cd ../edge-router
+   ```
+2. Initialize and apply:
+   ```bash
+   export PROVISIONING_SA_EMAIL="tf-provisioner@${PROJECT_ID}.iam.gserviceaccount.com"
+   
+   terraform init \
+     -backend-config="bucket=gdc-on-gcp-${PROJECT_ID}-tfstate" \
+     -backend-config="prefix=terraform/edge-router/state" \
+     -backend-config="impersonate_service_account=${PROVISIONING_SA_EMAIL}"
+
+   terraform apply
+   ```
+
+## 4. Provision a Cluster Footprint
 
 Deploy a 3-node virtual hardware footprint for your new cluster. Because this uses a separate state file, you can destroy these VMs later without deleting your shared admin workstation.
 
@@ -58,7 +79,7 @@ Before running Terraform, set an environment variable with your desired cluster 
 
 1. Navigate to the cluster directory:
    ```bash
-   cd ../../terraform
+   cd ../
    ```
 2. Export your cluster name:
    ```bash
@@ -78,7 +99,7 @@ Before running Terraform, set an environment variable with your desired cluster 
    terraform apply -var="cluster_name=${CLUSTER_NAME}"
    ```
 
-## 4. Configuration & Deployment (Ansible)
+## 5. Configuration & Deployment (Ansible)
 
 Navigate to the `ansible` directory to run the orchestration playbook. This will dynamically read your Terraform state, configure the internal VxLAN network across your VMs, and asynchronously kick off the Anthos `bmctl` deployment from the shared workstation.
 
@@ -139,7 +160,7 @@ You can also access the cluster from your local machine using standard GCP IAM i
 
 ---
 
-## 5. Deleting a Cluster
+## 6. Deleting a Cluster
 
 To safely delete an individual cluster, you must first unregister it from Google Cloud before destroying its VMs. This ensures a clean state for your GCP project and prevents orphan resources.
 
@@ -166,9 +187,11 @@ To safely delete an individual cluster, you must first unregister it from Google
    terraform destroy -var="cluster_name=${CLUSTER_NAME}"
    ```
 
+*(Note: To delete the optional Edge Router, you must first navigate to `terraform/edge-router`, edit `main.tf` to set `deletion_protection = false`, apply the change, and then run `terraform destroy`).*
+
 ---
 
-## 6. Validation & Compliance (TDD)
+## 7. Validation & Compliance (TDD)
 
 This project includes a comprehensive E2E validation suite using **[Kyverno Chainsaw](https://kyverno.github.io/chainsaw/)** to ensure your ABM cluster accurately emulates the workload restrictions of GDC Connected Servers.
 

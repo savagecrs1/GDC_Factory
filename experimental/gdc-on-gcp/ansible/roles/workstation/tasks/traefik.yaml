@@ -1,0 +1,78 @@
+- name: Check if Traefik is installed
+  command: which traefik
+  register: traefik_check
+  failed_when: false
+  changed_when: false
+
+- name: Download and install Traefik
+  unarchive:
+    src: https://github.com/traefik/traefik/releases/download/v3.0.0/traefik_v3.0.0_linux_amd64.tar.gz
+    dest: /usr/local/bin/
+    remote_src: yes
+    creates: /usr/local/bin/traefik
+
+- name: Make Traefik executable
+  file:
+    path: /usr/local/bin/traefik
+    mode: '0755'
+
+- name: Create Traefik configuration directory
+  file:
+    path: /etc/traefik
+    state: directory
+    mode: '0755'
+
+- name: Configure Traefik as an Edge Router
+  copy:
+    dest: /etc/traefik/traefik.yml
+    content: |
+      entryPoints:
+        web:
+          address: ":80"
+        websecure:
+          address: ":443"
+      providers:
+        file:
+          directory: /etc/traefik/dynamic
+          watch: true
+      api:
+        insecure: true
+        dashboard: true
+
+- name: Create Traefik dynamic configuration directory
+  file:
+    path: /etc/traefik/dynamic
+    state: directory
+    mode: '0755'
+
+- name: Create Systemd service for Traefik
+  copy:
+    dest: /etc/systemd/system/traefik.service
+    content: |
+      [Unit]
+      Description=Traefik Edge Router
+      Documentation=https://doc.traefik.io/traefik/
+      After=network-online.target
+      Wants=network-online.target systemd-networkd-wait-online.service
+
+      [Service]
+      Restart=on-abnormal
+      User=root
+      Group=root
+      ExecStart=/usr/local/bin/traefik --configfile=/etc/traefik/traefik.yml
+      LimitNOFILE=1048576
+      PrivateTmp=true
+      PrivateDevices=false
+      ProtectHome=true
+      ProtectSystem=full
+      ReadWriteDirectories=/etc/traefik
+
+      [Install]
+      WantedBy=multi-user.target
+
+- name: Enable and start Traefik service
+  systemd:
+    name: traefik
+    enabled: yes
+    state: started
+    daemon_reload: yes

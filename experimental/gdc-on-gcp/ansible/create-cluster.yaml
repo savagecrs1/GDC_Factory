@@ -11,6 +11,12 @@
   roles:
     - cluster_nodes
 
+- name: Setup Edge Router
+  hosts: edge_router
+  become: yes
+  roles:
+    - edge_router
+
 - name: Setup VxLAN on all GCE instances
   hosts: gdc_nodes
   become: yes

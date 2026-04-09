@@ -21,3 +21,30 @@
     ip addr add {{ vxlan_ip }}/24 dev vxlan0
     ip link set up dev vxlan0
   register: ip_assign
+
+# --- Secondary Emulated Networks ---
+- name: Ensure clean state by deleting existing secondary VXLANs
+  shell: "ip link delete gdcenet0.{{ item.vlan_id }}"
+  failed_when: false
+  changed_when: false
+  loop: "{{ secondary_networks }}"
+  when: secondary_networks is defined
+
+- name: Create secondary VXLAN interfaces
+  shell: |
+    ip link add gdcenet0.{{ item.vlan_id }} type vxlan id {{ item.vlan_id }} dev ens4 dstport 4789
+    ip link set dev gdcenet0.{{ item.vlan_id }} mtu 1410
+  loop: "{{ secondary_networks }}"
+  when: secondary_networks is defined
+
+- name: Append FDB entries for secondary VXLANs across all nodes
+  shell: |
+    bridge fdb append to 00:00:00:00:00:00 dst {{ hostvars[item.1].internal_ip }} dev gdcenet0.{{ item.0.vlan_id }}
+  loop: "{{ secondary_networks | product(groups['gdc_nodes']) | list }}"
+  when: "secondary_networks is defined and item.1 != inventory_hostname"
+
+- name: Bring secondary VXLAN interfaces up
+  shell: |
+    ip link set up dev gdcenet0.{{ item.vlan_id }}
+  loop: "{{ secondary_networks }}"
+  when: secondary_networks is defined

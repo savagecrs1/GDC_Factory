@@ -34,6 +34,14 @@ NODE1_INTERNAL_IP=$(terraform output -json cluster_nodes_ips 2>/dev/null | jq -r
 NODE2_INTERNAL_IP=$(terraform output -json cluster_nodes_ips 2>/dev/null | jq -r '.node2' || echo "")
 NODE3_INTERNAL_IP=$(terraform output -json cluster_nodes_ips 2>/dev/null | jq -r '.node3' || echo "")
 
+# Fetch Edge Router details (if deployed)
+EDGE_ROUTER_IP=""
+EDGE_ROUTER_NAME=""
+if [ -d "edge-router/.terraform" ]; then
+  EDGE_ROUTER_IP=$(terraform -chdir=edge-router output -raw edge_router_ip 2>/dev/null || echo "")
+  EDGE_ROUTER_NAME=$(terraform -chdir=edge-router output -raw edge_router_name 2>/dev/null || echo "")
+fi
+
 # Use standard SSH user since OS Login is disabled
 CLUSTER_NAME="$(terraform output -raw cluster_name 2>/dev/null || echo 'abm-cluster-1')"
 
@@ -68,11 +76,22 @@ cat <<EOF
   "cluster_nodes": {
     "hosts": ["node1", "node2", "node3"]
   },
+  "edge_router": {
+    "hosts": $(if [ -n "$EDGE_ROUTER_NAME" ]; then echo "[\"edge_router_host\"]"; else echo "[]"; fi)
+  },
   "gdc_nodes": {
-    "children": ["workstation", "cluster_nodes"]
+    "children": ["workstation", "cluster_nodes"$(if [ -n "$EDGE_ROUTER_NAME" ]; then echo ', "edge_router"'; fi)]
   },
   "_meta": {
     "hostvars": {
+$(if [ -n "$EDGE_ROUTER_NAME" ]; then cat <<INNER_EOF
+      "edge_router_host": {
+        "ansible_host": "${EDGE_ROUTER_NAME}",
+        "internal_ip": "${EDGE_ROUTER_IP}",
+        "vxlan_ip": "${VXLAN_BASE}.254"
+      },
+INNER_EOF
+fi)
       "gem_admin_ws": {
         "ansible_host": "${GEM_WS_NAME}",
         "internal_ip": "${GEM_WS_INTERNAL_IP}",

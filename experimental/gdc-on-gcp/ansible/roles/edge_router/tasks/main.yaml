@@ -1,0 +1,21 @@
+---
+- name: Install required packages
+  apt:
+    name:
+      - bridge-utils
+      - jq
+    state: present
+    update_cache: yes
+
+- name: Install Traefik
+  import_role:
+    name: workstation
+    tasks_from: traefik.yaml
+
+- name: Allow IP forwarding globally
+  sysctl:
+    name: net.ipv4.ip_forward
+    value: "1"
+    sysctl_set: yes
+    state: present
+    reload: yes

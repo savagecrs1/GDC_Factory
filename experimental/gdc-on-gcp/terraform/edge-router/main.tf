@@ -1,0 +1,62 @@
+terraform {
+  required_version = ">= 1.5.0"
+  required_providers {
+    google = {
+      source  = "hashicorp/google"
+      version = "~> 7.26.0"
+    }
+  }
+}
+
+provider "google" {
+  project = var.project_id
+  region  = var.region
+  zone    = var.zone
+}
+
+data "google_compute_network" "gdc_vpc" {
+  name = "gdc-so-vpc"
+}
+
+data "google_compute_subnetwork" "gdc_subnet" {
+  name   = "gdc-so-subnet"
+  region = var.region
+}
+
+data "google_compute_image" "ubuntu" {
+  family  = "ubuntu-2204-lts"
+  project = "ubuntu-os-cloud"
+}
+
+resource "google_compute_instance" "edge_router" {
+  name         = var.edge_router_name
+  machine_type = var.machine_type
+  zone         = var.zone
+
+  tags = ["http-server", "https-server"]
+
+  boot_disk {
+    initialize_params {
+      image = data.google_compute_image.ubuntu.self_link
+      size  = 20
+      type  = "pd-balanced"
+    }
+  }
+
+  network_interface {
+    network    = data.google_compute_network.gdc_vpc.self_link
+    subnetwork = data.google_compute_subnetwork.gdc_subnet.self_link
+  }
+
+  can_ip_forward = true
+
+  deletion_protection = true
+
+  metadata = {
+    enable-oslogin = "FALSE"
+  }
+
+  service_account {
+    scopes = ["cloud-platform"]
+  }
+}
