@@ -1,0 +1,9 @@
+apiVersion: baremetal.cluster.gke.io/v1alpha1
+kind: ClusterCIDRConfig
+metadata:
+  name: {{ item.name }}-cidr
+spec:
+  network: {{ item.name }}
+  ipv4:
+    cidr: "{{ item.pod_cidr }}"
+    perNodeMaskSize: {{ item.per_node_ipam_size }}

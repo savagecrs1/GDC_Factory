@@ -32,3 +32,4 @@
     - gdc_deploy
     - topolvm
     - gatekeeper
+    - secondary_networks

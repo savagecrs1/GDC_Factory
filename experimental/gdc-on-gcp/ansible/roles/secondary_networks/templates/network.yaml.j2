@@ -1,0 +1,18 @@
+apiVersion: networking.gke.io/v1
+kind: Network
+metadata:
+  name: {{ item.name }}
+  annotations:
+    networking.gke.io/gdce-vlan-id: "{{ item.vlan_id }}"
+    networking.gke.io/gdce-vlan-mtu: "1410"
+spec:
+  type: L2
+  IPAMMode: Internal
+  nodeInterfaceMatcher:
+    interfaceName: gdcenet0.{{ item.vlan_id }}
+  gateway4: {{ item.gateway }}
+  l2NetworkConfig:
+    prefixLength4: {{ item.subnet | split('/') | last }}
+  dnsConfig:
+    nameservers:
+      - 8.8.8.8

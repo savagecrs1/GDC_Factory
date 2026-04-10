@@ -1,0 +1,42 @@
+---
+- name: Create working directory for secondary networks
+  file:
+    path: "{{ gdc_home }}/bmctl-workspace/{{ cluster_name }}/secondary-networks"
+    state: directory
+    owner: "{{ gdc_user }}"
+    group: "{{ gdc_user }}"
+    mode: '0755'
+
+- name: Render Network Custom Resources
+  template:
+    src: network.yaml.j2
+    dest: "{{ gdc_home }}/bmctl-workspace/{{ cluster_name }}/secondary-networks/network-{{ item.name }}.yaml"
+    owner: "{{ gdc_user }}"
+    group: "{{ gdc_user }}"
+    mode: '0644'
+  loop: "{{ secondary_networks }}"
+
+- name: Render ClusterCIDRConfig Custom Resources
+  template:
+    src: clustercidrconfig.yaml.j2
+    dest: "{{ gdc_home }}/bmctl-workspace/{{ cluster_name }}/secondary-networks/clustercidr-{{ item.name }}.yaml"
+    owner: "{{ gdc_user }}"
+    group: "{{ gdc_user }}"
+    mode: '0644'
+  loop: "{{ secondary_networks }}"
+
+- name: Render MetalLB IPAddressPool and L2Advertisement
+  template:
+    src: metallb.yaml.j2
+    dest: "{{ gdc_home }}/bmctl-workspace/{{ cluster_name }}/secondary-networks/metallb-{{ item.name }}.yaml"
+    owner: "{{ gdc_user }}"
+    group: "{{ gdc_user }}"
+    mode: '0644'
+  loop: "{{ secondary_networks }}"
+
+- name: Apply Secondary Network Manifests
+  shell: |
+    export KUBECONFIG="{{ gdc_home }}/bmctl-workspace/{{ cluster_name }}/{{ cluster_name }}-kubeconfig"
+    kubectl apply -f {{ gdc_home }}/bmctl-workspace/{{ cluster_name }}/secondary-networks/
+  register: kubectl_apply
+  changed_when: "'created' in kubectl_apply.stdout or 'configured' in kubectl_apply.stdout"

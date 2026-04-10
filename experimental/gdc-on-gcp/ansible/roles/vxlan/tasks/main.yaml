@@ -43,8 +43,25 @@
   loop: "{{ secondary_networks | product(groups['gdc_nodes']) | list }}"
   when: "secondary_networks is defined and item.1 != inventory_hostname"
 
-- name: Bring secondary VXLAN interfaces up
+- name: Bring secondary VXLAN interfaces up and assign IP
   shell: |
+    # Calculate the base IP from the subnet (e.g. 172.16.10.0/24 -> 172.16.10)
+    SUBNET_BASE=$(echo "{{ item.subnet }}" | cut -d. -f1-3)
+    
+    # Determine the host octet based on the hostname. Edge router gets 254. Workstation gets 100.
+    if [[ "{{ inventory_hostname }}" == "gong_ws" ]]; then
+      HOST_OCTET="100"
+    elif [[ "{{ inventory_hostname }}" == "edge_router_host" ]]; then
+      HOST_OCTET="254"
+    else
+      # Extract node number from 'node1', 'node2', etc and add 1 (so node1 gets .2)
+      NODE_NUM=$(echo "{{ inventory_hostname }}" | grep -oE '[0-9]+$')
+      HOST_OCTET=$((NODE_NUM + 1))
+    fi
+    
+    IP_CIDR="${SUBNET_BASE}.${HOST_OCTET}/24"
+    
+    ip addr add ${IP_CIDR} dev gdcenet0.{{ item.vlan_id }} || true
     ip link set up dev gdcenet0.{{ item.vlan_id }}
   loop: "{{ secondary_networks }}"
   when: secondary_networks is defined

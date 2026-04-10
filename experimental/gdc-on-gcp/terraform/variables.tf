@@ -24,7 +24,7 @@ variable "cluster_name" {
 
 variable "bmctl_version" {
   type    = string
-  default = "1.32.100-gke.107"
+  default = "1.33.300-gke.60"
 }
 
 variable "machine_type" {

@@ -49,6 +49,7 @@ spec:
         effect: {{ taint.effect }}
 {% endfor %}
   clusterNetwork:
+    multipleNetworkInterfaces: true
     pods:
       cidrBlocks:
       - {{ pod_cidrBlocks }}
