@@ -6,7 +6,7 @@ This project provisions a Google Distributed Cloud Software-Only (GDCSO) Hybrid 
 
 This project uses an enterprise **Two-Tier (Foundation / Cluster) Architecture** to ensure you can scale to hundreds of ephemeral clusters without destroying your shared management infrastructure.
 
-1. **The Foundation (`terraform/bootstrap`):** This layer provisions the permanent, shared infrastructure: the core VPC network, Cloud NAT, Service Accounts, and a dedicated, decoupled Admin Workstation (`gong-ws`). This workstation is used to safely orchestrate Anthos installations.
+1. **The Foundation (`terraform/bootstrap`):** This layer provisions the permanent, shared infrastructure: the core VPC network, Cloud NAT, Service Accounts, and a dedicated, decoupled Admin Workstation (`gem-admin-ws`). This workstation is used to safely orchestrate Anthos installations.
 2. **Ephemeral Clusters (`terraform/`):** This layer is used as a template to rapidly stamp out ephemeral 3-node GDCSO cluster footprints (`node1`, `node2`, `node3`). It uses data sources to automatically attach these new nodes to the shared foundation.
 
 ## Prerequisites
@@ -32,7 +32,7 @@ The infrastructure is created by Terraform using service account impersonation. 
 
 ## 2. Deploy the Shared Foundation
 
-Deploy the permanent networking and the dedicated Admin Workstation (`gong-ws`). **You only need to run this step once per GCP project.**
+Deploy the permanent networking and the dedicated Admin Workstation (`gem-admin-ws`). **You only need to run this step once per GCP project.**
 
 1. Navigate to the bootstrap directory:
    ```bash
@@ -64,12 +64,11 @@ Before running Terraform, set an environment variable with your desired cluster 
    ```bash
    export CLUSTER_NAME="my-gdc-on-gcp-cluster"
    ```
-3. Initialize Terraform with a parameterized state prefix (clearing the cache first ensures you don't conflict with previous deployments):
+3. Initialize Terraform with a parameterized state prefix (using -reconfigure ensures you don't conflict with previous deployments):
    ```bash
    export PROVISIONING_SA_EMAIL="tf-provisioner@${PROJECT_ID}.iam.gserviceaccount.com"
-   rm -rf .terraform
 
-   terraform init \
+   terraform init -reconfigure \
      -backend-config="bucket=gdc-on-gcp-${PROJECT_ID}-tfstate" \
      -backend-config="prefix=clusters/${CLUSTER_NAME}/state" \
      -backend-config="impersonate_service_account=${PROVISIONING_SA_EMAIL}"
@@ -96,13 +95,13 @@ Navigate to the `ansible` directory to run the orchestration playbook. This will
 
 ## Monitoring and Accessing the Cluster
 
-Because the Anthos deployment takes 15-20 minutes, the Ansible playbook launches it as a background process on the `gong-ws` workstation to protect it from SSH timeouts.
+Because the Anthos deployment takes 15-20 minutes, the Ansible playbook launches it as a background process on the `gem-admin-ws` workstation to protect it from SSH timeouts.
 
 To monitor the installation progress in real-time, SSH into your dedicated admin workstation:
 
 ```bash
 # Connect to the admin workstation
-gcloud compute ssh gong-ws --tunnel-through-iap
+gcloud compute ssh gem-admin-ws --tunnel-through-iap
 
 # Switch to the dedicated Anthos service user
 sudo su - gdc
@@ -119,11 +118,11 @@ kubectl get nodes --kubeconfig /home/gdc/bmctl-workspace/${CLUSTER_NAME}/${CLUST
 
 ### Local Access via GKE Connect Gateway
 
-You can also access the cluster from your local machine using standard GCP IAM identities via the GKE Connect Gateway. This requires impersonating the `gong-cluster-admin` service account.
+You can also access the cluster from your local machine using standard GCP IAM identities via the GKE Connect Gateway. This requires impersonating the `gem-cluster-admin` service account.
 
 1. Configure `gcloud` to impersonate the cluster admin service account:
    ```bash
-   gcloud config set auth/impersonate_service_account gong-cluster-admin@gdc-on-gcp2.iam.gserviceaccount.com
+   gcloud config set auth/impersonate_service_account gem-cluster-admin@gdc-on-gcp2.iam.gserviceaccount.com
    ```
 2. Get the cluster credentials:
    ```bash
@@ -158,7 +157,7 @@ To safely delete an individual cluster, you must first unregister it from Google
    cd ../terraform
    
    # Re-initialize to the correct state for this specific cluster
-   terraform init \
+   terraform init -reconfigure \
      -backend-config="bucket=gdc-on-gcp-${PROJECT_ID}-tfstate" \
      -backend-config="prefix=clusters/${CLUSTER_NAME}/state" \
      -backend-config="impersonate_service_account=${PROVISIONING_SA_EMAIL}"

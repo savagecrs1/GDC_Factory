@@ -23,8 +23,8 @@ fi
 # Get outputs
 GCP_PROJECT=$(terraform output -raw project_id 2>/dev/null || echo "")
 GCP_ZONE=$(terraform output -raw zone 2>/dev/null || echo "")
-GONG_WS_NAME=$(terraform output -raw workstation_name 2>/dev/null || echo "")
-GONG_WS_INTERNAL_IP=$(terraform output -raw workstation_ip 2>/dev/null || echo "")
+GEM_WS_NAME=$(terraform output -raw workstation_name 2>/dev/null || echo "")
+GEM_WS_INTERNAL_IP=$(terraform output -raw workstation_ip 2>/dev/null || echo "")
 
 NODE1_NAME=$(terraform output -json cluster_nodes_names 2>/dev/null | jq -r '.node1' || echo "")
 NODE2_NAME=$(terraform output -json cluster_nodes_names 2>/dev/null | jq -r '.node2' || echo "")
@@ -63,7 +63,7 @@ cat <<EOF
     }
   },
   "workstation": {
-    "hosts": ["gong_ws"]
+    "hosts": ["gem_admin_ws"]
   },
   "cluster_nodes": {
     "hosts": ["node1", "node2", "node3"]
@@ -73,9 +73,9 @@ cat <<EOF
   },
   "_meta": {
     "hostvars": {
-      "gong_ws": {
-        "ansible_host": "${GONG_WS_NAME}",
-        "internal_ip": "${GONG_WS_INTERNAL_IP}",
+      "gem_admin_ws": {
+        "ansible_host": "${GEM_WS_NAME}",
+        "internal_ip": "${GEM_WS_INTERNAL_IP}",
         "vxlan_ip": "${VXLAN_BASE}.100"
       },
       "node1": {

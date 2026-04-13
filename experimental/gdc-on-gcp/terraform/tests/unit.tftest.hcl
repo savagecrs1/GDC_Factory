@@ -1,9 +1,9 @@
 mock_provider "google" {}
 
 override_data {
-  target = data.google_compute_instance.gong_ws
+  target = data.google_compute_instance.gem_admin_ws
   values = {
-    name = "mocked-gong-ws"
+    name = "mocked-gem-admin-ws"
     network_interface = [
       {
         network_ip = "10.0.0.100"

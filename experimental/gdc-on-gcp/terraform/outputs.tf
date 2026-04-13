@@ -15,11 +15,11 @@ output "cluster_nodes_names" {
 }
 
 output "workstation_name" {
-  value = data.google_compute_instance.gong_ws.name
+  value = data.google_compute_instance.gem_admin_ws.name
 }
 
 output "workstation_ip" {
-  value = data.google_compute_instance.gong_ws.network_interface[0].network_ip
+  value = data.google_compute_instance.gem_admin_ws.network_interface[0].network_ip
 }
 
 output "cluster_name" { value = var.cluster_name }

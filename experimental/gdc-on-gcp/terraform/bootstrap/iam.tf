@@ -25,8 +25,8 @@ resource "google_project_iam_member" "baremetal_gcr_roles" {
 
 # Dedicated Service Account for Cluster Administration (via GKE Connect Gateway)
 resource "google_service_account" "gong_cluster_admin" {
-  account_id   = "gong-cluster-admin"
-  display_name = "GONG Cluster Admin"
+  account_id   = "gem-cluster-admin"
+  display_name = "GEM Cluster Admin"
   project      = var.project_id
 }
 

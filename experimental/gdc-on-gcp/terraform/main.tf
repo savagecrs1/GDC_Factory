@@ -27,8 +27,8 @@ data "google_compute_subnetwork" "gdc_subnet" {
 }
 
 # Read the shared Admin Workstation
-data "google_compute_instance" "gong_ws" {
-  name    = "gong-ws"
+data "google_compute_instance" "gem_admin_ws" {
+  name    = "gem-admin-ws"
   zone    = var.zone
   project = var.project_id
 }

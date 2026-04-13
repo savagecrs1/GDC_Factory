@@ -4,7 +4,7 @@ data "google_compute_image" "ubuntu" {
 }
 
 resource "google_compute_instance" "admin_ws" {
-  name         = "gong-ws"
+  name         = "gem-admin-ws"
   machine_type = "e2-standard-4"
   zone         = var.zone
   project      = var.project_id

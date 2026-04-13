@@ -11,3 +11,25 @@
     kubectl --kubeconfig {{ gdc_home }}/bmctl-workspace/{{ cluster_name }}/{{ cluster_name }}-kubeconfig
     wait --for=condition=ready pod -n gatekeeper-system -l control-plane=controller-manager --timeout=300s
   changed_when: false
+
+- name: Create policies directory on workstation
+  file:
+    path: "{{ gdc_home }}/bmctl-workspace/{{ cluster_name }}/policies"
+    state: directory
+    owner: "{{ gdc_user }}"
+    group: "{{ gdc_user }}"
+    mode: '0755'
+
+- name: Copy Gatekeeper policies to workstation
+  copy:
+    src: "{{ playbook_dir }}/../policies/"
+    dest: "{{ gdc_home }}/bmctl-workspace/{{ cluster_name }}/policies/"
+    owner: "{{ gdc_user }}"
+    group: "{{ gdc_user }}"
+
+- name: Apply Gatekeeper policies to cluster
+  command: >
+    kubectl --kubeconfig {{ gdc_home }}/bmctl-workspace/{{ cluster_name }}/{{ cluster_name }}-kubeconfig
+    apply -f {{ gdc_home }}/bmctl-workspace/{{ cluster_name }}/policies/ --recursive
+  register: apply_policies
+  changed_when: '"created" in apply_policies.stdout or "configured" in apply_policies.stdout'
