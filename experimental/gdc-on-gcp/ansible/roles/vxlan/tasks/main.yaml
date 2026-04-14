@@ -47,9 +47,9 @@
   shell: |
     # Calculate the base IP from the subnet (e.g. 172.16.10.0/24 -> 172.16.10)
     SUBNET_BASE=$(echo "{{ item.subnet }}" | cut -d. -f1-3)
-    
+
     # Determine the host octet based on the hostname. Edge router gets 254. Workstation gets 100.
-    if [[ "{{ inventory_hostname }}" == "gong_ws" ]]; then
+    if [[ "{{ inventory_hostname }}" == "gem_admin_ws" ]]; then
       HOST_OCTET="100"
     elif [[ "{{ inventory_hostname }}" == "edge_router_host" ]]; then
       HOST_OCTET="254"
@@ -58,9 +58,9 @@
       NODE_NUM=$(echo "{{ inventory_hostname }}" | grep -oE '[0-9]+$')
       HOST_OCTET=$((NODE_NUM + 1))
     fi
-    
+
     IP_CIDR="${SUBNET_BASE}.${HOST_OCTET}/24"
-    
+
     ip addr add ${IP_CIDR} dev gdcenet0.{{ item.vlan_id }} || true
     ip link set up dev gdcenet0.{{ item.vlan_id }}
   loop: "{{ secondary_networks }}"

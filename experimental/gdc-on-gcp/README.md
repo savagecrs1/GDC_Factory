@@ -42,7 +42,7 @@ Deploy the permanent networking and the dedicated Admin Workstation (`gem-admin-
 2. Initialize with partial configuration and apply:
    ```bash
    export PROVISIONING_SA_EMAIL="tf-provisioner@${PROJECT_ID}.iam.gserviceaccount.com"
-   
+
    terraform init \
      -backend-config="bucket=gdc-on-gcp-${PROJECT_ID}-tfstate" \
      -backend-config="prefix=terraform/bootstrap/state" \
@@ -62,7 +62,7 @@ If you plan on accessing secondary networks (Island Mode) from your local workst
 2. Initialize and apply:
    ```bash
    export PROVISIONING_SA_EMAIL="tf-provisioner@${PROJECT_ID}.iam.gserviceaccount.com"
-   
+
    terraform init \
      -backend-config="bucket=gdc-on-gcp-${PROJECT_ID}-tfstate" \
      -backend-config="prefix=terraform/edge-router/state" \
@@ -176,13 +176,13 @@ To safely delete an individual cluster, you must first unregister it from Google
    Navigate to the `terraform` directory and destroy the specific cluster's VMs:
    ```bash
    cd ../terraform
-   
+
    # Re-initialize to the correct state for this specific cluster
    terraform init -reconfigure \
      -backend-config="bucket=gdc-on-gcp-${PROJECT_ID}-tfstate" \
      -backend-config="prefix=clusters/${CLUSTER_NAME}/state" \
      -backend-config="impersonate_service_account=${PROVISIONING_SA_EMAIL}"
-   
+
    # Destroy the resources
    terraform destroy -var="cluster_name=${CLUSTER_NAME}"
    ```

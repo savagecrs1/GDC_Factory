@@ -24,18 +24,18 @@ resource "google_project_iam_member" "baremetal_gcr_roles" {
 }
 
 # Dedicated Service Account for Cluster Administration (via GKE Connect Gateway)
-resource "google_service_account" "gong_cluster_admin" {
+resource "google_service_account" "gem_cluster_admin" {
   account_id   = "gem-cluster-admin"
   display_name = "GEM Cluster Admin"
   project      = var.project_id
 }
 
-resource "google_project_iam_member" "gong_cluster_admin_roles" {
+resource "google_project_iam_member" "gem_cluster_admin_roles" {
   for_each = toset([
     "roles/gkehub.gatewayAdmin",
     "roles/gkehub.admin"
   ])
   project = var.project_id
   role    = each.value
-  member  = "serviceAccount:${google_service_account.gong_cluster_admin.email}"
+  member  = "serviceAccount:${google_service_account.gem_cluster_admin.email}"
 }
