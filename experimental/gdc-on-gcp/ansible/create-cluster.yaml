@@ -1,21 +1,19 @@
 ---
-- name: Prepare Administrative Workstation
+- name: Fetch SSH Key from Workstation
   hosts: workstation
   become: yes
-  roles:
-    - workstation
+  tasks:
+    - name: Fetch standard user public key from workstation
+      fetch:
+        src: "{{ gdc_home }}/.ssh/id_rsa.pub"
+        dest: /tmp/ws_id_rsa.pub
+        flat: yes
 
 - name: Setup SSH Access and Base OS on Cluster Nodes
   hosts: cluster_nodes
   become: yes
   roles:
     - cluster_nodes
-
-- name: Setup Edge Router
-  hosts: edge_router
-  become: yes
-  roles:
-    - edge_router
 
 - name: Setup VxLAN on all GCE instances
   hosts: gdc_nodes

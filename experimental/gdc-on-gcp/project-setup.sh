@@ -90,6 +90,8 @@ echo "   terraform init -reconfigure -backend-config=\"bucket=gdc-on-gcp-\${PROJ
 echo "                  -backend-config=\"prefix=terraform/bootstrap/state\" \\"
 echo "                  -backend-config=\"impersonate_service_account=\${PROVISIONING_SA_EMAIL}\""
 echo "   terraform apply"
+echo "   cd ../../ansible"
+echo "   ansible-playbook setup-foundation.yaml"
 echo ""
 echo "2. Set your cluster name: export CLUSTER_NAME='abm-cluster-1'"
 echo ""

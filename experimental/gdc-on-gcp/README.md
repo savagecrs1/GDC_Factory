@@ -101,13 +101,24 @@ Before running Terraform, set an environment variable with your desired cluster 
 
 ## 5. Configuration & Deployment (Ansible)
 
-Navigate to the `ansible` directory to run the orchestration playbook. This will dynamically read your Terraform state, configure the internal VxLAN network across your VMs, and asynchronously kick off the Anthos `bmctl` deployment from the shared workstation.
+The configuration is split into two distinct playbooks to support the Two-Tier architecture: one to configure the permanent foundation, and another to orchestrate ephemeral clusters.
+
+### Foundation Phase
+This playbook installs the required binaries (`kubectl`, `bmctl`, Docker), sets up the user environment, and configures the Edge Router. **You only need to run this step once per GCP project.**
 
 1. Navigate to the Ansible directory:
    ```bash
    cd ../ansible
    ```
-2. Run the Ansible playbook:
+2. Run the foundation playbook:
+   ```bash
+   ansible-playbook setup-foundation.yaml
+   ```
+
+### Cluster Phase
+This playbook dynamically reads your Terraform state, configures the internal VxLAN network across your new cluster VMs, and asynchronously kicks off the Anthos `bmctl` deployment from the shared workstation.
+
+1. Run the cluster playbook:
    ```bash
    ansible-playbook create-cluster.yaml
    ```
