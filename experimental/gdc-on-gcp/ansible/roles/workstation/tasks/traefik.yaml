@@ -16,15 +16,23 @@
     path: /usr/local/bin/traefik
     mode: '0755'
 
+- name: Grant Traefik capability to bind privileged ports
+  command: setcap 'cap_net_bind_service=+ep' /usr/local/bin/traefik
+  become: yes
+
 - name: Create Traefik configuration directory
   file:
     path: /etc/traefik
     state: directory
     mode: '0755'
+    owner: "{{ gem_user }}"
+    group: "{{ gem_user }}"
 
 - name: Configure Traefik as an Edge Router
   copy:
     dest: /etc/traefik/traefik.yml
+    owner: "{{ gem_user }}"
+    group: "{{ gem_user }}"
     content: |
       entryPoints:
         web:
@@ -44,6 +52,8 @@
     path: /etc/traefik/dynamic
     state: directory
     mode: '0755'
+    owner: "{{ gem_user }}"
+    group: "{{ gem_user }}"
 
 - name: Create Systemd service for Traefik
   copy:
@@ -57,8 +67,8 @@
 
       [Service]
       Restart=on-abnormal
-      User=root
-      Group=root
+      User={{ gem_user }}
+      Group={{ gem_user }}
       ExecStart=/usr/local/bin/traefik --configfile=/etc/traefik/traefik.yml
       LimitNOFILE=1048576
       PrivateTmp=true

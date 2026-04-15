@@ -1,9 +1,9 @@
 ---
-gcrKeyPath: {{ gdc_home }}/bm-gcr.json
-sshPrivateKeyPath: {{ gdc_home }}/.ssh/id_rsa
-gkeConnectAgentServiceAccountKeyPath: {{ gdc_home }}/bm-gcr.json
-gkeConnectRegisterServiceAccountKeyPath: {{ gdc_home }}/bm-gcr.json
-cloudOperationsServiceAccountKeyPath: {{ gdc_home }}/bm-gcr.json
+gcrKeyPath: {{ gem_home }}/bm-gcr.json
+sshPrivateKeyPath: {{ gem_home }}/.ssh/id_rsa
+gkeConnectAgentServiceAccountKeyPath: {{ gem_home }}/bm-gcr.json
+gkeConnectRegisterServiceAccountKeyPath: {{ gem_home }}/bm-gcr.json
+cloudOperationsServiceAccountKeyPath: {{ gem_home }}/bm-gcr.json
 ---
 apiVersion: v1
 kind: Namespace
@@ -20,7 +20,7 @@ spec:
   profile: default
   anthosBareMetalVersion: {{ bmctl_version }}
   nodeAccess:
-    loginUser: {{ gdc_user }}
+    loginUser: {{ gem_user }}
   gkeConnect:
     projectID: {{ gcp_project_id }}
   controlPlane:

@@ -1,35 +1,35 @@
 ---
 - name: Deploy OPA Gatekeeper using the raw manifest
   command: >
-    kubectl --kubeconfig {{ gdc_home }}/bmctl-workspace/{{ cluster_name }}/{{ cluster_name }}-kubeconfig
+    kubectl --kubeconfig {{ gem_home }}/bmctl-workspace/{{ cluster_name }}/{{ cluster_name }}-kubeconfig
     apply -f https://raw.githubusercontent.com/open-policy-agent/gatekeeper/{{ gatekeeper_version }}/deploy/gatekeeper.yaml
   register: gatekeeper_deploy
   changed_when: '"created" in gatekeeper_deploy.stdout or "configured" in gatekeeper_deploy.stdout'
 
 - name: Wait for Gatekeeper Webhook service to be ready
   command: >
-    kubectl --kubeconfig {{ gdc_home }}/bmctl-workspace/{{ cluster_name }}/{{ cluster_name }}-kubeconfig
+    kubectl --kubeconfig {{ gem_home }}/bmctl-workspace/{{ cluster_name }}/{{ cluster_name }}-kubeconfig
     wait --for=condition=ready pod -n gatekeeper-system -l control-plane=controller-manager --timeout=300s
   changed_when: false
 
 - name: Create policies directory on workstation
   file:
-    path: "{{ gdc_home }}/bmctl-workspace/{{ cluster_name }}/policies"
+    path: "{{ gem_home }}/bmctl-workspace/{{ cluster_name }}/policies"
     state: directory
-    owner: "{{ gdc_user }}"
-    group: "{{ gdc_user }}"
+    owner: "{{ gem_user }}"
+    group: "{{ gem_user }}"
     mode: '0755'
 
 - name: Copy Gatekeeper policies to workstation
   copy:
     src: "{{ playbook_dir }}/../policies/"
-    dest: "{{ gdc_home }}/bmctl-workspace/{{ cluster_name }}/policies/"
-    owner: "{{ gdc_user }}"
-    group: "{{ gdc_user }}"
+    dest: "{{ gem_home }}/bmctl-workspace/{{ cluster_name }}/policies/"
+    owner: "{{ gem_user }}"
+    group: "{{ gem_user }}"
 
 - name: Apply Gatekeeper policies to cluster
   command: >
-    kubectl --kubeconfig {{ gdc_home }}/bmctl-workspace/{{ cluster_name }}/{{ cluster_name }}-kubeconfig
-    apply -f {{ gdc_home }}/bmctl-workspace/{{ cluster_name }}/policies/ --recursive
+    kubectl --kubeconfig {{ gem_home }}/bmctl-workspace/{{ cluster_name }}/{{ cluster_name }}-kubeconfig
+    apply -f {{ gem_home }}/bmctl-workspace/{{ cluster_name }}/policies/ --recursive
   register: apply_policies
   changed_when: '"created" in apply_policies.stdout or "configured" in apply_policies.stdout'

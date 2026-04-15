@@ -25,7 +25,7 @@
     cluster_name: test-cluster
     bmctl_version: "1.28.1-gke.46"
     gcp_project_id: "test-project"
-    gdc_home: "/home/gdc"
+    gem_home: "/home/gdc"
     vxlan_base_ip: "10.200.0"
     pod_cidrBlocks: "10.0.0.0/17"
     services_cidrBlocks: "10.96.0.0/12"

@@ -8,17 +8,17 @@
 
 - name: Ensure standard user exists
   user:
-    name: "{{ gdc_user }}"
+    name: "{{ gem_user }}"
     state: present
     shell: /bin/bash
 
 - name: Configure GOOGLE_APPLICATION_CREDENTIALS for the user
   lineinfile:
-    path: "{{ gdc_home }}/.bashrc"
-    line: "export GOOGLE_APPLICATION_CREDENTIALS={{ gdc_home }}/bm-gcr.json"
+    path: "{{ gem_home }}/.bashrc"
+    line: "export GOOGLE_APPLICATION_CREDENTIALS={{ gem_home }}/bm-gcr.json"
     create: yes
-    owner: "{{ gdc_user }}"
-    group: "{{ gdc_user }}"
+    owner: "{{ gem_user }}"
+    group: "{{ gem_user }}"
 
 - name: Download kubectl
   get_url:
@@ -36,10 +36,10 @@
 
 - name: Create baremetal directory
   file:
-    path: "{{ gdc_home }}/baremetal"
+    path: "{{ gem_home }}/baremetal"
     state: directory
-    owner: "{{ gdc_user }}"
-    group: "{{ gdc_user }}"
+    owner: "{{ gem_user }}"
+    group: "{{ gem_user }}"
 
 - name: Download bmctl version {{ bmctl_version }}
   command: "gcloud storage cp gs://anthos-baremetal-release/bmctl/{{ bmctl_version }}/linux-amd64/bmctl /usr/local/sbin/bmctl-{{ bmctl_version }}"
@@ -72,7 +72,7 @@
 
 - name: Add user to docker group
   user:
-    name: "{{ gdc_user }}"
+    name: "{{ gem_user }}"
     groups: docker
     append: yes
 
@@ -102,29 +102,29 @@
 
 - name: Ensure .ssh directory exists
   file:
-    path: "{{ gdc_home }}/.ssh"
+    path: "{{ gem_home }}/.ssh"
     state: directory
-    owner: "{{ gdc_user }}"
-    group: "{{ gdc_user }}"
+    owner: "{{ gem_user }}"
+    group: "{{ gem_user }}"
     mode: '0700'
 
 - name: Generate SSH keypair for standard user
   openssh_keypair:
-    path: "{{ gdc_home }}/.ssh/id_rsa"
+    path: "{{ gem_home }}/.ssh/id_rsa"
     type: rsa
     size: 2048
-    owner: "{{ gdc_user }}"
-    group: "{{ gdc_user }}"
+    owner: "{{ gem_user }}"
+    group: "{{ gem_user }}"
 
 - name: Fetch standard user public key from workstation
   fetch:
-    src: "{{ gdc_home }}/.ssh/id_rsa.pub"
+    src: "{{ gem_home }}/.ssh/id_rsa.pub"
     dest: /tmp/ws_id_rsa.pub
     flat: yes
 
 - name: Check if Anthos Service Account Key exists on workstation
   stat:
-    path: "{{ gdc_home }}/bm-gcr.json"
+    path: "{{ gem_home }}/bm-gcr.json"
   register: ws_sa_key
 
 - name: Generate Anthos Service Account Key dynamically
@@ -142,9 +142,9 @@
 - name: Copy Anthos Service Account Key to workstation
   copy:
     src: /tmp/bm-gcr.json
-    dest: "{{ gdc_home }}/bm-gcr.json"
-    owner: "{{ gdc_user }}"
-    group: "{{ gdc_user }}"
+    dest: "{{ gem_home }}/bm-gcr.json"
+    owner: "{{ gem_user }}"
+    group: "{{ gem_user }}"
     mode: '0600'
   when: not ws_sa_key.stat.exists
 

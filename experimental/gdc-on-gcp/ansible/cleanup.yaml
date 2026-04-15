@@ -2,10 +2,10 @@
 - name: Reset and Unregister GDC Cluster
   hosts: workstation
   become: yes
-  become_user: "{{ gdc_user }}"
+  become_user: "{{ gem_user }}"
   vars:
     # Ensure these are passed via --extra-vars or defined in group_vars
-    kubeconfig_path: "{{ gdc_home }}/bmctl-workspace/{{ cluster_name | default('UNSET') }}/{{ cluster_name | default('UNSET') }}-kubeconfig"
+    kubeconfig_path: "{{ gem_home }}/bmctl-workspace/{{ cluster_name | default('UNSET') }}/{{ cluster_name | default('UNSET') }}-kubeconfig"
   tasks:
     - name: Ensure cluster_name is provided
       fail:
@@ -20,9 +20,9 @@
     - name: Run bmctl reset
       command: "bmctl reset cluster -c {{ cluster_name }} --kubeconfig {{ kubeconfig_path }}"
       args:
-        chdir: "{{ gdc_home }}"
+        chdir: "{{ gem_home }}"
       environment:
-        GOOGLE_APPLICATION_CREDENTIALS: "{{ gdc_home }}/bm-gcr.json"
+        GOOGLE_APPLICATION_CREDENTIALS: "{{ gem_home }}/bm-gcr.json"
       when: kubeconfig_stat.stat.exists
       async: 1200
       poll: 30
@@ -36,5 +36,5 @@
 
     - name: Clean up cluster workspace directory
       file:
-        path: "{{ gdc_home }}/bmctl-workspace/{{ cluster_name }}"
+        path: "{{ gem_home }}/bmctl-workspace/{{ cluster_name }}"
         state: absent

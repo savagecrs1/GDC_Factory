@@ -44,7 +44,7 @@ variable "gce_subnetwork" {
   default = "gdc-so-subnet"
 }
 
-variable "gdc_user" {
+variable "gem_user" {
   type    = string
   default = "gdc"
 }

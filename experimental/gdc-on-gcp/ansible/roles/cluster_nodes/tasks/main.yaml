@@ -33,7 +33,7 @@
 
 - name: Ensure standard user exists
   user:
-    name: "{{ gdc_user }}"
+    name: "{{ gem_user }}"
     state: present
     shell: /bin/bash
 
@@ -44,19 +44,19 @@
 
 - name: Add user to docker group
   user:
-    name: "{{ gdc_user }}"
+    name: "{{ gem_user }}"
     groups: docker
     append: yes
 
 - name: Grant passwordless sudo to standard user
   copy:
-    dest: "/etc/sudoers.d/{{ gdc_user }}"
-    content: "{{ gdc_user }} ALL=(ALL) NOPASSWD: ALL"
+    dest: "/etc/sudoers.d/{{ gem_user }}"
+    content: "{{ gem_user }} ALL=(ALL) NOPASSWD: ALL"
     mode: '0440'
 
 - name: Add workstation public key to authorized_keys
   authorized_key:
-    user: "{{ gdc_user }}"
+    user: "{{ gem_user }}"
     state: present
     key: "{{ lookup('file', '/tmp/ws_id_rsa.pub') }}"
   when: lookup('file', '/tmp/ws_id_rsa.pub', errors='ignore') | length > 0

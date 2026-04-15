@@ -20,5 +20,5 @@ variable "machine_type" {
 
 variable "edge_router_name" {
   type    = string
-  default = "gdc-edge-router"
+  default = "gem-edge-router"
 }

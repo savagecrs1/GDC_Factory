@@ -1,26 +1,26 @@
 ---
 - name: Create Anthos cluster workspace directory
-  become_user: "{{ gdc_user }}"
+  become_user: "{{ gem_user }}"
   file:
-    path: "{{ gdc_home }}/bmctl-workspace/{{ cluster_name }}"
+    path: "{{ gem_home }}/bmctl-workspace/{{ cluster_name }}"
     state: directory
-    owner: "{{ gdc_user }}"
-    group: "{{ gdc_user }}"
+    owner: "{{ gem_user }}"
+    group: "{{ gem_user }}"
 
 - name: Create cluster configuration template in workspace
-  become_user: "{{ gdc_user }}"
+  become_user: "{{ gem_user }}"
   template:
     src: cluster.yaml.j2
-    dest: "{{ gdc_home }}/bmctl-workspace/{{ cluster_name }}/{{ cluster_name }}.yaml"
+    dest: "{{ gem_home }}/bmctl-workspace/{{ cluster_name }}/{{ cluster_name }}.yaml"
 
 - name: Deploy the GDC Hybrid Cluster
-  become_user: "{{ gdc_user }}"
+  become_user: "{{ gem_user }}"
   command: "bmctl create cluster -c {{ cluster_name }}"
   args:
-    chdir: "{{ gdc_home }}"
-    creates: "{{ gdc_home }}/bmctl-workspace/{{ cluster_name }}/{{ cluster_name }}-kubeconfig"
+    chdir: "{{ gem_home }}"
+    creates: "{{ gem_home }}/bmctl-workspace/{{ cluster_name }}/{{ cluster_name }}-kubeconfig"
   environment:
-    GOOGLE_APPLICATION_CREDENTIALS: "{{ gdc_home }}/bm-gcr.json"
+    GOOGLE_APPLICATION_CREDENTIALS: "{{ gem_home }}/bm-gcr.json"
   async: 3600
   poll: 60
   register: cluster_create
@@ -31,9 +31,9 @@
   when: cluster_create is defined and cluster_create.stdout_lines is defined
 
 - name: Create ClusterRoleBinding for GKE Connect Gateway access
-  become_user: "{{ gdc_user }}"
+  become_user: "{{ gem_user }}"
   shell: |
-    cat <<EOF | kubectl --kubeconfig {{ gdc_home }}/bmctl-workspace/{{ cluster_name }}/{{ cluster_name }}-kubeconfig apply -f -
+    cat <<EOF | kubectl --kubeconfig {{ gem_home }}/bmctl-workspace/{{ cluster_name }}/{{ cluster_name }}-kubeconfig apply -f -
     apiVersion: rbac.authorization.k8s.io/v1
     kind: ClusterRoleBinding
     metadata:
