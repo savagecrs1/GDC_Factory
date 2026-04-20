@@ -12,7 +12,7 @@
     wait --for=condition=ready pod -n gatekeeper-system -l control-plane=controller-manager --timeout=300s
   changed_when: false
 
-- name: Create policies directory on workstation
+- name: Create policies directory on admin workstation
   file:
     path: "{{ gem_home }}/bmctl-workspace/{{ cluster_name }}/policies"
     state: directory
@@ -20,7 +20,7 @@
     group: "{{ gem_user }}"
     mode: '0755'
 
-- name: Copy Gatekeeper policies to workstation
+- name: Copy Gatekeeper policies to admin workstation
   copy:
     src: "{{ playbook_dir }}/../policies/"
     dest: "{{ gem_home }}/bmctl-workspace/{{ cluster_name }}/policies/"

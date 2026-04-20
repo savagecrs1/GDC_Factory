@@ -1,67 +1,30 @@
 ---
-- name: Ensure clean state by deleting existing vxlan0
-  shell: ip link delete vxlan0
-  failed_when: false
-  changed_when: false
+- name: Disable old GDC VXLAN service if it exists
+  ansible.builtin.systemd:
+    name: gdc-vxlan.service
+    enabled: no
+    state: stopped
+  ignore_errors: true
 
-- name: Create vxlan0 interface
-  shell: |
-    ip link add vxlan0 type vxlan id {{ vxlan_id }} dev ens4 dstport 4789
-    ip link set dev vxlan0 mtu 1410
-  register: vxlan_create
+- name: Template the VXLAN setup script
+  ansible.builtin.template:
+    src: setup-gem-vxlan.sh.j2
+    dest: /usr/local/bin/setup-gem-vxlan.sh
+    mode: '0755'
+    owner: root
+    group: root
 
-- name: Append FDB entries for other nodes
-  shell: |
-    bridge fdb append to 00:00:00:00:00:00 dst {{ hostvars[item].internal_ip }} dev vxlan0
-  loop: "{{ groups['gdc_nodes'] }}"
-  when: "item != inventory_hostname"
+- name: Template the systemd service for VXLAN persistence
+  ansible.builtin.template:
+    src: gem-vxlan.service.j2
+    dest: /etc/systemd/system/gem-vxlan.service
+    mode: '0644'
+    owner: root
+    group: root
 
-- name: Assign IP address to vxlan0 and bring interface up
-  shell: |
-    ip addr add {{ vxlan_ip }}/24 dev vxlan0
-    ip link set up dev vxlan0
-  register: ip_assign
-
-# --- Secondary Emulated Networks ---
-- name: Ensure clean state by deleting existing secondary VXLANs
-  shell: "ip link delete gdcenet0.{{ item.vlan_id }}"
-  failed_when: false
-  changed_when: false
-  loop: "{{ secondary_networks }}"
-  when: secondary_networks is defined
-
-- name: Create secondary VXLAN interfaces
-  shell: |
-    ip link add gdcenet0.{{ item.vlan_id }} type vxlan id {{ item.vlan_id }} dev ens4 dstport 4789
-    ip link set dev gdcenet0.{{ item.vlan_id }} mtu 1410
-  loop: "{{ secondary_networks }}"
-  when: secondary_networks is defined
-
-- name: Append FDB entries for secondary VXLANs across all nodes
-  shell: |
-    bridge fdb append to 00:00:00:00:00:00 dst {{ hostvars[item.1].internal_ip }} dev gdcenet0.{{ item.0.vlan_id }}
-  loop: "{{ secondary_networks | product(groups['gdc_nodes']) | list }}"
-  when: "secondary_networks is defined and item.1 != inventory_hostname"
-
-- name: Bring secondary VXLAN interfaces up and assign IP
-  shell: |
-    # Calculate the base IP from the subnet (e.g. 172.16.10.0/24 -> 172.16.10)
-    SUBNET_BASE=$(echo "{{ item.subnet }}" | cut -d. -f1-3)
-
-    # Determine the host octet based on the hostname. Edge router gets 254. Workstation gets 100.
-    if [[ "{{ inventory_hostname }}" == "gem_admin_ws" ]]; then
-      HOST_OCTET="100"
-    elif [[ "{{ inventory_hostname }}" == "edge_router_host" ]]; then
-      HOST_OCTET="254"
-    else
-      # Extract node number from 'node1', 'node2', etc and add 1 (so node1 gets .2)
-      NODE_NUM=$(echo "{{ inventory_hostname }}" | grep -oE '[0-9]+$')
-      HOST_OCTET=$((NODE_NUM + 1))
-    fi
-
-    IP_CIDR="${SUBNET_BASE}.${HOST_OCTET}/24"
-
-    ip addr add ${IP_CIDR} dev gdcenet0.{{ item.vlan_id }} || true
-    ip link set up dev gdcenet0.{{ item.vlan_id }}
-  loop: "{{ secondary_networks }}"
-  when: secondary_networks is defined
+- name: Enable and start the GEM VXLAN service
+  ansible.builtin.systemd:
+    name: gem-vxlan.service
+    enabled: yes
+    state: started
+    daemon_reload: yes

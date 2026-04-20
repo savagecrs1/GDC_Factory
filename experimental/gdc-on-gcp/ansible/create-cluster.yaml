@@ -3,7 +3,7 @@
   hosts: workstation
   become: yes
   tasks:
-    - name: Fetch standard user public key from workstation
+    - name: Fetch platform user public key from workstation
       fetch:
         src: "{{ gem_home }}/.ssh/id_rsa.pub"
         dest: /tmp/ws_id_rsa.pub

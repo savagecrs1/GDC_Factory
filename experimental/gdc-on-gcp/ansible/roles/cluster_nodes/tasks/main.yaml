@@ -31,7 +31,7 @@
       fi
   become: yes
 
-- name: Ensure standard user exists
+- name: Ensure platform user exists
   user:
     name: "{{ gem_user }}"
     state: present
@@ -48,7 +48,7 @@
     groups: docker
     append: yes
 
-- name: Grant passwordless sudo to standard user
+- name: Grant passwordless sudo to platform user
   copy:
     dest: "/etc/sudoers.d/{{ gem_user }}"
     content: "{{ gem_user }} ALL=(ALL) NOPASSWD: ALL"
