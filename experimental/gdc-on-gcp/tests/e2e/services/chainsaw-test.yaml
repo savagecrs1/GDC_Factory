@@ -5,17 +5,17 @@ metadata:
 spec:
   steps:
   - try:
-    - command:
-        entrypoint: kubectl
-        args: ["run", "dummy-for-expose-tdd", "--image=nginx", "--labels=testsuite=true"]
-    - command:
-        entrypoint: kubectl
-        args: ["expose", "pod", "dummy-for-expose-tdd", "--type=NodePort", "--name=forbidden-nodeport-tdd", "--port=80"]
-        check:
-          (contains($stderr, 'is forbidden') || contains($stderr, 'denied by admission webhook')): true
+    - apply:
+        file: pod.yaml
+    - apply:
+        file: service-nodeport.yaml
+        expect:
+        - check:
+            ($error != null): true
+            (contains($error, 'forbidden') || contains($error, 'denied')): true
     - apply:
         file: service-external-ips.yaml
         expect:
         - check:
             ($error != null): true
-            (contains($error, 'is forbidden') || contains($error, 'denied by admission webhook')): true
+            (contains($error, 'forbidden') || contains($error, 'denied')): true

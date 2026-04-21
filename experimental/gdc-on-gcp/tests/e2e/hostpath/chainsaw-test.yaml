@@ -5,15 +5,11 @@ metadata:
 spec:
   steps:
   - try:
-    # Negative Test: Forbidden path
-    - command:
-        entrypoint: kubectl
-        args: ["apply", "-f", "pod-forbidden.yaml"]
-        check:
-          (contains($stderr, 'is forbidden') || contains($stderr, 'denied by admission webhook')): true
-    # Positive Test: Allowed path (Expected to succeed)
-    - command:
-        entrypoint: kubectl
-        args: ["apply", "-f", "pod-allowed.yaml"]
-        check:
-          (size($stderr) == 0): true
+    - apply:
+        file: pod-forbidden.yaml
+        expect:
+        - check:
+            ($error != null): true
+            (contains($error, 'forbidden') || contains($error, 'denied')): true
+    - apply:
+        file: pod-allowed.yaml

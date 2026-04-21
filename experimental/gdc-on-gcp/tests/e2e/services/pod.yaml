@@ -1,12 +1,11 @@
 apiVersion: v1
 kind: Pod
 metadata:
+  name: dummy-for-expose-tdd
   labels:
     testsuite: "true"
-  name: forbidden-host-network-tdd
 spec:
   automountServiceAccountToken: false
-  hostNetwork: true
   containers:
   - name: nginx
     image: nginx

@@ -5,6 +5,7 @@ metadata:
     testsuite: "true"
   name: forbidden-privileged-tdd
 spec:
+  automountServiceAccountToken: false
   containers:
   - name: nginx
     image: nginx

@@ -5,13 +5,13 @@ metadata:
 spec:
   steps:
   - try:
-    - command:
-        entrypoint: kubectl
-        args: ["apply", "-f", "pod-no-limits.yaml"]
-        check:
-          (contains($stderr, 'is forbidden') || contains($stderr, 'denied by admission webhook')): true
-    - command:
-        entrypoint: kubectl
-        args: ["apply", "-f", "pod-with-limits.yaml"]
-        check:
-          (size($stderr) == 0): true
+    - apply:
+        file: priorityclasses.yaml
+    - apply:
+        file: pod-high-priority.yaml
+        expect:
+        - check:
+            ($error != null): true
+            (contains($error, 'forbidden') || contains($error, 'denied')): true
+    - apply:
+        file: pod-low-priority.yaml

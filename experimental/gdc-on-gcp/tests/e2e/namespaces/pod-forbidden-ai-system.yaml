@@ -1,0 +1,9 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: forbidden-ai-system-tdd
+  namespace: ai-system
+spec:
+  containers:
+  - name: nginx
+    image: nginx

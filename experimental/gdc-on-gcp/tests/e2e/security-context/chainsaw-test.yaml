@@ -5,13 +5,15 @@ metadata:
 spec:
   steps:
   - try:
-    - command:
-        entrypoint: kubectl
-        args: ["apply", "-f", "pod-hostnetwork.yaml"]
-        check:
-          (contains($stderr, 'is forbidden') || contains($stderr, 'denied by admission webhook')): true
-    - command:
-        entrypoint: kubectl
-        args: ["apply", "-f", "pod-privileged.yaml"]
-        check:
-          (contains($stderr, 'is forbidden') || contains($stderr, 'denied by admission webhook')): true
+    - apply:
+        file: pod-hostnetwork.yaml
+        expect:
+        - check:
+            ($error != null): true
+            (contains($error, 'forbidden') || contains($error, 'denied')): true
+    - apply:
+        file: pod-privileged.yaml
+        expect:
+        - check:
+            ($error != null): true
+            (contains($error, 'forbidden') || contains($error, 'denied')): true

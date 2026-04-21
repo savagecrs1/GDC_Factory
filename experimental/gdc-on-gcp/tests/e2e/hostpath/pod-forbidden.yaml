@@ -1,10 +1,11 @@
 apiVersion: v1
 kind: Pod
 metadata:
+  name: forbidden-hostpath-tdd
   labels:
     testsuite: "true"
-  name: forbidden-hostpath-tdd
 spec:
+  automountServiceAccountToken: false
   containers:
   - name: nginx
     image: nginx
