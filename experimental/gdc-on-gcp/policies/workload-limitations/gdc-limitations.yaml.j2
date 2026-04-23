@@ -123,6 +123,7 @@ spec:
       - "system:masters"
       - "system:nodes"
       - "gem-cluster-admin"
+      - "{{ gcp_edge_container_sa }}"
     excludedUserPrefixes:
       - "system:serviceaccount:kube-system:"
       - "system:serviceaccount:gke-system:"
@@ -131,6 +132,7 @@ spec:
       - "system:serviceaccount:metallb-system:"
       - "system:serviceaccount:gatekeeper-system:"
       - "system:serviceaccount:anthos-identity-service:"
+      - "system:serviceaccount:vm-system:"
       - "system:kube-"
     allowedHostPaths:
       - "/dev/hugepages"
@@ -224,6 +226,7 @@ spec:
       - "system:masters"
       - "system:nodes"
       - "gem-cluster-admin"
+      - "{{ gcp_edge_container_sa }}"
     excludedUserPrefixes:
       - "system:serviceaccount:kube-system:"
       - "system:serviceaccount:gke-system:"
@@ -232,6 +235,7 @@ spec:
       - "system:serviceaccount:metallb-system:"
       - "system:serviceaccount:gatekeeper-system:"
       - "system:serviceaccount:anthos-identity-service:"
+      - "system:serviceaccount:vm-system:"
       - "system:kube-"
     restrictedNamespaces:
       - "ai-system"
