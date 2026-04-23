@@ -54,51 +54,86 @@ gcloud iam service-accounts add-iam-policy-binding "${PROVISIONING_SA_EMAIL}" \
 echo "✅ Provisioning Service Account setup complete."
 
 echo "🔄 Generating terraform.tfvars files..."
-cat <<EOF > terraform/bootstrap/terraform.tfvars
+cat <<EOF > terraform/foundation/terraform.tfvars
 project_id            = "${PROJECT_ID}"
 EOF
 
-cat <<EOF > terraform/terraform.tfvars
+cat <<EOF > terraform/admin-workstation/terraform.tfvars
+project_id            = "${PROJECT_ID}"
+EOF
+
+cat <<EOF > terraform/edge-router/terraform.tfvars
+project_id            = "${PROJECT_ID}"
+EOF
+
+cat <<EOF > terraform/cluster/terraform.tfvars
 project_id            = "${PROJECT_ID}"
 provisioning_sa_email = "${PROVISIONING_SA_EMAIL}"
 EOF
 echo "✅ terraform.tfvars created successfully."
 
 echo "🔄 Creating Terraform state bucket..."
-gcloud storage buckets create "gs://gdc-on-gcp-${PROJECT_ID}-tfstate" --project="${PROJECT_ID}" --location="us-central1" || true
-gcloud storage buckets update "gs://gdc-on-gcp-${PROJECT_ID}-tfstate" --versioning || true
+gcloud storage buckets create "gs://gem-${PROJECT_ID}-tfstate" --project="${PROJECT_ID}" --location="us-central1" || true
+gcloud storage buckets update "gs://gem-${PROJECT_ID}-tfstate" --versioning || true
 
 echo "🔄 Generating backend.tf files..."
-cat <<EOF > terraform/bootstrap/backend.tf
+cat <<EOF > terraform/foundation/backend.tf
 terraform {
   backend "gcs" {}
 }
 EOF
 
-cat <<EOF > terraform/backend.tf
+cat <<EOF > terraform/admin-workstation/backend.tf
+terraform {
+  backend "gcs" {}
+}
+EOF
+
+cat <<EOF > terraform/edge-router/backend.tf
+terraform {
+  backend "gcs" {}
+}
+EOF
+
+cat <<EOF > terraform/cluster/backend.tf
 terraform {
   backend "gcs" {}
 }
 EOF
 echo "✅ backend.tf created successfully. Terraform will automatically use GCS for remote state!"
 
-echo "=========================================================================================="
+
 echo "🚀 Bootstrap complete! Please follow these steps to deploy your environment:"
 echo "1. Deploy the foundation:"
-echo "   cd terraform/bootstrap"
-echo "   terraform init -reconfigure -backend-config=\"bucket=gdc-on-gcp-\${PROJECT_ID}-tfstate\" \\"
-echo "                  -backend-config=\"prefix=terraform/bootstrap/state\" \\"
+echo "   cd terraform/foundation"
+echo "   terraform init -reconfigure -backend-config=\"bucket=gem-\${PROJECT_ID}-tfstate\" \\"
+echo "                  -backend-config=\"prefix=foundation/state\" \\"
+echo "                  -backend-config=\"impersonate_service_account=\${PROVISIONING_SA_EMAIL}\""
+echo "   terraform apply"
+echo ""
+echo "2. Deploy the admin workstation:"
+echo "   cd ../admin-workstation"
+echo "   terraform init -reconfigure -backend-config=\"bucket=gem-\${PROJECT_ID}-tfstate\" \\"
+echo "                  -backend-config=\"prefix=admin-workstation/state\" \\"
 echo "                  -backend-config=\"impersonate_service_account=\${PROVISIONING_SA_EMAIL}\""
 echo "   terraform apply"
 echo "   cd ../../ansible"
-echo "   ansible-playbook setup-foundation.yaml"
+echo "   ansible-playbook admin-workstation.yaml"
 echo ""
-echo "2. Set your cluster name: export CLUSTER_NAME='abm-cluster-1'"
+echo "3. Deploy the Edge Router (Optional):"
+echo "   cd ../terraform/edge-router"
+echo "   terraform init -reconfigure -backend-config=\"bucket=gem-\${PROJECT_ID}-tfstate\" \\"
+echo "                  -backend-config=\"prefix=edge-router/state\" \\"
+echo "                  -backend-config=\"impersonate_service_account=\${PROVISIONING_SA_EMAIL}\""
+echo "   terraform apply"
+echo "   cd ../../ansible"
+echo "   ansible-playbook edge-router.yaml"
 echo ""
-echo "3. Deploy the cluster VMs:"
-echo "   cd ../"
-echo "   terraform init -reconfigure -backend-config=\"bucket=gdc-on-gcp-\${PROJECT_ID}-tfstate\" \\"
+echo "4. Set your cluster name: export CLUSTER_NAME='abm-cluster-1'"
+echo ""
+echo "5. Deploy the cluster VMs:"
+echo "   cd ../terraform/cluster"
+echo "   terraform init -reconfigure -backend-config=\"bucket=gem-\${PROJECT_ID}-tfstate\" \\"
 echo "                  -backend-config=\"prefix=clusters/\${CLUSTER_NAME}/state\" \\"
 echo "                  -backend-config=\"impersonate_service_account=\${PROVISIONING_SA_EMAIL}\""
 echo "   terraform apply -var=\"cluster_name=\${CLUSTER_NAME}\""
-echo "=========================================================================================="
