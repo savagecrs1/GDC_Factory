@@ -1,0 +1,6 @@
+---
+- name: Setup Edge Router
+  hosts: edge_router
+  become: yes
+  roles:
+    - edge_router

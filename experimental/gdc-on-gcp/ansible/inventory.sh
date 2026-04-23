@@ -1,58 +1,85 @@
 #!/bin/bash
 # inventory.sh
-# Dynamic inventory script that reads Terraform outputs and configures IAP tunneling.
+# Dynamic inventory script that aggregates Terraform outputs from the decoupled tiers.
 
 set -euo pipefail
 
-TF_DIR="../terraform"
+# Helper function to get output from a specific terraform directory
+get_tf_output() {
+  local dir=$1
+  local key=$2
+  if [ -d "$dir/.terraform" ]; then
+    local val=$(terraform -chdir="$dir" output -raw "$key" 2>/dev/null || echo "")
+    if [[ "$val" == *"No outputs"* ]] || [[ "$val" == *"Warning"* ]] || [[ "$val" == *"Error"* ]]; then
+      echo ""
+    else
+      echo "$val"
+    fi
+  else
+    echo ""
+  fi
+}
 
-# Ensure terraform output is available
-if ! command -v terraform &> /dev/null; then
+get_tf_json() {
+  local dir=$1
+  local key=$2
+  local json_key=$3
+  if [ -d "$dir/.terraform" ]; then
+    local result=$(terraform -chdir="$dir" output -json "$key" 2>/dev/null | jq -r ".$json_key")
+    if [ "$result" == "null" ] || [ -z "$result" ]; then
+      echo ""
+    else
+      echo "$result"
+    fi
+  else
+    echo ""
+  fi
+}
+
+# Fetch Admin Workstation details (Required)
+GEM_WS_NAME=$(get_tf_output "../terraform/admin-workstation" "workstation_name")
+GEM_WS_INTERNAL_IP=$(get_tf_output "../terraform/admin-workstation" "workstation_ip")
+GCP_PROJECT=$(get_tf_output "../terraform/admin-workstation" "project_id")
+GCP_ZONE=$(get_tf_output "../terraform/admin-workstation" "zone")
+
+# Fallback if somehow missing
+if [ -z "$GCP_PROJECT" ]; then
+  GCP_PROJECT=$(get_tf_output "../terraform/foundation" "project_id")
+fi
+GCP_PROJECT_NUMBER=$(get_tf_output "../terraform/foundation" "project_number")
+
+# Fetch Cluster details (Optional)
+CLUSTER_DIR="../terraform/cluster"
+NODE1_NAME=$(get_tf_json "$CLUSTER_DIR" "cluster_nodes_names" "node1")
+NODE2_NAME=$(get_tf_json "$CLUSTER_DIR" "cluster_nodes_names" "node2")
+NODE3_NAME=$(get_tf_json "$CLUSTER_DIR" "cluster_nodes_names" "node3")
+
+NODE1_INTERNAL_IP=$(get_tf_json "$CLUSTER_DIR" "cluster_nodes_ips" "node1")
+NODE2_INTERNAL_IP=$(get_tf_json "$CLUSTER_DIR" "cluster_nodes_ips" "node2")
+NODE3_INTERNAL_IP=$(get_tf_json "$CLUSTER_DIR" "cluster_nodes_ips" "node3")
+
+CLUSTER_NAME=$(get_tf_output "$CLUSTER_DIR" "cluster_name")
+if [ -z "$CLUSTER_NAME" ]; then
+  CLUSTER_NAME="abm-cluster-1"
+fi
+BMCTL_VERSION=$(get_tf_output "$CLUSTER_DIR" "bmctl_version")
+
+# Fetch Edge Router details (Optional)
+EDGE_ROUTER_IP=$(get_tf_output "../terraform/edge-router" "edge_router_ip")
+EDGE_ROUTER_NAME=$(get_tf_output "../terraform/edge-router" "edge_router_name")
+
+# If Admin WS isn't deployed yet, return empty inventory
+if [ -z "$GEM_WS_NAME" ]; then
   echo "{}"
   exit 0
 fi
-
-cd "$TF_DIR" || exit 1
-
-# If terraform is not initialized or state is missing, return empty
-if ! terraform output -json &> /dev/null || [ "$(terraform output -json 2>/dev/null)" == "{}" ]; then
-  echo "{}"
-  exit 0
-fi
-
-# Get outputs
-GCP_PROJECT=$(terraform output -raw project_id 2>/dev/null || echo "")
-GCP_ZONE=$(terraform output -raw zone 2>/dev/null || echo "")
-GEM_WS_NAME=$(terraform output -raw workstation_name 2>/dev/null || echo "")
-GEM_WS_INTERNAL_IP=$(terraform output -raw workstation_ip 2>/dev/null || echo "")
-
-NODE1_NAME=$(terraform output -json cluster_nodes_names 2>/dev/null | jq -r '.node1' || echo "")
-NODE2_NAME=$(terraform output -json cluster_nodes_names 2>/dev/null | jq -r '.node2' || echo "")
-NODE3_NAME=$(terraform output -json cluster_nodes_names 2>/dev/null | jq -r '.node3' || echo "")
-
-NODE1_INTERNAL_IP=$(terraform output -json cluster_nodes_ips 2>/dev/null | jq -r '.node1' || echo "")
-NODE2_INTERNAL_IP=$(terraform output -json cluster_nodes_ips 2>/dev/null | jq -r '.node2' || echo "")
-NODE3_INTERNAL_IP=$(terraform output -json cluster_nodes_ips 2>/dev/null | jq -r '.node3' || echo "")
-
-# Fetch Edge Router details (if deployed)
-EDGE_ROUTER_IP=""
-EDGE_ROUTER_NAME=""
-if [ -d "edge-router/.terraform" ]; then
-  EDGE_ROUTER_IP=$(terraform -chdir=edge-router output -raw edge_router_ip 2>/dev/null || echo "")
-  EDGE_ROUTER_NAME=$(terraform -chdir=edge-router output -raw edge_router_name 2>/dev/null || echo "")
-fi
-
-# Use standard SSH user since OS Login is disabled
-CLUSTER_NAME="$(terraform output -raw cluster_name 2>/dev/null || echo 'abm-cluster-1')"
 
 # Deterministic Hashing Scheme for Network Isolation
-# Generate a pseudo-random hash from the cluster name to ensure unique networks
 HASH=$(echo -n "$CLUSTER_NAME" | cksum | awk '{print $1}')
-VXLAN_ID=$(( HASH % 16000000 + 100 ))  # Safe VNI range (100 - 16M)
-OCTET3=$(( HASH % 254 + 1 ))           # Safe subnet range (1 - 254)
+VXLAN_ID=$(( HASH % 16000000 + 100 ))
+OCTET3=$(( HASH % 254 + 1 ))
 VXLAN_BASE="10.200.${OCTET3}"
 
-# Use standard SSH user since OS Login is disabled
 GCP_USER="${USER:-$(whoami)}"
 
 # Build JSON inventory
@@ -64,8 +91,9 @@ cat <<EOF
       "ansible_python_interpreter": "/usr/bin/python3",
       "ansible_user": "${GCP_USER}",
       "gcp_project_id": "${GCP_PROJECT}",
+      "gcp_project_number": "${GCP_PROJECT_NUMBER}",
       "tf_cluster_name": "${CLUSTER_NAME}",
-      "bmctl_version": "$(terraform output -raw bmctl_version 2>/dev/null || echo '')",
+$(if [ -n "$BMCTL_VERSION" ]; then echo "      \"bmctl_version\": \"${BMCTL_VERSION}\","; fi)
       "vxlan_id": "${VXLAN_ID}",
       "vxlan_base_ip": "${VXLAN_BASE}"
     }
@@ -74,30 +102,35 @@ cat <<EOF
     "hosts": ["gem_admin_ws"]
   },
   "cluster_nodes": {
-    "hosts": ["node1", "node2", "node3"]
+    "hosts": $(if [ -n "$NODE1_NAME" ]; then echo "[\"node1\", \"node2\", \"node3\"]"; else echo "[]"; fi)
   },
   "edge_router": {
     "hosts": $(if [ -n "$EDGE_ROUTER_NAME" ]; then echo "[\"edge_router_host\"]"; else echo "[]"; fi)
   },
   "gdc_nodes": {
-    "children": ["workstation", "cluster_nodes"$(if [ -n "$EDGE_ROUTER_NAME" ]; then echo ', "edge_router"'; fi)]
+    "children": [
+      "workstation"
+      $(if [ -n "$NODE1_NAME" ]; then echo ', "cluster_nodes"'; fi)
+      $(if [ -n "$EDGE_ROUTER_NAME" ]; then echo ', "edge_router"'; fi)
+    ]
   },
   "_meta": {
     "hostvars": {
-$(if [ -n "$EDGE_ROUTER_NAME" ]; then cat <<INNER_EOF
-      "edge_router_host": {
-        "ansible_host": "${EDGE_ROUTER_NAME}",
-        "internal_ip": "${EDGE_ROUTER_IP}",
-        "vxlan_ip": "${VXLAN_BASE}.254"
-      },
-INNER_EOF
-fi)
       "gem_admin_ws": {
         "ansible_host": "${GEM_WS_NAME}",
         "internal_ip": "${GEM_WS_INTERNAL_IP}",
         "vxlan_ip": "${VXLAN_BASE}.100"
-      },
-      "node1": {
+      }
+$(if [ -n "$EDGE_ROUTER_NAME" ]; then cat <<INNER_EOF
+      , "edge_router_host": {
+        "ansible_host": "${EDGE_ROUTER_NAME}",
+        "internal_ip": "${EDGE_ROUTER_IP}",
+        "vxlan_ip": "${VXLAN_BASE}.254"
+      }
+INNER_EOF
+fi)
+$(if [ -n "$NODE1_NAME" ]; then cat <<INNER_EOF
+      , "node1": {
         "ansible_host": "${NODE1_NAME}",
         "internal_ip": "${NODE1_INTERNAL_IP}",
         "vxlan_ip": "${VXLAN_BASE}.2"
@@ -112,6 +145,8 @@ fi)
         "internal_ip": "${NODE3_INTERNAL_IP}",
         "vxlan_ip": "${VXLAN_BASE}.4"
       }
+INNER_EOF
+fi)
     }
   }
 }

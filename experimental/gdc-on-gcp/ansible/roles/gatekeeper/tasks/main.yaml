@@ -27,9 +27,25 @@
     owner: "{{ gem_user }}"
     group: "{{ gem_user }}"
 
+- name: Render dynamic Gatekeeper limitations template
+  template:
+    src: "{{ playbook_dir }}/../policies/workload-limitations/gdc-limitations.yaml.j2"
+    dest: "{{ gem_home }}/bmctl-workspace/{{ cluster_name }}/policies/workload-limitations/gdc-limitations.yaml"
+    owner: "{{ gem_user }}"
+    group: "{{ gem_user }}"
+    mode: '0644'
+
+- name: Remove raw template file to prevent kubectl parsing errors
+  file:
+    path: "{{ gem_home }}/bmctl-workspace/{{ cluster_name }}/policies/workload-limitations/gdc-limitations.yaml.j2"
+    state: absent
+
 - name: Apply Gatekeeper policies to cluster
   command: >
     kubectl --kubeconfig {{ gem_home }}/bmctl-workspace/{{ cluster_name }}/{{ cluster_name }}-kubeconfig
     apply -f {{ gem_home }}/bmctl-workspace/{{ cluster_name }}/policies/ --recursive
   register: apply_policies
+  retries: 5
+  delay: 5
+  until: apply_policies.rc == 0
   changed_when: '"created" in apply_policies.stdout or "configured" in apply_policies.stdout'

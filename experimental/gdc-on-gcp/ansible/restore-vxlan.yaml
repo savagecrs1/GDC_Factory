@@ -1,0 +1,6 @@
+---
+- name: Restore VxLAN on Workstation
+  hosts: gdc_nodes
+  become: yes
+  roles:
+    - vxlan

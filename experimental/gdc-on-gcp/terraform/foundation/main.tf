@@ -1,9 +1,9 @@
 terraform {
-  required_version = ">= 1.5.0"
+  required_version = ">= 1.12.2"
   required_providers {
     google = {
       source  = "hashicorp/google"
-      version = "~> 7.26.0"
+      version = "~> 7.29.0"
     }
   }
 }
@@ -13,6 +13,8 @@ provider "google" {
   region  = var.region
   zone    = var.zone
 }
+
+data "google_project" "project" {}
 
 # Essential APIs
 resource "google_project_service" "apis" {

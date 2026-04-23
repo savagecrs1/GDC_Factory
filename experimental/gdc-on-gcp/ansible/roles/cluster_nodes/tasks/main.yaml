@@ -12,6 +12,10 @@
       - lvm2
     state: present
     update_cache: yes
+  register: apt_status
+  until: apt_status is success
+  delay: 10
+  retries: 3
 
 - name: Create TopoLVM partition (remaining 1300GB)
   shell:

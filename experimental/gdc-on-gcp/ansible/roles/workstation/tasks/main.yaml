@@ -91,14 +91,7 @@
     state: restarted
   when: docker_mtu_config.changed
 
-# The bmctl installer runs a local KinD cluster that attempts to send packets
-# at the default Docker MTU (1500). Because our custom VxLAN overlay has an MTU of 1410,
-# large API server payloads (like TLS handshakes) get dropped, causing EOF errors.
-# This iptables rule dynamically shrinks the TCP MSS of traffic exiting the workstation
-# onto the vxlan0 interface to fit within the Path MTU limit.
-- name: Clamp MSS to PMTU for vxlan0 to fix KinD MTU issues
-  command: iptables -t mangle -A POSTROUTING -p tcp --tcp-flags SYN,RST SYN -o vxlan0 -j TCPMSS --clamp-mss-to-pmtu
-  become: yes
+
 
 - name: Ensure .ssh directory exists
   file:

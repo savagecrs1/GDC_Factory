@@ -1,30 +1,29 @@
 ---
-- name: Disable old GDC VXLAN service if it exists
-  ansible.builtin.systemd:
-    name: gdc-vxlan.service
-    enabled: no
-    state: stopped
-  ignore_errors: true
+- name: Set dynamic interface and service names
+  set_fact:
+    vx_iface: "vx-{{ cluster_name | replace('-', '') | truncate(11, True, '', 0) }}"
+    vx_service: "vxlan-{{ cluster_name }}.service"
+    vx_script: "/usr/local/bin/setup-vxlan-{{ cluster_name }}.sh"
 
 - name: Template the VXLAN setup script
   ansible.builtin.template:
-    src: setup-gem-vxlan.sh.j2
-    dest: /usr/local/bin/setup-gem-vxlan.sh
+    src: setup-vxlan.sh.j2
+    dest: "{{ vx_script }}"
     mode: '0755'
     owner: root
     group: root
 
 - name: Template the systemd service for VXLAN persistence
   ansible.builtin.template:
-    src: gem-vxlan.service.j2
-    dest: /etc/systemd/system/gem-vxlan.service
+    src: vxlan.service.j2
+    dest: "/etc/systemd/system/{{ vx_service }}"
     mode: '0644'
     owner: root
     group: root
 
-- name: Enable and start the GEM VXLAN service
+- name: Enable and start the per-cluster VXLAN service
   ansible.builtin.systemd:
-    name: gem-vxlan.service
+    name: "{{ vx_service }}"
     enabled: yes
-    state: started
+    state: restarted
     daemon_reload: yes

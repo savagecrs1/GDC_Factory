@@ -14,7 +14,7 @@ resource "google_compute_subnetwork" "gdc_subnet" {
 }
 
 resource "google_compute_firewall" "gdc_allow_internal" {
-  name    = "gdc-so-allow-internal"
+  name    = "gem-clusters-allow-internal"
   project = var.project_id
   network = google_compute_network.gdc_vpc.self_link
 
@@ -30,11 +30,11 @@ resource "google_compute_firewall" "gdc_allow_internal" {
 
   source_ranges = [var.gce_subnetwork_cidr]
   # Targets VMs with these specific tags
-  target_tags   = ["http-server", "https-server"]
+  target_tags = ["http-server", "https-server"]
 }
 
 resource "google_compute_firewall" "gdc_allow_ssh" {
-  name    = "gdc-so-allow-iap-ssh"
+  name    = "gem-clusters-allow-iap-ssh"
   project = var.project_id
   network = google_compute_network.gdc_vpc.self_link
 
@@ -45,7 +45,7 @@ resource "google_compute_firewall" "gdc_allow_ssh" {
 
   source_ranges = ["35.235.240.0/20"] # IAP Range
   # Targets VMs with these specific tags
-  target_tags   = ["http-server", "https-server"]
+  target_tags = ["http-server", "https-server"]
 }
 
 resource "google_compute_router" "router" {

@@ -14,12 +14,12 @@ variable "zone" {
 
 variable "gce_network" {
   type    = string
-  default = "gdc-so-vpc"
+  default = "gem-clusters-vpc"
 }
 
 variable "gce_subnetwork" {
   type    = string
-  default = "gdc-so-subnet"
+  default = "gem-clusters-subnet"
 }
 
 variable "gce_subnetwork_cidr" {

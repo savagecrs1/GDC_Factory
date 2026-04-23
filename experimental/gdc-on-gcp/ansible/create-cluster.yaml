@@ -12,6 +12,7 @@
 - name: Setup SSH Access and Base OS on Cluster Nodes
   hosts: cluster_nodes
   become: yes
+  any_errors_fatal: true
   roles:
     - cluster_nodes
 

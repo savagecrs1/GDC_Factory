@@ -3,6 +3,17 @@ data "google_compute_image" "ubuntu" {
   project = "ubuntu-os-cloud"
 }
 
+data "google_compute_network" "gdc_vpc" {
+  name    = var.gce_network
+  project = var.project_id
+}
+
+data "google_compute_subnetwork" "gdc_subnet" {
+  name    = var.gce_subnetwork
+  region  = var.region
+  project = var.project_id
+}
+
 resource "google_compute_instance" "admin_ws" {
   name         = "gem-admin-ws"
   machine_type = "e2-standard-4"
@@ -24,8 +35,8 @@ resource "google_compute_instance" "admin_ws" {
   }
 
   network_interface {
-    network    = google_compute_network.gdc_vpc.self_link
-    subnetwork = google_compute_subnetwork.gdc_subnet.self_link
+    network    = data.google_compute_network.gdc_vpc.self_link
+    subnetwork = data.google_compute_subnetwork.gdc_subnet.self_link
   }
 
   shielded_instance_config {
@@ -41,6 +52,4 @@ resource "google_compute_instance" "admin_ws" {
   service_account {
     scopes = ["cloud-platform"]
   }
-
-  depends_on = [google_project_service.apis]
 }

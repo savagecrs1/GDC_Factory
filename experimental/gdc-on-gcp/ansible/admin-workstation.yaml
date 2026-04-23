@@ -1,0 +1,6 @@
+---
+- name: Prepare Administrative Workstation
+  hosts: workstation
+  become: yes
+  roles:
+    - workstation

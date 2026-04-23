@@ -1,9 +1,9 @@
 terraform {
-  required_version = ">= 1.5.0"
+  required_version = ">= 1.12.2"
   required_providers {
     google = {
       source  = "hashicorp/google"
-      version = "~> 7.26.0"
+      version = "~> 7.29.0"
     }
   }
 }
@@ -15,11 +15,11 @@ provider "google" {
 }
 
 data "google_compute_network" "gdc_vpc" {
-  name = "gdc-so-vpc"
+  name = "gem-clusters-vpc"
 }
 
 data "google_compute_subnetwork" "gdc_subnet" {
-  name   = "gdc-so-subnet"
+  name   = "gem-clusters-subnet"
   region = var.region
 }
 

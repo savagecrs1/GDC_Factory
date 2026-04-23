@@ -1,0 +1,15 @@
+[Unit]
+Description=GEM on GCP VXLAN Overlay Emulation ({{ cluster_name }})
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart={{ vx_script }}
+# Remove the old IP tables rule when stopping the service
+ExecStop=/sbin/iptables -t mangle -D POSTROUTING -p tcp --tcp-flags SYN,RST SYN -o {{ vx_iface }} -j TCPMSS --clamp-mss-to-pmtu 2>/dev/null || true
+ExecStop=/sbin/ip link delete {{ vx_iface }} 2>/dev/null || true
+
+[Install]
+WantedBy=multi-user.target
