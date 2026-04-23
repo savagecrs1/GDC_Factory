@@ -1,6 +1,0 @@
----
-- name: Setup VxLAN on all GCE instances
-  hosts: gdc_nodes
-  become: yes
-  roles:
-    - vxlan
