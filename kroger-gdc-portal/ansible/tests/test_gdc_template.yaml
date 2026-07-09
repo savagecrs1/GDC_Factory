@@ -1,0 +1,88 @@
+# Copyright 2026 Google LLC
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     https://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+---
+- name: Test GDC Template Rendering Setup
+  hosts: localhost
+  gather_facts: false
+  tasks:
+    - name: Add mock node1
+      add_host:
+        name: node1
+        vxlan_ip: 10.200.0.2
+
+    - name: Add mock node2
+      add_host:
+        name: node2
+        vxlan_ip: 10.200.0.3
+
+    - name: Add mock node3
+      add_host:
+        name: node3
+        vxlan_ip: 10.200.0.4
+
+- name: Test GDC Template Rendering Execution
+  hosts: localhost
+  gather_facts: false
+  vars:
+    cluster_name: test-cluster
+    bmctl_version: "1.28.1-gke.46"
+    gcp_project_id: "test-project"
+    gem_home: "/home/gdc"
+    vxlan_base_ip: "10.200.0"
+    pod_cidrBlocks: "10.0.0.0/17"
+    services_cidrBlocks: "10.96.0.0/12"
+    maxPodsPerNode: 250
+    cluster_node_taints:
+      - key: "node-role.kubernetes.io/master"
+        effect: "PreferNoSchedule"
+      - key: "node-role.kubernetes.io/control-plane"
+        effect: "PreferNoSchedule"
+  tasks:
+    - name: Ensure test directory exists
+      file:
+        path: "/tmp/gdc_test"
+        state: directory
+
+    - name: Render cluster configuration template
+      template:
+        src: "../roles/gdc_deploy/templates/cluster.yaml.j2"
+        dest: "/tmp/gdc_test/cluster.yaml"
+
+    - name: Slurp rendered template
+      slurp:
+        src: "/tmp/gdc_test/cluster.yaml"
+      register: rendered_template
+
+    - name: Debug rendered template
+      debug:
+        msg: "{{ rendered_template['content'] | b64decode }}"
+
+    - name: Verify template contents
+      assert:
+        that:
+          - "'name: test-cluster' in (rendered_template['content'] | b64decode)"
+          - "'anthosBareMetalVersion: 1.28.1-gke.46' in (rendered_template['content'] | b64decode)"
+          - "'projectID: test-project' in (rendered_template['content'] | b64decode)"
+          - "'- address: 10.200.0.2' in (rendered_template['content'] | b64decode)"
+          - "'- address: 10.200.0.3' in (rendered_template['content'] | b64decode)"
+          - "'- address: 10.200.0.4' in (rendered_template['content'] | b64decode)"
+          - "'key: node-role.kubernetes.io/master' in (rendered_template['content'] | b64decode)"
+          - "'key: node-role.kubernetes.io/control-plane' in (rendered_template['content'] | b64decode)"
+        fail_msg: "Template rendering failed one or more assertions."
+
+    - name: Clean up test directory
+      file:
+        path: "/tmp/gdc_test"
+        state: absent
