@@ -18,17 +18,51 @@
 
 set -euo pipefail
 
-if [[ -z "${PROJECT_ID:-}" ]]; then
-  echo "🚨 Environment variable PROJECT_ID is not set."
+PROJECT_ID="${PROJECT_ID:-${1:-}}"
+if [[ -z "${PROJECT_ID}" ]]; then
+  echo "🚨 Environment variable PROJECT_ID (or positional argument $1) is not set."
   exit 1
 fi
 
+echo "🔍 Verifying GCP project '${PROJECT_ID}' exists and is accessible..."
+if ! gcloud projects describe "${PROJECT_ID}" >/dev/null 2>&1; then
+  echo "❌ ERROR: Project '${PROJECT_ID}' does not exist or you do not have permission to access it!"
+  echo "💡 Tip: Check for typos in the project ID. For example, use 'kroger-store-test1' instead of 'gem-kroger-store-test1'."
+  exit 1
+fi
+
+echo "💳 Checking billing status for '${PROJECT_ID}'..."
+if ! gcloud beta billing projects describe "${PROJECT_ID}" --format="value(billingEnabled)" | grep -q "True"; then
+  echo "⚠️ Billing is not enabled on '${PROJECT_ID}'. Attempting to link billing account..."
+  if [[ -n "${BILLING_ACCOUNT_ID:-}" ]]; then
+    BILLING_ACC="${BILLING_ACCOUNT_ID##*/}"
+  else
+    BILLING_ACC=$(gcloud billing accounts list --format="value(name)" --filter="open=true" | head -n 1 || true)
+    BILLING_ACC="${BILLING_ACC##*/}"
+  fi
+  if [[ -n "$BILLING_ACC" ]]; then
+    gcloud beta billing projects link "${PROJECT_ID}" --billing-account="${BILLING_ACC}" || {
+      echo "❌ ERROR: Failed to link billing account '${BILLING_ACC}' on '${PROJECT_ID}'."
+      exit 1
+    }
+  else
+    echo "❌ ERROR: No billing account provided or found. Cannot enable billing on '${PROJECT_ID}'."
+    exit 1
+  fi
+fi
+
 echo "🔄 Enabling essential APIs..."
-gcloud services enable cloudresourcemanager.googleapis.com serviceusage.googleapis.com --project="${PROJECT_ID}"
+gcloud services enable cloudresourcemanager.googleapis.com serviceusage.googleapis.com orgpolicy.googleapis.com --project="${PROJECT_ID}"
 
 # GCP APIs can sometimes take a moment to propagate globally after being enabled.
 echo "⏳ Waiting for APIs to fully activate (10s)..."
 sleep 10
+
+echo "🔄 Relaxing Org Policy constraints for GDCSO infrastructure deployment..."
+gcloud org-policies reset constraints/iam.disableServiceAccountKeyCreation --project="${PROJECT_ID}" --quiet 2>/dev/null || true
+gcloud org-policies reset constraints/compute.requireOsLogin --project="${PROJECT_ID}" --quiet 2>/dev/null || true
+gcloud org-policies reset constraints/compute.vmCanIpForward --project="${PROJECT_ID}" --quiet 2>/dev/null || true
+gcloud org-policies reset constraints/compute.requireShieldedVm --project="${PROJECT_ID}" --quiet 2>/dev/null || true
 
 PROVISIONING_SA_NAME="tf-provisioner"
 PROVISIONING_SA_EMAIL="${PROVISIONING_SA_NAME}@${PROJECT_ID}.iam.gserviceaccount.com"
@@ -37,6 +71,9 @@ echo "🔄 Creating provisioning Service Account: ${PROVISIONING_SA_NAME}..."
 gcloud iam service-accounts create ${PROVISIONING_SA_NAME} \
   --display-name="Terraform Provisioning SA for GDCSO" \
   --project="${PROJECT_ID}" || true
+
+echo "⏳ Waiting 15s for IAM Service Account propagation across GCP..."
+sleep 15
 
 echo "🔄 Granting roles to the provisioning Service Account..."
 # Required roles for Terraform to manage infrastructure
@@ -49,23 +86,59 @@ ROLES=(
 )
 
 for role in "${ROLES[@]}"; do
-  gcloud projects add-iam-policy-binding "${PROJECT_ID}" \
-    --member="serviceAccount:${PROVISIONING_SA_EMAIL}" \
-    --role="${role}" \
-    --condition=None \
-    --no-user-output-enabled
+  echo "  -> Assigning ${role}..."
+  n=0
+  until [ "$n" -ge 5 ]; do
+    gcloud projects add-iam-policy-binding "${PROJECT_ID}" \
+      --member="serviceAccount:${PROVISIONING_SA_EMAIL}" \
+      --role="${role}" \
+      --condition=None \
+      --no-user-output-enabled && break
+    n=$((n+1))
+    echo "  ⚠️ IAM propagation delay detected, retrying in 5s ($n/5)..."
+    sleep 5
+  done
 done
 
 # Allow your user account to impersonate this service account
 USER_EMAIL=$(gcloud config get-value account)
 echo "🔄 Allowing user ${USER_EMAIL} to impersonate ${PROVISIONING_SA_EMAIL}..."
-gcloud iam service-accounts add-iam-policy-binding "${PROVISIONING_SA_EMAIL}" \
-  --member="user:${USER_EMAIL}" \
-  --role="roles/iam.serviceAccountTokenCreator" \
-  --project="${PROJECT_ID}" \
-  --no-user-output-enabled
+n=0
+until [ "$n" -ge 5 ]; do
+  gcloud iam service-accounts add-iam-policy-binding "${PROVISIONING_SA_EMAIL}" \
+    --member="user:${USER_EMAIL}" \
+    --role="roles/iam.serviceAccountTokenCreator" \
+    --project="${PROJECT_ID}" \
+    --no-user-output-enabled && break
+  n=$((n+1))
+  echo "  ⚠️ SA token creator binding delay, retrying in 5s ($n/5)..."
+  sleep 5
+done
+
+echo "⏳ Verifying IAM impersonation propagation for ${PROVISIONING_SA_EMAIL}..."
+n=0
+until [ "$n" -ge 12 ]; do
+  if gcloud auth print-access-token --impersonate-service-account="${PROVISIONING_SA_EMAIL}" >/dev/null 2>&1; then
+    echo "✅ IAM token impersonation successfully verified!"
+    break
+  fi
+  n=$((n+1))
+  echo "  ⚠️ Waiting for token creator permission to propagate across IAM endpoints ($n/12)..."
+  sleep 5
+done
 
 echo "✅ Provisioning Service Account setup complete."
+
+echo "🔑 Uploading local SSH public key to GCP project metadata..."
+PUB_KEY=$(cat ~/.ssh/google_compute_engine.pub 2>/dev/null || cat ~/.ssh/id_ed25519.pub 2>/dev/null || cat ~/.ssh/id_rsa.pub 2>/dev/null || true)
+if [[ -n "$PUB_KEY" ]]; then
+  echo "${USER}:${PUB_KEY}" > /tmp/gcp_ssh_key.pub
+  gcloud compute project-info add-metadata --project="${PROJECT_ID}" --metadata-from-file=ssh-keys=/tmp/gcp_ssh_key.pub --quiet 2>/dev/null || true
+  rm -f /tmp/gcp_ssh_key.pub
+  echo "✅ SSH public key injected into project '${PROJECT_ID}'."
+else
+  echo "⚠️ No local SSH public key found in ~/.ssh. Skipping SSH key injection."
+fi
 
 echo "🔄 Generating terraform.tfvars files..."
 cat <<EOF > terraform/foundation/terraform.tfvars

@@ -38,8 +38,8 @@ data "google_compute_subnetwork" "gdc_subnet" {
 }
 
 data "google_compute_image" "ubuntu" {
-  family  = "ubuntu-2204-lts"
-  project = "ubuntu-os-cloud"
+  family  = "ubuntu-pro-2204-lts"
+  project = "ubuntu-os-pro-cloud"
 }
 
 resource "google_compute_instance" "edge_router" {
@@ -64,7 +64,7 @@ resource "google_compute_instance" "edge_router" {
 
   can_ip_forward = true
 
-  deletion_protection = true
+  deletion_protection = false
 
   metadata = {
     enable-oslogin = "FALSE"

@@ -13,6 +13,12 @@
 # limitations under the License.
 
 ---
+- name: Wait for cloud-init to finish on boot
+  command: cloud-init status --wait
+  changed_when: false
+  retries: 30
+  delay: 5
+
 - name: Ensure required packages are installed
   apt:
     name:
@@ -129,11 +135,6 @@
     dest: /tmp/ws_id_rsa.pub
     flat: yes
 
-- name: Check if Anthos Service Account Key exists on workstation
-  stat:
-    path: "{{ gem_home }}/bm-gcr.json"
-  register: ws_sa_key
-
 - name: Generate Anthos Service Account Key dynamically
   delegate_to: localhost
   become: no
@@ -144,7 +145,6 @@
     --impersonate-service-account=tf-provisioner@{{ gcp_project_id }}.iam.gserviceaccount.com
   args:
     creates: /tmp/bm-gcr.json
-  when: not ws_sa_key.stat.exists
 
 - name: Copy Anthos Service Account Key to workstation
   copy:
@@ -153,7 +153,6 @@
     owner: "{{ gem_user }}"
     group: "{{ gem_user }}"
     mode: '0600'
-  when: not ws_sa_key.stat.exists
 
 - name: Clean up local Anthos Service Account Key
   delegate_to: localhost
@@ -161,4 +160,3 @@
   file:
     path: /tmp/bm-gcr.json
     state: absent
-  when: not ws_sa_key.stat.exists

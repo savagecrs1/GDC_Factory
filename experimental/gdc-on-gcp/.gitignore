@@ -19,3 +19,5 @@ terraform.rc
 *.retry
 .ansible/
 *.ansible
+*.tar.gz
+*.app/

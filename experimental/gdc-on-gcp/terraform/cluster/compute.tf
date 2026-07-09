@@ -21,8 +21,8 @@ locals {
 }
 
 data "google_compute_image" "ubuntu" {
-  family  = "ubuntu-2204-lts"
-  project = "ubuntu-os-cloud"
+  family  = "ubuntu-pro-2204-lts"
+  project = "ubuntu-os-pro-cloud"
 }
 
 resource "google_compute_disk" "gdc_data_disks" {
@@ -41,8 +41,8 @@ resource "google_compute_instance" "gdc_vms" {
   zone         = var.zone
   project      = var.project_id
 
-  # Match GDCc Ice Lake CPU platform
-  min_cpu_platform = "Intel Ice Lake"
+  # Match GDCc Ice Lake CPU platform (E2 instances do not support setting min_cpu_platform)
+  min_cpu_platform = startswith(var.machine_type, "e2-") ? null : "Intel Ice Lake"
 
   # Applies default GCP firewall rules to allow inbound traffic on ports 80 and 443
   tags = ["http-server", "https-server"]
@@ -68,7 +68,7 @@ resource "google_compute_instance" "gdc_vms" {
   can_ip_forward = true
 
   shielded_instance_config {
-    enable_secure_boot          = false
+    enable_secure_boot          = true
     enable_vtpm                 = true
     enable_integrity_monitoring = true
   }

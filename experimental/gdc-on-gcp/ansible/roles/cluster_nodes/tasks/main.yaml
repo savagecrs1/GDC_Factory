@@ -13,6 +13,12 @@
 # limitations under the License.
 
 ---
+- name: Wait for cloud-init to finish on boot
+  command: cloud-init status --wait
+  changed_when: false
+  retries: 30
+  delay: 5
+
 - name: Install required packages
   apt:
     name:

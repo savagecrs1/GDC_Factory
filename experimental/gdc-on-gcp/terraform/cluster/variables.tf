@@ -43,8 +43,8 @@ variable "bmctl_version" {
 
 variable "machine_type" {
   type = string
-  # 32 vCPU, 128GB RAM
-  default = "n2-standard-32"
+  # 8 vCPU, 32GB RAM - Compact Standard (Supports Nested Virtualization)
+  default = "n2-standard-8"
 
 }
 

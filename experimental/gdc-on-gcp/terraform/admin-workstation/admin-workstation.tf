@@ -13,8 +13,8 @@
 # limitations under the License.
 
 data "google_compute_image" "ubuntu" {
-  family  = "ubuntu-2204-lts"
-  project = "ubuntu-os-cloud"
+  family  = "ubuntu-pro-2204-lts"
+  project = "ubuntu-os-pro-cloud"
 }
 
 data "google_compute_network" "gdc_vpc" {
@@ -34,8 +34,7 @@ resource "google_compute_instance" "admin_ws" {
   zone         = var.zone
   project      = var.project_id
 
-  can_ip_forward      = true
-  deletion_protection = true
+  deletion_protection = false
 
   # Applies default GCP firewall rules to allow inbound traffic on ports 80 and 443
   tags = ["http-server", "https-server"]

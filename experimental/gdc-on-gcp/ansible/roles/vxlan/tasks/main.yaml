@@ -39,5 +39,5 @@
   ansible.builtin.systemd:
     name: "{{ vx_service }}"
     enabled: yes
-    state: restarted
+    state: started
     daemon_reload: yes

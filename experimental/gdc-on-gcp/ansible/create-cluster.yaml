@@ -33,6 +33,8 @@
 - name: Setup VxLAN on all GCE instances
   hosts: gdc_nodes
   become: yes
+  vars:
+    cluster_name: "{{ tf_cluster_name }}"
   roles:
     - vxlan
 
