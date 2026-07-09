@@ -19,7 +19,14 @@ The **Google Distributed Cloud (GDC) Connected Hybrid PCI Edge Portal** is an ad
 
 This platform is 100% self-bootstrapping and portable to any Google Cloud organization. It requires no hardcoded environments, external IPs, or VPNs:
 * **IAM Permissions**: Your Google Cloud user account needs **Owner** (or **Editor** + **Project IAM Admin**) on the target GCP Project to allow Terraform to enable APIs, create VPCs, and assign service accounts.
-* **Zero External IPs (IAP Tunneling)**: In accordance with enterprise security standards, cluster nodes and admin workstations do not receive public external IPs. Our automation script dynamically enables **Identity-Aware Proxy (IAP)** and creates standard TCP forwarding rules (`allow-ssh-from-iap` from `35.235.240.0/20`), allowing secure SSH terminal tunneling from anywhere.
+* **Recommended: Zero External IPs (IAP Tunneling)**: In accordance with enterprise zero-trust security standards, cluster nodes and admin workstations do not receive public external IPs by default. Our automation script dynamically enables **Identity-Aware Proxy (IAP)** and creates standard TCP forwarding rules (`allow-ssh-from-iap` from Google's `35.235.240.0/20` range), allowing secure SSH terminal tunneling from anywhere without public internet exposure.
+
+### ⚠️ Alternative: Direct External IPs (Optional Lab Mode)
+If Kroger's organization security policy allows public external IPv4 addresses in non-production sandbox projects, developers can skip IAP tunneling entirely by selecting **External IP Mode** during cluster deployment.
+* **How it works**: The `gem-admin-ws` workstation and cluster nodes are provisioned with ephemeral public IPs, allowing direct SSH and Kubernetes API communication over standard internet routing.
+* **🚨 Security & Compliance Caveats**:
+  * **Public Attack Surface**: Direct SSH daemons and K8s API endpoints become reachable over the internet. You **must** configure strict GCP VPC firewall rules restricting inbound TCP ports 22 and 6443 strictly to authorized Kroger corporate egress CIDRs or corporate VPN IPs.
+  * **PCI-DSS Scope**: In-scope PCI payment workloads (NGPOS, Fuel Systems) running on external-facing nodes require rigorous host-level firewalling, intrusion detection systems (IDS), and QSA re-validation. We strongly recommend **IAP Tunneling (Internal Mode)** for all PCI compliance validation testing.
 
 ---
 
