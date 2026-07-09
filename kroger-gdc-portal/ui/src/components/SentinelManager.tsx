@@ -52,6 +52,7 @@ export default function SentinelManager({ clusterName: initialCluster, projectId
 
   const fetchStatus = async () => {
     try {
+      setLoading(true);
       const res = await fetch(`/api/sentinel/status?projectId=${encodeURIComponent(projectId)}&clusterName=${encodeURIComponent(clusterName)}`);
       const data = await res.json();
       if (res.ok) {
