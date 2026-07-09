@@ -1,0 +1,86 @@
+# Copyright 2026 Google LLC
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     https://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+---
+- name: Create Anthos cluster workspace directory
+  become_user: "{{ gem_user }}"
+  file:
+    path: "{{ gem_home }}/bmctl-workspace/{{ cluster_name }}"
+    state: directory
+    owner: "{{ gem_user }}"
+    group: "{{ gem_user }}"
+
+- name: Create cluster configuration template in workspace
+  become_user: "{{ gem_user }}"
+  template:
+    src: cluster.yaml.j2
+    dest: "{{ gem_home }}/bmctl-workspace/{{ cluster_name }}/{{ cluster_name }}.yaml"
+
+- name: Deploy the GDC Hybrid Cluster
+  become_user: "{{ gem_user }}"
+  command: "bmctl create cluster -c {{ cluster_name }}"
+  args:
+    chdir: "{{ gem_home }}"
+    creates: "{{ gem_home }}/bmctl-workspace/{{ cluster_name }}/{{ cluster_name }}-kubeconfig"
+  environment:
+    GOOGLE_APPLICATION_CREDENTIALS: "{{ gem_home }}/bm-gcr.json"
+  async: 3600
+  poll: 60
+  register: cluster_create
+
+- name: Display cluster creation output
+  debug:
+    var: cluster_create.stdout_lines
+  when: cluster_create is defined and cluster_create.stdout_lines is defined
+
+- name: Create ClusterRoleBinding for GKE Connect Gateway access
+  become: yes
+  delegate_to: node1
+  shell: |
+    cat <<EOF | kubectl --kubeconfig /etc/kubernetes/admin.conf apply -f -
+    apiVersion: rbac.authorization.k8s.io/v1
+    kind: ClusterRoleBinding
+    metadata:
+      name: gcp-sa-cluster-admin-binding
+    subjects:
+    - kind: User
+      name: {{ gcp_cluster_admin_sa }}
+    roleRef:
+      kind: ClusterRole
+      name: cluster-admin
+      apiGroup: rbac.authorization.k8s.io
+    EOF
+  when: cluster_create is not failed
+
+- name: Create ClusterRoleBinding for admin user accounts via GKE Connect Gateway
+  become: yes
+  delegate_to: node1
+  shell: |
+    cat <<EOF | kubectl --kubeconfig /etc/kubernetes/admin.conf apply -f -
+    apiVersion: rbac.authorization.k8s.io/v1
+    kind: ClusterRoleBinding
+    metadata:
+      name: user-admin-binding-{{ item | regex_replace('[^a-zA-Z0-9-]', '-') | lower }}
+    subjects:
+    - kind: User
+      name: {{ item }}
+    roleRef:
+      kind: ClusterRole
+      name: cluster-admin
+      apiGroup: rbac.authorization.k8s.io
+    EOF
+  loop: "{{ gcp_admin_users | default([]) }}"
+  when: cluster_create is not failed
+
+
