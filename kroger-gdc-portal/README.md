@@ -13,7 +13,17 @@ The **Google Distributed Cloud (GDC) Connected Hybrid PCI Edge Portal** is an ad
 
 ---
 
-## 🚀 Two Ways to Deploy
+---
+
+## 🔐 Universal Access & Security Prereqs
+
+This platform is 100% self-bootstrapping and portable to any Google Cloud organization. It requires no hardcoded environments, external IPs, or VPNs:
+* **IAM Permissions**: Your Google Cloud user account needs **Owner** (or **Editor** + **Project IAM Admin**) on the target GCP Project to allow Terraform to enable APIs, create VPCs, and assign service accounts.
+* **Zero External IPs (IAP Tunneling)**: In accordance with enterprise security standards, cluster nodes and admin workstations do not receive public external IPs. Our automation script dynamically enables **Identity-Aware Proxy (IAP)** and creates standard TCP forwarding rules (`allow-ssh-from-iap` from `35.235.240.0/20`), allowing secure SSH terminal tunneling from anywhere.
+
+---
+
+## 🚀 Ways to Deploy & Access the Portal
 
 ### Option A: 1-Click Launch in Google Cloud Shell (No Install Required)
 You can test and deploy Hybrid PCI clusters directly from your web browser using Google Cloud Shell—zero local installation required.
@@ -30,12 +40,8 @@ You can test and deploy Hybrid PCI clusters directly from your web browser using
 
 ---
 
-### Option B: Containerized Deployment via Docker Compose (Recommended for Engineers)
+### Option B: Containerized on Local Laptop (Docker Compose)
 For cloud architects running on local laptops or dedicated workstations, use our self-contained Docker Compose bundle. It automatically mounts your existing Google Cloud SDK (`gcloud`) credentials and SSH keys.
-
-#### Prerequisites
-- [Docker Desktop](https://www.docker.com/products/docker-desktop) installed and running.
-- Google Cloud CLI authenticated locally (`gcloud auth login` and `gcloud auth application-default login`).
 
 #### 1-Command Startup
 ```bash
@@ -45,6 +51,16 @@ docker-compose up -d --build
 ```
 Once built and started, open your web browser to:
 👉 **http://localhost:3001**
+
+---
+
+### Option C: Running on Remote Cloud Dev VMs (SSH Tunneling)
+If you run the portal container or Node server on a remote headless cloud VM (such as Google Compute Engine or Cloud Workstations) instead of your local laptop, forward port 3001 over SSH:
+```bash
+# Run on your local laptop terminal to proxy port 3001 from the remote VM:
+gcloud compute ssh <YOUR_CLOUD_VM_NAME> --project=<YOUR_DEV_PROJECT> --zone=<ZONE> -- -L 3001:localhost:3001
+```
+Once connected, open **http://localhost:3001** on your local laptop browser!
 
 ---
 
