@@ -1,6 +1,20 @@
 import { runDeploymentSequence, runDestroySequence, getJob, appendLog } from './deployment-runner';
 import { analyzeError, getTriageReports } from './ai-watchdog';
 import { addAuditLog } from './k8s-client';
+import { exec } from 'child_process';
+
+function sendWatchdogAlert(projectId: string, title: string, message: string, isError: boolean = true) {
+  try {
+    const status = isError ? 'FAILED' : 'COMPLETED';
+    const payload = JSON.stringify({ status, message, title });
+    // Trigger Cloud Logging notification event (fires GCP email alert)
+    exec(`gcloud logging write gdc-watchdog '${payload}' --severity=${isError ? 'ERROR' : 'NOTICE'} --payload-type=json --project=${projectId} 2>/dev/null`);
+    // Trigger Mac Desktop banner & chime
+    exec(`osascript -e 'display notification "${message}" with title "${title}" sound name "${isError ? 'Basso' : 'Glass'}"' 2>/dev/null`);
+  } catch {
+    // Ignore notification dispatch errors
+  }
+}
 
 export interface SentinelState {
   loopId: string;
@@ -121,6 +135,7 @@ async function runLoopStep(loop: SentinelState, billingAccountId: string): Promi
         loop.activePhase = 'paused-error';
         loop.isRunning = false;
         addSentinelLog(loop, `❌ Phase 1 Failed! AI Watchdog generated RCA report [${report.id}]: ${report.errorTitle}. Loop paused.`);
+        sendWatchdogAlert(loop.targetProject, 'GDC Watchdog Error', `Phase 1 Provisioning Failed: ${report.errorTitle}`, true);
         return;
       }
       addSentinelLog(loop, `✅ Phase 1 Complete: Cluster provisioned successfully.`);
@@ -130,6 +145,7 @@ async function runLoopStep(loop: SentinelState, billingAccountId: string): Promi
       loop.activePhase = 'paused-error';
       loop.isRunning = false;
       addSentinelLog(loop, `❌ Phase 1 Fatal Exception! AI Watchdog RCA: ${report.rootCause}`);
+      sendWatchdogAlert(loop.targetProject, 'GDC Watchdog Error', `Phase 1 Fatal Exception: ${report.rootCause}`, true);
       return;
     }
 
@@ -162,6 +178,7 @@ async function runLoopStep(loop: SentinelState, billingAccountId: string): Promi
         loop.activePhase = 'paused-error';
         loop.isRunning = false;
         addSentinelLog(loop, `❌ Phase 3 Teardown Failed! AI Watchdog generated RCA report: ${report.errorTitle}. Loop paused.`);
+        sendWatchdogAlert(loop.targetProject, 'GDC Watchdog Error', `Phase 3 Teardown Failed: ${report.errorTitle}`, true);
         return;
       }
       addSentinelLog(loop, `✅ Phase 3 Complete: Environment wiped cleanly.`);
@@ -183,5 +200,6 @@ async function runLoopStep(loop: SentinelState, billingAccountId: string): Promi
     loop.isRunning = false;
     addSentinelLog(loop, `🏁 All ${loop.maxIterations} continuous lifecycle iterations completed successfully with 0 regression errors!`);
     addAuditLog('Sentinel Loop Success', loop.targetCluster, `Successfully completed ${loop.maxIterations}x concurrent validation loops`, 'success');
+    sendWatchdogAlert(loop.targetProject, 'GDC Watchdog Success', `All ${loop.maxIterations} continuous iterations completed successfully with 0 errors!`, false);
   }
 }
