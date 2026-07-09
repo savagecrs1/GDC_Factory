@@ -132,6 +132,21 @@ export default function SentinelManager({ clusterName: initialCluster, projectId
     fetchStatus();
   };
 
+  const handleClearTriage = async () => {
+    try {
+      const res = await fetch('/api/sentinel/triage', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'clear' }),
+      });
+      if (res.ok) {
+        setTriageReports([]);
+      }
+    } catch (err) {
+      console.error('Error clearing triage reports:', err);
+    }
+  };
+
   const activeLoopCount = Object.values(activeLoops).filter((l: any) => l.isRunning).length;
 
   return (
@@ -285,14 +300,14 @@ export default function SentinelManager({ clusterName: initialCluster, projectId
                 </div>
               </div>
 
-              <div className="pt-2 flex items-center gap-3">
+              <div className="pt-2">
                 {!currentLoopState.isRunning ? (
                   <button
                     onClick={handleStartLoop}
                     className="w-full py-3 rounded-xl bg-gradient-to-r from-sky-500 to-indigo-600 hover:from-sky-400 hover:to-indigo-500 text-white font-semibold text-xs shadow-lg shadow-sky-500/20 flex items-center justify-center gap-2 transition"
                   >
                     <Play className="w-4 h-4 fill-white" />
-                    <span>Launch Concurrent Loop on {projectId}</span>
+                    <span>Launch Concurrent Loop</span>
                   </button>
                 ) : (
                   <button
@@ -303,22 +318,6 @@ export default function SentinelManager({ clusterName: initialCluster, projectId
                     <span>Stop Loop on {projectId}</span>
                   </button>
                 )}
-              </div>
-            </div>
-          </div>
-
-          {/* Active Phase Box */}
-          <div className="glass-panel p-5 rounded-2xl border border-slate-800">
-            <h4 className="text-xs font-semibold text-slate-300 uppercase tracking-wider mb-3">Live Execution Phase ({projectId})</h4>
-            <div className="grid grid-cols-3 gap-2 text-center text-xs font-mono">
-              <div className={`p-3 rounded-xl border ${currentLoopState.activePhase === 'provisioning' ? 'bg-sky-500/10 border-sky-500 text-sky-400 font-bold animate-pulse' : 'bg-slate-900/60 border-slate-800 text-slate-500'}`}>
-                1. PROVISION
-              </div>
-              <div className={`p-3 rounded-xl border ${currentLoopState.activePhase === 'validating' ? 'bg-amber-500/10 border-amber-500 text-amber-400 font-bold animate-pulse' : 'bg-slate-900/60 border-slate-800 text-slate-500'}`}>
-                2. VALIDATE
-              </div>
-              <div className={`p-3 rounded-xl border ${currentLoopState.activePhase === 'teardown' ? 'bg-emerald-500/10 border-emerald-500 text-emerald-400 font-bold animate-pulse' : 'bg-slate-900/60 border-slate-800 text-slate-500'}`}>
-                3. TEARDOWN
               </div>
             </div>
           </div>
@@ -333,9 +332,19 @@ export default function SentinelManager({ clusterName: initialCluster, projectId
                 <ShieldAlert className="w-5 h-5 text-amber-400" />
                 <h3 className="font-bold text-white text-md">AI Watchdog Root Cause Analysis (RCA) Hub</h3>
               </div>
-              <span className="text-xs bg-slate-800 text-slate-300 px-2.5 py-1 rounded-md font-mono">
-                {(triageReports || []).length} Triage Alerts
-              </span>
+              <div className="flex items-center gap-2">
+                {(triageReports || []).length > 0 && (
+                  <button
+                    onClick={handleClearTriage}
+                    className="text-xs bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/20 px-2.5 py-1 rounded-md font-mono transition"
+                  >
+                    Clear Reports
+                  </button>
+                )}
+                <span className="text-xs bg-slate-800 text-slate-300 px-2.5 py-1 rounded-md font-mono">
+                  {(triageReports || []).length} Triage Alerts
+                </span>
+              </div>
             </div>
 
             {(triageReports || []).length === 0 ? (
