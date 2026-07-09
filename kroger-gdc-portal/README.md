@@ -10,6 +10,7 @@ The **Google Distributed Cloud (GDC) Connected Hybrid PCI Edge Portal** is an ad
 * **⚡ Compact Cloud Test Footprints**: Natively supports optimized virtual compute footprints (such as **`n2-standard-8`** — 8 vCPUs, 32 GB RAM per node) with Intel Ice Lake nested virtualization. This allows engineering teams to rapidly spin up and tear down test clusters without exhausting regional GCP vCPU quotas.
 * **🔄 Thread-Safe & Idempotent Automation**: Built on a resilient Terraform and Ansible execution engine that dynamically inspects real-time GCP cloud state. Multiple team members can test concurrently without IP collisions or state corruption.
 * **🧠 AI-Powered Telemetry & Watchdog**: Features integrated real-time cluster health monitoring, live browser-based SSH/xterm terminal modals, automated ConfigSync GitOps management, and an AI Watchdog for instant Root Cause Analysis (RCA) of failing pods or network attachments.
+* **📧 Automated Watchdog Email & Audio Alerting**: When running long-duration continuous regression loops (e.g., 5x or 10x lifecycle iterations), the Watchdog automatically fires Google Cloud Logging alert events on any regression error or upon successful loop completion—dispatching real-time email alerts directly to engineers' corporate inboxes and triggering native desktop audio notifications.
 
 ---
 
