@@ -25,6 +25,8 @@ export default function ProvisionWizard({
   const [logs, setLogs] = useState<any[]>([]);
   const [currentStep, setCurrentStep] = useState('Idle');
   const [error, setError] = useState<string | null>(null);
+  const [confirmStop, setConfirmStop] = useState(false);
+  const [confirmDestroy, setConfirmDestroy] = useState(false);
   const logsEndRef = useRef<HTMLDivElement>(null);
 
   const jobId = `${projectId}-${clusterName}`;
@@ -292,32 +294,90 @@ export default function ProvisionWizard({
           </button>
 
           {isDeploying && (
-            <button
-              onClick={cancelDeployment}
-              className="w-full py-2.5 rounded-xl bg-amber-500/20 hover:bg-amber-500/30 border border-amber-500/50 text-amber-300 font-bold text-xs flex items-center justify-center gap-1.5 transition shadow-sm animate-pulse"
-            >
-              <span className="w-2 h-2 rounded-full bg-amber-400" />
-              <span>⏹ Force Stop / Cancel In-Process Automation Job</span>
-            </button>
+            <div className="space-y-2">
+              {!confirmStop ? (
+                <button
+                  onClick={() => setConfirmStop(true)}
+                  className="w-full py-2.5 rounded-xl bg-amber-500/20 hover:bg-amber-500/30 border border-amber-500/50 text-amber-300 font-bold text-xs flex items-center justify-center gap-1.5 transition shadow-sm animate-pulse"
+                >
+                  <span className="w-2 h-2 rounded-full bg-amber-400" />
+                  <span>⏹ Force Stop / Cancel In-Process Automation Job</span>
+                </button>
+              ) : (
+                <div className="p-3.5 rounded-xl bg-amber-950/90 border-2 border-amber-500/80 text-amber-200 text-xs space-y-2.5 animate-fadeIn">
+                  <div className="flex items-start gap-2">
+                    <AlertCircle className="w-4 h-4 text-amber-400 flex-shrink-0 mt-0.5" />
+                    <div>
+                      <div className="font-bold text-white">⚠️ Active Workflow Protection Guard</div>
+                      <p className="text-[11px] text-amber-300 mt-0.5 leading-snug">
+                        An automation job is actively executing on project <strong className="text-white">{projectId}</strong>. Aborting this job may interrupt another engineer's active deployment or leave GCP terraform state locked.
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2 pt-1">
+                    <button
+                      onClick={() => { setConfirmStop(false); cancelDeployment(); }}
+                      className="flex-1 py-1.5 rounded-lg bg-rose-600 hover:bg-rose-500 text-white font-bold text-[11px] transition shadow"
+                    >
+                      ✅ Yes, Abort Active Job
+                    </button>
+                    <button
+                      onClick={() => setConfirmStop(false)}
+                      className="flex-1 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold text-[11px] transition"
+                    >
+                      ❌ Keep Job Running
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
           )}
 
-          <button
-            onClick={startTeardown}
-            disabled={isDeploying || !projectId || !clusterName}
-            className="w-full py-2.5 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/30 text-rose-400 disabled:opacity-50 font-semibold text-xs flex items-center justify-center gap-1.5 transition"
-          >
-            {isDeploying ? (
-              <>
-                <RefreshCw className="w-3.5 h-3.5 animate-spin" />
-                <span>Tearing Down...</span>
-              </>
-            ) : (
-              <>
-                <Trash2 className="w-3.5 h-3.5" />
-                <span>Destroy / Tear Down Cluster Environment</span>
-              </>
-            )}
-          </button>
+          {!confirmDestroy ? (
+            <button
+              onClick={() => setConfirmDestroy(true)}
+              disabled={isDeploying || !projectId || !clusterName}
+              className="w-full py-2.5 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/30 text-rose-400 disabled:opacity-50 font-semibold text-xs flex items-center justify-center gap-1.5 transition"
+            >
+              {isDeploying ? (
+                <>
+                  <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                  <span>Tearing Down...</span>
+                </>
+              ) : (
+                <>
+                  <Trash2 className="w-3.5 h-3.5" />
+                  <span>Destroy / Tear Down Cluster Environment</span>
+                </>
+              )}
+            </button>
+          ) : (
+            <div className="p-3.5 rounded-xl bg-rose-950/90 border-2 border-rose-500/80 text-rose-200 text-xs space-y-2.5 animate-fadeIn">
+              <div className="flex items-start gap-2">
+                <AlertCircle className="w-4 h-4 text-rose-400 flex-shrink-0 mt-0.5" />
+                <div>
+                  <div className="font-bold text-white">🔥 Cluster Destruction Guard</div>
+                  <p className="text-[11px] text-rose-300 mt-0.5 leading-snug">
+                    You are about to execute terraform destroy on cluster <strong className="text-white">{clusterName}</strong> in project <strong className="text-white">{projectId}</strong>. This will wipe all bare-metal nodes and running workloads.
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2 pt-1">
+                <button
+                  onClick={() => { setConfirmDestroy(false); startTeardown(); }}
+                  className="flex-1 py-1.5 rounded-lg bg-rose-600 hover:bg-rose-500 text-white font-bold text-[11px] transition shadow"
+                >
+                  🗑️ Confirm Destroy Cluster
+                </button>
+                <button
+                  onClick={() => setConfirmDestroy(false)}
+                  className="flex-1 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold text-[11px] transition"
+                >
+                  ❌ Cancel
+                </button>
+              </div>
+            </div>
+          )}
 
           {(!isDeploying && (error || logs.some(l => l.level === 'error'))) && (
             <button
