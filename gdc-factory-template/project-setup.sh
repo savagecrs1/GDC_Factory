@@ -137,11 +137,12 @@ if [[ -n "$PUB_KEY" ]]; then
   rm -f /tmp/gcp_ssh_key.pub
   echo "✅ SSH public key injected into project '${PROJECT_ID}'."
 
-echo "🛡️ Pre-flight check: Disabling compute instance deletion protection across existing project VMs..."
-for inst in $(gcloud compute instances list --project="${PROJECT_ID}" --format="value(name)" 2>/dev/null); do
+echo "🛡️ Pre-flight check: Disabling compute instance deletion protection across target deployment VMs (scoped mitigation)..."
+for inst in $(gcloud compute instances list --project="${PROJECT_ID}" --filter="name=(gem-admin-ws, gem-edge-router) OR name ~ ^${CLUSTER_NAME}-node-.*" --format="value(name)" 2>/dev/null); do
+  echo "  -> Removing deletion protection lock on target managed instance: $inst"
   gcloud compute instances update "$inst" --project="${PROJECT_ID}" --zone="us-central1-a" --no-deletion-protection --quiet 2>/dev/null || true
 done
-echo "✅ Deletion protection stripped from existing VMs."
+echo "✅ Scoped deletion protection check complete. Unrelated project VMs untouched."
 else
   echo "⚠️ No local SSH public key found in ~/.ssh. Skipping SSH key injection."
 fi
