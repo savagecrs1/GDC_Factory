@@ -9,7 +9,7 @@ interface FleetProps {
 }
 
 export default function FleetOperationsCenter({ currentProject, onSelectProject }: FleetProps) {
-  const [projects, setProjects] = useState<string[]>([]);
+  const [projects, setProjects] = useState<any[]>([]);
   const [fleetStats, setFleetStats] = useState<{
     totalClusters: number;
     totalVms: number;
@@ -127,12 +127,14 @@ export default function FleetOperationsCenter({ currentProject, onSelectProject 
           <span>Active Fleet Project Control Matrix:</span>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-          {projects.map((proj, idx) => {
-            const isCurrent = proj === currentProject;
+          {projects.map((projObj: any, idx) => {
+            const projId = typeof projObj === 'string' ? projObj : projObj.projectId || projObj.name || String(projObj);
+            const projName = typeof projObj === 'string' ? projObj : projObj.name || projObj.projectId || String(projObj);
+            const isCurrent = projId === currentProject;
             return (
               <div
                 key={idx}
-                onClick={() => onSelectProject && onSelectProject(proj)}
+                onClick={() => onSelectProject && onSelectProject(projId)}
                 className={`p-3 rounded-xl border transition flex items-center justify-between cursor-pointer ${
                   isCurrent
                     ? 'bg-sky-500/10 border-sky-500/50 shadow-md shadow-sky-500/10'
@@ -141,10 +143,10 @@ export default function FleetOperationsCenter({ currentProject, onSelectProject 
               >
                 <div>
                   <div className="flex items-center gap-1.5">
-                    <span className="font-bold text-white text-xs font-mono">{proj}</span>
+                    <span className="font-bold text-white text-xs font-mono">{projId}</span>
                     {isCurrent && <span className="bg-sky-500 text-slate-950 text-[9px] font-extrabold px-1.5 py-0.2 rounded">ACTIVE</span>}
                   </div>
-                  <div className="text-[10px] text-slate-400 mt-0.5">2 Clusters • 4 Nodes • NVMe Ready</div>
+                  <div className="text-[10px] text-slate-400 mt-0.5 truncate max-w-[180px]">{projName}</div>
                 </div>
                 <ArrowUpRight className={`w-4 h-4 ${isCurrent ? 'text-sky-400' : 'text-slate-500'}`} />
               </div>
