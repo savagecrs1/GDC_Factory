@@ -78,11 +78,13 @@ export default function Navbar({
 
         {/* Navigation Tabs (Progressive Disclosure) */}
         {activeTab === 'dashboard' ? (
-          <div className="hidden md:flex items-center gap-2 bg-slate-900/90 px-4 py-2 rounded-xl border border-slate-800 text-xs text-slate-300">
-            <span className="w-2 h-2 rounded-full bg-purple-400 animate-pulse" />
-            <span className="font-semibold text-white">🏠 Overview Dashboard</span>
-            <span className="text-slate-500">•</span>
-            <span>Select an operational console below to open</span>
+          <div className="flex items-center gap-3 bg-slate-900/95 px-5 py-2.5 rounded-2xl border-2 border-purple-500/50 shadow-xl shadow-purple-500/10 text-sm">
+            <span className="text-2xl animate-bounce-slow">🏠</span>
+            <span className="font-black text-white text-base tracking-wide">Overview Dashboard</span>
+            <span className="text-slate-600 text-lg font-light">•</span>
+            <span className="text-xs text-purple-200 font-semibold bg-purple-500/20 px-3 py-1 rounded-full border border-purple-500/30">
+              Select an operational console below to open
+            </span>
           </div>
         ) : (
           <nav className="flex items-center gap-1 bg-slate-900/80 p-1 rounded-xl border border-slate-800/80">

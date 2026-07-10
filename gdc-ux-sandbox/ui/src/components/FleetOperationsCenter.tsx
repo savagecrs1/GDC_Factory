@@ -148,20 +148,43 @@ export default function FleetOperationsCenter({ currentProject, onSelectProject,
               <div
                 key={idx}
                 onClick={() => onSelectProject && onSelectProject(projId)}
-                className={`p-3 rounded-xl border transition flex items-center justify-between cursor-pointer ${
+                className={`p-4 rounded-xl border transition flex flex-col justify-between cursor-pointer space-y-2.5 ${
                   isCurrent
-                    ? 'bg-sky-500/10 border-sky-500/50 shadow-md shadow-sky-500/10'
-                    : 'bg-slate-900/60 border-slate-800 hover:border-slate-700'
+                    ? 'bg-gradient-to-br from-sky-500/15 via-indigo-500/10 to-slate-900 border-sky-500/60 shadow-lg shadow-sky-500/10'
+                    : 'bg-slate-900/80 border-slate-800 hover:border-slate-700 hover:bg-slate-800/60'
                 }`}
               >
-                <div>
-                  <div className="flex items-center gap-1.5">
-                    <span className="font-bold text-white text-xs font-mono">{projId}</span>
-                    {isCurrent && <span className="bg-sky-500 text-slate-950 text-[9px] font-extrabold px-1.5 py-0.2 rounded">ACTIVE</span>}
+                <div className="flex items-start justify-between gap-2">
+                  <div>
+                    <div className="flex items-center gap-1.5">
+                      <span className="font-extrabold text-white text-xs font-mono tracking-tight">{projId}</span>
+                      {isCurrent && <span className="bg-sky-500 text-slate-950 text-[9px] font-black px-1.5 py-0.5 rounded shadow">ACTIVE</span>}
+                    </div>
+                    <div className="text-[11px] text-slate-300 font-medium mt-0.5 truncate max-w-[200px]">{projName}</div>
                   </div>
-                  <div className="text-[10px] text-slate-400 mt-0.5 truncate max-w-[180px]">{projName}</div>
+                  <ArrowUpRight className={`w-4 h-4 flex-shrink-0 ${isCurrent ? 'text-sky-400' : 'text-slate-500'}`} />
                 </div>
-                <ArrowUpRight className={`w-4 h-4 ${isCurrent ? 'text-sky-400' : 'text-slate-500'}`} />
+
+                <div className="grid grid-cols-2 gap-1.5 pt-1.5 border-t border-slate-800/80 text-[10px]">
+                  <div className="bg-slate-950/60 px-2 py-1 rounded border border-slate-800/60 flex items-center justify-between">
+                    <span className="text-slate-400 font-semibold">Status:</span>
+                    <span className="text-emerald-400 font-bold flex items-center gap-1">
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" /> 100% SLA
+                    </span>
+                  </div>
+                  <div className="bg-slate-950/60 px-2 py-1 rounded border border-slate-800/60 flex items-center justify-between">
+                    <span className="text-slate-400 font-semibold">Nodes:</span>
+                    <span className="text-sky-300 font-mono font-bold">3x n2-std-8</span>
+                  </div>
+                  <div className="bg-slate-950/60 px-2 py-1 rounded border border-slate-800/60 flex items-center justify-between">
+                    <span className="text-slate-400 font-semibold">Storage:</span>
+                    <span className="text-purple-300 font-mono font-bold">1.4TB TopoLVM</span>
+                  </div>
+                  <div className="bg-slate-950/60 px-2 py-1 rounded border border-slate-800/60 flex items-center justify-between">
+                    <span className="text-slate-400 font-semibold">Load:</span>
+                    <span className="text-amber-300 font-mono font-bold">CPU 24% | RAM 41%</span>
+                  </div>
+                </div>
               </div>
             );
           })}
