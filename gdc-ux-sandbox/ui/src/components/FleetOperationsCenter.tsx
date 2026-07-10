@@ -119,6 +119,7 @@ export default function FleetOperationsCenter({ currentProject, onSelectProject,
           >
             <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
           </button>
+        </div>
       </div>
 
       {/* 3-State Modal Window Machine: Fleet Matrix -> Project Console -> Cluster Console */}
