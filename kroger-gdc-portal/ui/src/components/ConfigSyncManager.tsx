@@ -165,7 +165,7 @@ spec:
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
           <button
             type="button"
-            onClick={() => applyPreset('root-sync-grocery-pos', 'https://github.com/google-cloud-platform/anthos-config-management-samples.git', '/profiles/grocery-pos-standard', 'none')}
+            onClick={() => applyPreset('root-sync-grocery-pos', 'https://github.com/savagecrs1/gdc-vm-configs.git', '/kroger-gdc-portal/gitops-profiles/grocery-store-emulator', 'none')}
             className="p-3 rounded-xl bg-slate-900/80 hover:bg-slate-800/80 border border-slate-700/80 text-left transition flex flex-col justify-between group"
           >
             <div>

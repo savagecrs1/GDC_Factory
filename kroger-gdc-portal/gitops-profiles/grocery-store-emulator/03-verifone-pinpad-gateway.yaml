@@ -1,0 +1,66 @@
+# Copyright 2026 Google LLC / Kroger Cloud Engineering
+# Simulation: Verifone / Ingenico In-Scope PIN Pad Payment Encryption Gateway
+# Network Target: PCI-DSS Cardholder Data Environment VLAN 3430 (172.18.0.0/16)
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: verifone-pinpad-gateway
+  namespace: cde-pci-scope
+  labels:
+    app: pinpad-gateway
+    security-scope: pci-cde
+    vlan: "3430"
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: pinpad-gateway
+  template:
+    metadata:
+      labels:
+        app: pinpad-gateway
+        security-scope: pci-cde
+        vlan: "3430"
+      annotations:
+        k8s.v1.cni.cncf.io/networks: gke-system/pci-network-3430
+    spec:
+      containers:
+      - name: dukpt-gateway
+        image: nginx:alpine
+        env:
+        - name: PCI_ENVIRONMENT
+          value: "IN_SCOPE_CDE_V4"
+        - name: ENCRYPTION_SCHEME
+          value: "DUKPT_P2PE_ENABLED"
+        - name: VLAN_TARGET
+          value: "3430_PCI_CDE"
+        - name: TERMINAL_MODEL
+          value: "VERIFONE_M400_EMV"
+        ports:
+        - containerPort: 80
+          name: dukpt-token-port
+        resources:
+          requests:
+            memory: "128Mi"
+            cpu: "100m"
+          limits:
+            memory: "256Mi"
+            cpu: "250m"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: pinpad-tokenization-service
+  namespace: cde-pci-scope
+  labels:
+    app: pinpad-gateway
+    security-scope: pci-cde
+spec:
+  type: ClusterIP
+  selector:
+    app: pinpad-gateway
+  ports:
+  - port: 8443
+    targetPort: 80
+    name: secure-token-api

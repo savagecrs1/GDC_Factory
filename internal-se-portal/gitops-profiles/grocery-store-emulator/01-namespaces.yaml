@@ -1,0 +1,28 @@
+# Copyright 2026 Google LLC / Kroger Cloud Engineering
+# GitOps RootSync Profile: Grocery Store Emulator (Namespaces & Network Policies)
+
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: store-ops-non-pci
+  labels:
+    environment: store-edge
+    security-zone: non-pci
+    k8s-app: toshiba-elera
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: cde-pci-scope
+  labels:
+    environment: store-edge
+    security-zone: pci-dss-v4
+    k8s-app: verifone-pinpad
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: mfc-robotics
+  labels:
+    environment: micro-fulfillment
+    security-zone: warehouse-automation

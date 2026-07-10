@@ -1,0 +1,65 @@
+# Copyright 2026 Google LLC / Kroger Cloud Engineering
+# Simulation: Toshiba ELERA Cloud-Native POS Commerce Engine
+# Network Target: Non-PCI VLAN 3130 (172.16.0.0/16)
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: toshiba-elera-pos-engine
+  namespace: store-ops-non-pci
+  labels:
+    app: toshiba-elera
+    tier: commerce-engine
+    vlan: "3130"
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: toshiba-elera
+  template:
+    metadata:
+      labels:
+        app: toshiba-elera
+        tier: commerce-engine
+        vlan: "3130"
+      annotations:
+        k8s.v1.cni.cncf.io/networks: gke-system/non-pci-network-3130
+    spec:
+      containers:
+      - name: elera-core
+        image: nginx:alpine
+        env:
+        - name: STORE_ID
+          value: "kroger-store-002"
+        - name: COMMERCE_MODE
+          value: "ELERA_MICROSERVICE_V3"
+        - name: VLAN_TARGET
+          value: "3130_NON_PCI"
+        - name: MQTT_BROKER
+          value: "tcp://172.16.0.10:1883"
+        ports:
+        - containerPort: 80
+          name: http-pos
+        resources:
+          requests:
+            memory: "128Mi"
+            cpu: "100m"
+          limits:
+            memory: "256Mi"
+            cpu: "250m"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: toshiba-elera-service
+  namespace: store-ops-non-pci
+  labels:
+    app: toshiba-elera
+spec:
+  type: ClusterIP
+  selector:
+    app: toshiba-elera
+  ports:
+  - port: 8080
+    targetPort: 80
+    name: commerce-api
