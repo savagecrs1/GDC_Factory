@@ -1,5 +1,6 @@
 import fs from 'fs';
 import path from 'path';
+import { execSync } from 'child_process';
 import { runDeploymentSequence, runDestroySequence, getJob } from './deployment-runner';
 import { addAuditLog, fetchClusterStatus } from './k8s-client';
 
@@ -233,6 +234,47 @@ export async function runFullStackTestHarness(config: TestHarnessConfig) {
       const modeText = isExistingCluster ? "Existing Cluster Workload Verification" : "Custom Lifecycle Verification";
       report.summary = `🎉 ${modeText} Report: All selected phases completed in ${Math.round((report.totalDurationMs || 10000) / 1000)}s.` + (emailAlerts && notifyOnSuccess ? ` SLA report dispatched via SMTP to ${emailAlerts}.` : '');
       saveTestHarnessReport(report);
+      
+      // Dispatch Real Email Alert
+      if (emailAlerts && notifyOnSuccess) {
+        let stepsHtml = "";
+        for (const s of steps) {
+          const badgeColor = s.status === "success" ? "#10b981" : s.status === "skipped" ? "#64748b" : "#f43f5e";
+          stepsHtml += `
+            <tr style="border-bottom: 1px solid #334155;">
+              <td style="padding: 10px; color: #f8fafc; font-weight: bold;">${s.name}</td>
+              <td style="padding: 10px;"><span style="color: ${badgeColor}; font-weight: bold; font-family: monospace; text-transform: uppercase;">${s.status}</span></td>
+              <td style="padding: 10px; color: #cbd5e1;">${s.durationMs ? Math.round(s.durationMs / 1000) + "s" : "-"}</td>
+            </tr>
+          `;
+        }
+
+        const emailHtml = `
+          <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 600px; padding: 25px; background-color: #0f172a; color: #f8fafc; border-radius: 16px; border: 1px solid #334155; margin: 0 auto;">
+            <h2 style="color: #c084fc; margin-top: 0; font-size: 20px; font-weight: 900; display: flex; items-center gap: 10px;">🚀 GDC Edge SLA Verification: SUCCESS</h2>
+            <p style="color: #cbd5e1; font-size: 13px; line-height: 1.5; margin-bottom: 20px;">The End-to-End Edge Lifecycle Verification Suite successfully validated cluster <strong>${clusterName}</strong> in target project <strong>${projectId}</strong>.</p>
+            
+            <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px; font-size: 12px; background-color: #020617; border-radius: 12px; overflow: hidden; border: 1px solid #1e293b;">
+              <thead>
+                <tr style="background-color: #1e293b; color: #94a3b8; text-align: left;">
+                  <th style="padding: 10px;">Execution Phase</th>
+                  <th style="padding: 10px;">Status</th>
+                  <th style="padding: 10px;">Duration</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${stepsHtml}
+              </tbody>
+            </table>
+
+            <div style="background-color: #022c22; border: 1px solid #064e3b; padding: 14px; border-radius: 10px; font-weight: bold; color: #34d399; font-size: 13px; text-align: center; margin-top: 15px;">
+              🎉 Verification passed! All SLA thresholds met.
+            </div>
+          </div>
+        `;
+        sendAlertEmail(emailAlerts, `🚀 GDC Edge Verification Success: ${clusterName}`, emailHtml);
+      }
+
       addAuditLog('E2E Test Harness', clusterName, `SUCCESS: ${modeText} completed` + (emailAlerts ? ` (Alert sent to ${emailAlerts})` : ''), 'success');
     } catch (err: any) {
       report.status = 'failed';
@@ -245,9 +287,67 @@ export async function runFullStackTestHarness(config: TestHarnessConfig) {
         activeStep.logs.push(`ERROR: ${err.message}`);
       }
       saveTestHarnessReport(report);
+
+      // Dispatch Failure Email Alert
+      if (emailAlerts && notifyOnError) {
+        let stepsHtml = "";
+        for (const s of steps) {
+          const badgeColor = s.status === "success" ? "#10b981" : s.status === "failed" ? "#f43f5e" : s.status === "skipped" ? "#64748b" : "#e2e8f0";
+          stepsHtml += `
+            <tr style="border-bottom: 1px solid #334155;">
+              <td style="padding: 10px; color: #f8fafc; font-weight: bold;">${s.name}</td>
+              <td style="padding: 10px;"><span style="color: ${badgeColor}; font-weight: bold; font-family: monospace; text-transform: uppercase;">${s.status}</span></td>
+              <td style="padding: 10px; color: #cbd5e1;">${s.durationMs ? Math.round(s.durationMs / 1000) + "s" : "-"}</td>
+            </tr>
+          `;
+        }
+
+        const emailHtml = `
+          <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 600px; padding: 25px; background-color: #0f172a; color: #f8fafc; border-radius: 16px; border: 1px solid #334155; margin: 0 auto;">
+            <h2 style="color: #f43f5e; margin-top: 0; font-size: 20px; font-weight: 900; display: flex; items-center gap: 10px;">⚠️ GDC Edge SLA Verification: FAILED</h2>
+            <p style="color: #cbd5e1; font-size: 13px; line-height: 1.5; margin-bottom: 20px;">An E2E verification test suite run encountered a critical error on cluster <strong>${clusterName}</strong> in project <strong>${projectId}</strong>.</p>
+            
+            <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px; font-size: 12px; background-color: #020617; border-radius: 12px; overflow: hidden; border: 1px solid #1e293b;">
+              <thead>
+                <tr style="background-color: #1e293b; color: #94a3b8; text-align: left;">
+                  <th style="padding: 10px;">Execution Phase</th>
+                  <th style="padding: 10px;">Status</th>
+                  <th style="padding: 10px;">Duration</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${stepsHtml}
+              </tbody>
+            </table>
+
+            <div style="background-color: #450a0a; border: 1px solid #7f1d1d; padding: 14px; border-radius: 10px; font-weight: bold; color: #f87171; font-size: 13px; margin-top: 15px;">
+              <strong>Error Message:</strong> ${err.message}
+            </div>
+          </div>
+        `;
+        sendAlertEmail(emailAlerts, `⚠️ GDC Edge Verification Failed: ${clusterName}`, emailHtml);
+      }
+
       addAuditLog('E2E Test Harness', clusterName, `FAILED: ${err.message}` + (emailAlerts ? ` (Alert sent to ${emailAlerts})` : ''), 'error');
     }
   })();
 
   return report;
+}
+
+export function sendAlertEmail(recipient: string, subject: string, htmlBody: string): { success: boolean; method?: string; error?: string } {
+  try {
+    const scriptPath = path.join(process.cwd(), 'src/lib/send-email.py');
+    const payload = JSON.stringify({ to: recipient, subject, body: htmlBody });
+    
+    const result = execSync(`python3 "${scriptPath}"`, {
+      input: payload,
+      encoding: 'utf-8'
+    });
+    
+    return JSON.parse(result.trim());
+  } catch (err: any) {
+    console.error('Error executing send-email.py:', err);
+    return { success: false, error: err.message };
+  }
 }
