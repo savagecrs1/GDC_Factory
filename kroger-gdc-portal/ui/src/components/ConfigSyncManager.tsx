@@ -106,11 +106,12 @@ export default function ConfigSyncManager({ clusterName, projectId }: ConfigSync
     }
   };
 
-  const applyPreset = (presetName: string, presetRepo: string, presetDir: string, presetAuth = 'none') => {
+  const applyPreset = (presetName: string, presetRepo: string, presetDir: string, presetAuth = 'none', presetPeriod?: string) => {
     setName(presetName);
     setRepo(presetRepo);
     setDir(presetDir);
     setAuth(presetAuth);
+    if (presetPeriod) setPeriod(presetPeriod);
   };
 
   const generatedYaml = `apiVersion: configsync.gke.io/v1beta1
@@ -133,40 +134,31 @@ spec:
   return (
     <div className="space-y-6">
       {/* Banner */}
-      <div className="glass-panel p-5 rounded-2xl flex flex-col md:flex-row items-start md:items-center justify-between gap-4 border-l-4 border-l-sky-500">
+      <div className="glass-panel p-6 rounded-2xl border border-slate-800 bg-gradient-to-r from-sky-950/30 via-slate-900 to-indigo-950/20">
         <div className="flex items-center gap-4">
-          <div className="w-12 h-12 rounded-2xl bg-sky-500/10 border border-sky-500/20 flex items-center justify-center text-sky-400">
-            <GitBranch className="w-6 h-6 animate-pulse" />
+          <div className="p-3 bg-sky-500/10 rounded-xl border border-sky-500/20 text-sky-400">
+            <GitBranch className="w-8 h-8" />
           </div>
           <div>
-            <div className="flex items-center gap-2.5">
-              <h2 className="text-xl font-bold text-white">GitOps Config Sync & Workload Automation Engine</h2>
-              <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-sky-500/20 text-sky-300 border border-sky-500/30">
-                configsync.gke.io/v1beta1
+            <h2 className="text-xl font-bold text-white flex items-center gap-2">
+              Kroger GitOps & Workload Continuous Sync
+              <span className="text-xs bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 px-2 py-0.5 rounded-full font-mono font-normal">
+                Anthos Config Management v1.18
               </span>
-            </div>
-            <p className="text-sm text-slate-400 mt-0.5">
-              Manage RootSync and RepoSync CRDs to continuously deploy, reconcile, and enforce Kubernetes workloads on physical GDC nodes.
+            </h2>
+            <p className="text-slate-400 text-sm mt-1">
+              Declaratively manage POS engines, smart cart gateways, and security policies from Git repositories.
             </p>
           </div>
         </div>
-
-        <button
-          onClick={fetchRootSyncs}
-          disabled={loading}
-          className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-sm font-medium transition border border-slate-700 self-end md:self-center"
-        >
-          <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
-          Refresh Sync Status
-        </button>
       </div>
 
       {message && (
-        <div className={`p-4 rounded-xl text-xs flex items-center justify-between border ${
-          message.type === 'success' ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-300' : 'bg-rose-500/10 border-rose-500/30 text-rose-300'
+        <div className={`p-4 rounded-xl border text-xs font-mono flex items-center justify-between ${
+          message.type === 'success' ? 'bg-emerald-950/40 border-emerald-500/50 text-emerald-300' : 'bg-rose-950/40 border-rose-500/50 text-rose-300'
         }`}>
           <div className="flex items-center gap-2">
-            {message.type === 'success' ? <CheckCircle2 className="w-4 h-4 text-emerald-400 flex-shrink-0" /> : <AlertCircle className="w-4 h-4 text-rose-400 flex-shrink-0" />}
+            {message.type === 'success' ? <CheckCircle2 className="w-4 h-4 text-emerald-400" /> : <AlertCircle className="w-4 h-4 text-rose-400" />}
             <span>{message.text}</span>
           </div>
           <button onClick={() => setMessage(null)} className="text-slate-400 hover:text-white">✕</button>
@@ -185,7 +177,7 @@ spec:
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
           <button
             type="button"
-            onClick={() => applyPreset('root-sync-grocery-pos', 'https://github.com/savagecrs1/gdc-vm-configs.git', '/kroger-gdc-portal/gitops-profiles/grocery-store-emulator', 'none')}
+            onClick={() => applyPreset('root-sync-grocery-pos', 'https://github.com/savagecrs1/gdc-vm-configs.git', '/kroger-gdc-portal/gitops-profiles/grocery-store-emulator', 'none', '300s')}
             className="p-3 rounded-xl bg-slate-900/80 hover:bg-slate-800/80 border border-slate-700/80 text-left transition flex flex-col justify-between group"
           >
             <div>
