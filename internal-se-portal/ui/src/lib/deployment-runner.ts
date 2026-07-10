@@ -247,6 +247,14 @@ export async function runDestroySequence(
       console.warn('Could not clear configsync store:', e);
     }
 
+    // Unregister GKE Connect membership so subsequent loop iterations don't fail with E000025
+    try {
+      appendLog(job, 'info', `Unregistering GKE Connect membership for ${clusterName}...`, 'Step 1: Destroying Cluster VMs');
+      execSync(`gcloud container hub memberships delete ${clusterName} --quiet --project=${projectId} 2>/dev/null || gcloud container hub memberships unregister ${clusterName} --gke-cluster=us-central1/${clusterName} --quiet --project=${projectId} 2>/dev/null || true`);
+    } catch (e) {
+      console.warn('Could not unregister hub membership:', e);
+    }
+
     // Step 1: Destroy Cluster VMs
     job.currentStep = `Step 1: Destroying Cluster VMs for ${clusterName}`;
     const tfClusterDir = path.join(rootDir, 'terraform', 'cluster');
