@@ -30,9 +30,10 @@ data "google_compute_subnetwork" "gdc_subnet" {
 
 resource "google_compute_instance" "admin_ws" {
   name         = "gem-admin-ws"
-  machine_type = "e2-standard-4"
+  machine_type = "e2-standard-8"
   zone         = var.zone
   project      = var.project_id
+  allow_stopping_for_update = true
 
   deletion_protection = false
 
