@@ -157,6 +157,22 @@ spec:
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
           <button
             type="button"
+            onClick={() => applyPreset('root-sync-gdc-demo', 'https://github.com/savagecrs1/GDC_Factory.git', '/k8s/workloads', 'none', '60s')}
+            className="p-3 rounded-xl bg-slate-900/80 hover:bg-slate-800/80 border border-slate-700/80 text-left transition flex flex-col justify-between group"
+          >
+            <div>
+              <div className="flex items-center justify-between">
+                <span className="font-bold text-white text-xs group-hover:text-sky-300 transition">☸️ Standard K8s Demo Workloads</span>
+                <span className="text-[10px] bg-indigo-500/10 text-indigo-400 px-2 py-0.5 rounded border border-indigo-500/20 font-mono">/k8s/workloads</span>
+              </div>
+              <p className="text-[11px] text-slate-400 mt-1 leading-snug">
+                Deploys NGINX edge web server (NodePort 30080) and Redis session cache for automated GitOps reconciliation testing.
+              </p>
+            </div>
+          </button>
+
+          <button
+            type="button"
             onClick={() => applyPreset('root-sync-grocery-pos', 'https://github.com/savagecrs1/GDC_Factory.git', '/kroger-gdc-portal/gitops-profiles/grocery-store-emulator', 'none', '300s')}
             className="p-3 rounded-xl bg-slate-900/80 hover:bg-slate-800/80 border border-slate-700/80 text-left transition flex flex-col justify-between group"
           >

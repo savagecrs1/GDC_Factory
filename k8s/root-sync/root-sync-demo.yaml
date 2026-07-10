@@ -1,0 +1,15 @@
+apiVersion: configsync.gke.io/v1beta1
+kind: RootSync
+metadata:
+  name: root-sync-gdc-demo
+  namespace: config-management-system
+spec:
+  sourceFormat: unstructured
+  git:
+    repo: "https://github.com/savagecrs1/GDC_Factory.git"
+    branch: "main"
+    dir: "k8s/workloads"
+    auth: "none"
+    period: "60s"
+  override:
+    reconcileTimeout: "300s"
