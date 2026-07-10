@@ -17,8 +17,17 @@ export default function SentinelManager({ clusterName: initialCluster, projectId
 
   // Form inputs
   const [projectId, setProjectId] = useState(initialProject || 'kroger-store-test1');
-  const [clusterName, setClusterName] = useState(initialCluster || 'sentinel-test-cluster');
-  const [iterations, setIterations] = useState(3);
+  const [clusterName, setClusterName] = useState(initialCluster || 'kroger-store-001');
+
+  useEffect(() => {
+    if (initialProject) setProjectId(initialProject);
+  }, [initialProject]);
+
+  useEffect(() => {
+    if (initialCluster) setClusterName(initialCluster);
+  }, [initialCluster]);
+
+  const [iterations, setIterations] = useState(5);
   const [billingAccountId, setBillingAccountId] = useState('0150AE-F3AB84-9BC087');
   const [availableProjects, setAvailableProjects] = useState<any[]>([
     { id: 'kroger-store-test1', name: 'Kroger Store Test 1' },
