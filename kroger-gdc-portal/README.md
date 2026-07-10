@@ -133,7 +133,27 @@ To validate Kroger retail edge architectures against Qualified Security Assessor
 ### 2. Zero-Trust QSA Network Isolation
 * Enforces strict **PCI-DSS v4.0 NetworkPolicy segmentation**: store operations applications in `store-ops-non-pci` are blocked from sweeping or packet-sniffing the PCI Cardholder Data Environment, allowing only authorized tokenization proxy requests on port `8443`.
 
-### 3. 1-Click GitOps Setup & Cashier Checkout Simulation
+### 3. 1-Click GitOps Setup & Multi-Lane Concurrency Streaming
 1. **Auto-Configure RootSync**: In the portal dashboard, navigate to the **GitOps Config Sync** tab and click **`🏪 Standard Grocery POS Profile`**. This automatically points Anthos Config Management to our internal emulator repository directory and applies all 5 manifests across your physical bare-metal nodes.
-2. **Execute Cashier Checkout**: Scroll down to the **`🛒 Store Register & PIN Pad Transaction Simulator`** box and click **`💳 Test Cashier Checkout`**.
-   - The portal executes an interactive test from inside the POS cash register pod on VLAN `3130`, initiates an encrypted payment handshake across the network boundary to the PIN pad gateway on VLAN `3430`, and renders a live, itemized Kroger grocery receipt with an EMV approval code directly on your screen!
+2. **Execute Event-Driven Store Checkout Stream**: Navigate to the **`📈 Performance & Metrics`** tab and select **`🚀 POS Commerce Catalog & DB Bench`**.
+   - Scale active checkout concurrency from **1 to 24 concurrent store registers** (simulating Front End attended registers and Self-Checkout SCO bays).
+   - Watch real-time 4-phase event progression: item-by-item UPC barcode scanning, promotional discount reconciliation (Kroger Plus card rules), point-to-point DUKPT encryption handshakes over VLAN `3430`, and electronic receipt closeout.
+   - Click on any individual register box in the live grid to inspect its live streaming grocery receipt!
+
+---
+
+## 🍃 Kroger isc-utility MongoDB TopoLVM Storage Benchmark
+
+To validate bare-metal storage health and B-tree indexing under heavy synthetic load, the portal integrates the official **Kroger `isc-utility-project` MongoDB performance suite** (`/gitops-profiles/mongo-performance-test/`).
+
+### 1. 5-Tier Chained Microservice Architecture
+Instead of simple disk hammering, this suite pushes requests through a chained dependency path built in dependency-free Go (Golang 1.22):
+* **`entry-service`**: Multi-threaded load orchestrator spawning up to 2,000 concurrent threads.
+* **`cache-service`**: Custom Redis RESP protocol client evaluating in-memory hit/miss caching ratios.
+* **`cpu-service`**: Computes 200,000 prime number loops to evaluate CFS scheduling and compute saturation.
+* **`memory-service`**: Allocates 100MB+ heap blocks and holds for 100ms to test GC pressure and memory bus bandwidth.
+* **`database-service`**: Executes MongoDB index insertions and sequential document commits against local TopoLVM RWO persistent volume claims (`PVCs`).
+
+### 2. 1-Click Execution & Waterfall Attribution
+1. **Deploy Workload Suite**: In **GitOps Config Sync**, click **`🍃 MongoDB TopoLVM Bench`** to reconcile all 15 services and database pods onto your bare-metal nodes.
+2. **Analyze Telemetry**: In **Performance & Metrics**, select **`🍃 Kroger isc-utility MongoDB TopoLVM Bench`**. View exact P50/P95/P99 tail latencies, system throughput (TPS/RPS), disk Read/Write MB/s, and our 4-stage waterfall latency attribution chart with automated AI engineering bottleneck diagnosis!
