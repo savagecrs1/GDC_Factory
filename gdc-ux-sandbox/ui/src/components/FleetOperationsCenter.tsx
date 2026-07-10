@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Globe, Server, Cpu, Activity, RefreshCw, Layers, Terminal, ArrowUpRight, Zap } from 'lucide-react';
+import { Globe, Server, Cpu, Activity, RefreshCw, Layers, Terminal, ArrowUpRight, Zap, CheckCircle2, HardDrive, Shield, ExternalLink } from 'lucide-react';
 
 interface FleetProps {
   currentProject: string;
@@ -11,6 +11,7 @@ interface FleetProps {
 
 export default function FleetOperationsCenter({ currentProject, onSelectProject, onNavigateTab }: FleetProps) {
   const [projects, setProjects] = useState<any[]>([]);
+  const [selectedProj, setSelectedProj] = useState<string>(currentProject || 'gdc-edge-demo-1');
   const [fleetStats, setFleetStats] = useState<{
     totalClusters: number;
     totalVms: number;
@@ -24,7 +25,7 @@ export default function FleetOperationsCenter({ currentProject, onSelectProject,
     fetch('/api/gcp/projects')
       .then((res) => res.json())
       .then((data) => {
-        const projs = data.projects || ['gdc-edge-demo-1', 'core-edge-dm1', 'kroger-test-4'];
+        const projs = data.projects || ['gdc-edge-demo-1', 'core-edge-dm1', 'kroger-test-4', 'core-edge-rhel'];
         setProjects(projs);
         setFleetStats({
           totalClusters: projs.length * 2,
@@ -32,32 +33,66 @@ export default function FleetOperationsCenter({ currentProject, onSelectProject,
           activeDeployments: 1,
           healthyProjects: projs.length,
         });
+        if (projs.length > 0) {
+          const firstId = typeof projs[0] === 'string' ? projs[0] : projs[0].projectId || projs[0].name;
+          setSelectedProj(firstId || 'gdc-edge-demo-1');
+        }
         setLoading(false);
       })
       .catch((err) => {
         console.error(err);
-        setProjects(['gdc-edge-demo-1', 'core-edge-dm1']);
-        setFleetStats({ totalClusters: 4, totalVms: 8, activeDeployments: 0, healthyProjects: 2 });
+        const fallback = ['gdc-edge-demo-1', 'core-edge-dm1', 'kroger-test-4'];
+        setProjects(fallback);
+        setFleetStats({ totalClusters: 6, totalVms: 12, activeDeployments: 1, healthyProjects: 3 });
+        setSelectedProj('gdc-edge-demo-1');
         setLoading(false);
       });
   }, []);
 
+  // Mock deterministic metrics per project for rich visual inspection
+  const getProjectTelemetry = (projId: string) => {
+    const isPrimary = projId.includes('demo') || projId.includes('core');
+    const vcpuPct = isPrimary ? 75 : 42;
+    const ramPct = isPrimary ? 82 : 35;
+    const storagePct = isPrimary ? 64 : 28;
+    return {
+      status: 'RUNNING (100% SLA)',
+      clusters: isPrimary ? 2 : 1,
+      nodes: isPrimary ? '4x n2-standard-8' : '3x e2-standard-8',
+      vcpuUsed: isPrimary ? 24 : 10,
+      vcpuTotal: isPrimary ? 32 : 24,
+      vcpuPct,
+      ramUsed: isPrimary ? 105 : 45,
+      ramTotal: isPrimary ? 128 : 128,
+      ramPct,
+      storageUsed: isPrimary ? 1.4 : 0.6,
+      storageTotal: 2.0,
+      storagePct,
+      vms: isPrimary ? 6 : 2,
+      pods: isPrimary ? 42 : 18,
+      vlans: isPrimary ? 'VLAN 100, 200 (VXLAN Active)' : 'VLAN 3130 (Standard)',
+    };
+  };
+
+  const activeTelemetry = getProjectTelemetry(selectedProj);
+
   return (
-    <div className="glass-panel p-6 rounded-2xl border-2 border-sky-500/30 shadow-2xl space-y-5 bg-gradient-to-br from-slate-950 via-slate-900/90 to-slate-950">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-800 pb-4">
+    <div className="glass-panel p-6 rounded-2xl border-2 border-purple-500/40 shadow-2xl space-y-6 bg-gradient-to-br from-slate-950 via-slate-900/95 to-slate-950">
+      {/* Header */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-800/80 pb-4">
         <div className="flex items-center gap-3">
-          <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-sky-500 to-indigo-600 flex items-center justify-center text-white shadow-lg shadow-sky-500/20">
+          <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-purple-500 via-indigo-500 to-pink-500 flex items-center justify-center text-white shadow-lg shadow-purple-500/20">
             <Globe className="w-6 h-6 animate-spin-slow" />
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <h2 className="text-lg font-extrabold text-white tracking-tight">🌐 Multi-Cluster Fleet Operations Center</h2>
-              <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-sky-500/20 text-sky-300 border border-sky-500/30">
-                Single Pane of Glass
+              <h2 className="text-lg font-extrabold text-white tracking-tight">🌐 Multi-Cluster Fleet Control Center</h2>
+              <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-purple-500/20 text-purple-300 border border-purple-500/30">
+                Master-Detail View
               </span>
             </div>
             <p className="text-xs text-slate-400 mt-0.5">
-              Real-time aggregation of bare-metal operations, provisioning jobs, and virtual machine runtimes across all enterprise projects. Click any stat window below to jump directly to that operations console.
+              Select a project from the left roster to inspect real-time resource allocation and launch its console tools.
             </p>
           </div>
         </div>
@@ -77,117 +112,209 @@ export default function FleetOperationsCenter({ currentProject, onSelectProject,
         </div>
       </div>
 
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <div
-          onClick={() => onNavigateTab && onNavigateTab('provision')}
-          className="p-4 rounded-xl bg-slate-900/90 border border-slate-800 hover:border-sky-500/50 hover:bg-slate-800/80 cursor-pointer transition group flex items-center justify-between shadow-sm hover:shadow-sky-500/10"
-        >
-          <div>
-            <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider group-hover:text-sky-300 transition">Monitored GCP Projects</p>
-            <p className="text-2xl font-black text-white mt-1">{projects.length}</p>
-            <p className="text-[10px] text-emerald-400 mt-1 flex items-center gap-1">👉 Click to open Provisioner →</p>
+      {/* Interactive Master-Detail Inspector Layout */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        
+        {/* LEFT COLUMN: Project Roster (Master List - 4 Cols) */}
+        <div className="lg:col-span-4 space-y-2">
+          <div className="text-xs font-bold text-slate-300 uppercase tracking-wider px-1 flex items-center justify-between">
+            <span>Monitored Project Roster ({projects.length})</span>
+            <span className="text-[10px] text-purple-400">Click to Inspect ↓</span>
           </div>
-          <div className="w-10 h-10 rounded-xl bg-sky-500/10 border border-sky-500/20 flex items-center justify-center text-sky-400 group-hover:scale-110 transition">
-            <Layers className="w-5 h-5" />
-          </div>
-        </div>
-
-        <div
-          onClick={() => onNavigateTab && onNavigateTab('workloads')}
-          className="p-4 rounded-xl bg-slate-900/90 border border-slate-800 hover:border-indigo-500/50 hover:bg-slate-800/80 cursor-pointer transition group flex items-center justify-between shadow-sm hover:shadow-indigo-500/10"
-        >
-          <div>
-            <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider group-hover:text-indigo-300 transition">Active Edge Clusters</p>
-            <p className="text-2xl font-black text-white mt-1">{fleetStats.totalClusters}</p>
-            <p className="text-[10px] text-sky-400 mt-1">👉 Click to view Workloads →</p>
-          </div>
-          <div className="w-10 h-10 rounded-xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-indigo-400 group-hover:scale-110 transition">
-            <Server className="w-5 h-5" />
-          </div>
-        </div>
-
-        <div
-          onClick={() => onNavigateTab && onNavigateTab('vms')}
-          className="p-4 rounded-xl bg-slate-900/90 border border-slate-800 hover:border-purple-500/50 hover:bg-slate-800/80 cursor-pointer transition group flex items-center justify-between shadow-sm hover:shadow-purple-500/10"
-        >
-          <div>
-            <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider group-hover:text-purple-300 transition">Active KubeVirt VMs</p>
-            <p className="text-2xl font-black text-white mt-1">{fleetStats.totalVms}</p>
-            <p className="text-[10px] text-purple-400 mt-1">👉 Click to view VM Catalog →</p>
-          </div>
-          <div className="w-10 h-10 rounded-xl bg-purple-500/10 border border-purple-500/20 flex items-center justify-center text-purple-400 group-hover:scale-110 transition">
-            <Cpu className="w-5 h-5" />
-          </div>
-        </div>
-
-        <div
-          onClick={() => onNavigateTab && onNavigateTab('provision')}
-          className="p-4 rounded-xl bg-slate-900/90 border border-slate-800 hover:border-amber-500/50 hover:bg-slate-800/80 cursor-pointer transition group flex items-center justify-between shadow-sm hover:shadow-amber-500/10"
-        >
-          <div>
-            <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider group-hover:text-amber-300 transition">Active IaC Provisioning</p>
-            <p className="text-2xl font-black text-amber-400 mt-1">{fleetStats.activeDeployments}</p>
-            <p className="text-[10px] text-amber-300 mt-1 flex items-center gap-1">👉 Click to monitor Build →</p>
-          </div>
-          <div className="w-10 h-10 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400 group-hover:scale-110 transition">
-            <Terminal className="w-5 h-5 animate-pulse" />
-          </div>
-        </div>
-      </div>
-
-      <div className="pt-2">
-        <div className="text-xs font-semibold text-slate-300 uppercase tracking-wider mb-2.5 flex items-center gap-1.5">
-          <span>Active Fleet Project Control Matrix:</span>
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-          {projects.map((projObj: any, idx) => {
-            const projId = typeof projObj === 'string' ? projObj : projObj.projectId || projObj.name || String(projObj);
-            const projName = typeof projObj === 'string' ? projObj : projObj.name || projObj.projectId || String(projObj);
-            const isCurrent = projId === currentProject;
-            return (
-              <div
-                key={idx}
-                onClick={() => onSelectProject && onSelectProject(projId)}
-                className={`p-4 rounded-xl border transition flex flex-col justify-between cursor-pointer space-y-2.5 ${
-                  isCurrent
-                    ? 'bg-gradient-to-br from-sky-500/15 via-indigo-500/10 to-slate-900 border-sky-500/60 shadow-lg shadow-sky-500/10'
-                    : 'bg-slate-900/80 border-slate-800 hover:border-slate-700 hover:bg-slate-800/60'
-                }`}
-              >
-                <div className="flex items-start justify-between gap-2">
-                  <div>
-                    <div className="flex items-center gap-1.5">
-                      <span className="font-extrabold text-white text-xs font-mono tracking-tight">{projId}</span>
-                      {isCurrent && <span className="bg-sky-500 text-slate-950 text-[9px] font-black px-1.5 py-0.5 rounded shadow">ACTIVE</span>}
+          <div className="space-y-1.5 max-h-[380px] overflow-y-auto pr-1">
+            {projects.map((projObj: any, idx) => {
+              const projId = typeof projObj === 'string' ? projObj : projObj.projectId || projObj.name || String(projObj);
+              const projName = typeof projObj === 'string' ? projObj : projObj.name || projObj.projectId || String(projObj);
+              const isSelected = projId === selectedProj;
+              return (
+                <div
+                  key={idx}
+                  onClick={() => {
+                    setSelectedProj(projId);
+                    if (onSelectProject) onSelectProject(projId);
+                  }}
+                  className={`p-3 rounded-xl border transition cursor-pointer flex items-center justify-between group ${
+                    isSelected
+                      ? 'bg-gradient-to-r from-purple-600/25 to-indigo-600/20 border-purple-500 shadow-md shadow-purple-500/10'
+                      : 'bg-slate-900/60 border-slate-800 hover:border-slate-700 hover:bg-slate-800/50'
+                  }`}
+                >
+                  <div className="flex items-center gap-2.5 min-w-0">
+                    <span className={`w-2.5 h-2.5 rounded-full flex-shrink-0 ${isSelected ? 'bg-purple-400 animate-pulse' : 'bg-emerald-500'}`} />
+                    <div className="min-w-0">
+                      <div className={`font-bold text-xs font-mono truncate ${isSelected ? 'text-white font-extrabold' : 'text-slate-200'}`}>
+                        {projId}
+                      </div>
+                      <div className="text-[10px] text-slate-400 truncate mt-0.5">{projName}</div>
                     </div>
-                    <div className="text-[11px] text-slate-300 font-medium mt-0.5 truncate max-w-[200px]">{projName}</div>
                   </div>
-                  <ArrowUpRight className={`w-4 h-4 flex-shrink-0 ${isCurrent ? 'text-sky-400' : 'text-slate-500'}`} />
-                </div>
-
-                <div className="grid grid-cols-2 gap-1.5 pt-1.5 border-t border-slate-800/80 text-[10px]">
-                  <div className="bg-slate-950/60 px-2 py-1 rounded border border-slate-800/60 flex items-center justify-between">
-                    <span className="text-slate-400 font-semibold">Status:</span>
-                    <span className="text-emerald-400 font-bold flex items-center gap-1">
-                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" /> 100% SLA
+                  <div className="flex items-center gap-1.5 flex-shrink-0">
+                    <span className={`text-[9px] px-1.5 py-0.5 rounded font-mono font-bold ${
+                      isSelected ? 'bg-purple-500 text-white' : 'bg-slate-800 text-slate-400'
+                    }`}>
+                      2 CLUSTERS
                     </span>
+                    <ArrowUpRight className={`w-4 h-4 ${isSelected ? 'text-purple-300' : 'text-slate-500 group-hover:text-slate-300'}`} />
                   </div>
-                  <div className="bg-slate-950/60 px-2 py-1 rounded border border-slate-800/60 flex items-center justify-between">
-                    <span className="text-slate-400 font-semibold">Nodes:</span>
-                    <span className="text-sky-300 font-mono font-bold">3x n2-std-8</span>
-                  </div>
-                  <div className="bg-slate-950/60 px-2 py-1 rounded border border-slate-800/60 flex items-center justify-between">
-                    <span className="text-slate-400 font-semibold">Storage:</span>
-                    <span className="text-purple-300 font-mono font-bold">1.4TB TopoLVM</span>
-                  </div>
-                  <div className="bg-slate-950/60 px-2 py-1 rounded border border-slate-800/60 flex items-center justify-between">
-                    <span className="text-slate-400 font-semibold">Load:</span>
-                    <span className="text-amber-300 font-mono font-bold">CPU 24% | RAM 41%</span>
-                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* RIGHT COLUMN: Deep Visual Telemetry Inspector (Detail View - 8 Cols) */}
+        <div className="lg:col-span-8 bg-slate-900/80 border border-slate-800/90 rounded-2xl p-5 space-y-5 flex flex-col justify-between shadow-xl">
+          <div>
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-800 pb-3.5">
+              <div>
+                <span className="text-[10px] font-bold text-purple-400 uppercase tracking-widest">Active Inspection Target</span>
+                <div className="flex items-center gap-2 mt-0.5">
+                  <h3 className="text-xl font-black text-white font-mono">{selectedProj}</h3>
+                  <span className="bg-emerald-500/15 text-emerald-400 text-[10px] font-bold px-2 py-0.5 rounded border border-emerald-500/30 flex items-center gap-1">
+                    <CheckCircle2 className="w-3 h-3" /> {activeTelemetry.status}
+                  </span>
                 </div>
               </div>
-            );
-          })}
+              <div className="text-right text-xs text-slate-400 font-mono">
+                <div>Architecture: <strong className="text-white">{activeTelemetry.nodes}</strong></div>
+                <div>Network Overlay: <strong className="text-sky-300">{activeTelemetry.vlans}</strong></div>
+              </div>
+            </div>
+
+            {/* Visual Utilization Pie & Progress Gauges */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-4">
+              {/* vCPU Gauge */}
+              <div className="p-4 rounded-xl bg-slate-950/80 border border-slate-800 flex flex-col justify-between">
+                <div className="flex items-center justify-between text-xs font-bold text-slate-300">
+                  <span className="flex items-center gap-1.5">
+                    <Cpu className="w-4 h-4 text-sky-400" />
+                    <span>vCPU Allocation</span>
+                  </span>
+                  <span className="font-mono text-sky-400 font-extrabold">{activeTelemetry.vcpuPct}%</span>
+                </div>
+                <div className="my-3 flex items-center justify-center">
+                  <div className="relative w-20 h-20 flex items-center justify-center">
+                    <svg className="w-full h-full transform -rotate-90">
+                      <circle cx="40" cy="40" r="32" stroke="currentColor" strokeWidth="8" className="text-slate-800 fill-none" />
+                      <circle
+                        cx="40" cy="40" r="32" stroke="currentColor" strokeWidth="8"
+                        strokeDasharray={201}
+                        strokeDashoffset={201 - (201 * activeTelemetry.vcpuPct) / 100}
+                        className="text-sky-500 fill-none transition-all duration-700"
+                        strokeLinecap="round"
+                      />
+                    </svg>
+                    <span className="absolute font-mono font-bold text-xs text-white">{activeTelemetry.vcpuUsed}/{activeTelemetry.vcpuTotal}</span>
+                  </div>
+                </div>
+                <div className="text-[10px] text-center text-slate-400">Intel Ice Lake Bare-Metal Nodes</div>
+              </div>
+
+              {/* RAM Gauge */}
+              <div className="p-4 rounded-xl bg-slate-950/80 border border-slate-800 flex flex-col justify-between">
+                <div className="flex items-center justify-between text-xs font-bold text-slate-300">
+                  <span className="flex items-center gap-1.5">
+                    <Activity className="w-4 h-4 text-purple-400" />
+                    <span>RAM In-Use</span>
+                  </span>
+                  <span className="font-mono text-purple-400 font-extrabold">{activeTelemetry.ramPct}%</span>
+                </div>
+                <div className="my-3 flex items-center justify-center">
+                  <div className="relative w-20 h-20 flex items-center justify-center">
+                    <svg className="w-full h-full transform -rotate-90">
+                      <circle cx="40" cy="40" r="32" stroke="currentColor" strokeWidth="8" className="text-slate-800 fill-none" />
+                      <circle
+                        cx="40" cy="40" r="32" stroke="currentColor" strokeWidth="8"
+                        strokeDasharray={201}
+                        strokeDashoffset={201 - (201 * activeTelemetry.ramPct) / 100}
+                        className="text-purple-500 fill-none transition-all duration-700"
+                        strokeLinecap="round"
+                      />
+                    </svg>
+                    <span className="absolute font-mono font-bold text-xs text-white">{activeTelemetry.ramUsed}/{activeTelemetry.ramTotal}GB</span>
+                  </div>
+                </div>
+                <div className="text-[10px] text-center text-slate-400">ECC Registered Memory</div>
+              </div>
+
+              {/* Storage Gauge */}
+              <div className="p-4 rounded-xl bg-slate-950/80 border border-slate-800 flex flex-col justify-between">
+                <div className="flex items-center justify-between text-xs font-bold text-slate-300">
+                  <span className="flex items-center gap-1.5">
+                    <HardDrive className="w-4 h-4 text-pink-400" />
+                    <span>TopoLVM Storage</span>
+                  </span>
+                  <span className="font-mono text-pink-400 font-extrabold">{activeTelemetry.storagePct}%</span>
+                </div>
+                <div className="my-3 flex items-center justify-center">
+                  <div className="relative w-20 h-20 flex items-center justify-center">
+                    <svg className="w-full h-full transform -rotate-90">
+                      <circle cx="40" cy="40" r="32" stroke="currentColor" strokeWidth="8" className="text-slate-800 fill-none" />
+                      <circle
+                        cx="40" cy="40" r="32" stroke="currentColor" strokeWidth="8"
+                        strokeDasharray={201}
+                        strokeDashoffset={201 - (201 * activeTelemetry.storagePct) / 100}
+                        className="text-pink-500 fill-none transition-all duration-700"
+                        strokeLinecap="round"
+                      />
+                    </svg>
+                    <span className="absolute font-mono font-bold text-xs text-white">{activeTelemetry.storageUsed}TB</span>
+                  </div>
+                </div>
+                <div className="text-[10px] text-center text-slate-400">NVMe RWO Local Volumes</div>
+              </div>
+            </div>
+
+            {/* Workload Breakdown Pill Row */}
+            <div className="grid grid-cols-3 gap-3 pt-4">
+              <div className="bg-slate-950/60 p-2.5 rounded-xl border border-slate-800/80 flex items-center justify-between">
+                <span className="text-xs text-slate-400">Active VMs:</span>
+                <span className="font-mono font-bold text-white text-sm bg-purple-500/20 px-2 py-0.5 rounded text-purple-300 border border-purple-500/30">
+                  {activeTelemetry.vms} running
+                </span>
+              </div>
+              <div className="bg-slate-950/60 p-2.5 rounded-xl border border-slate-800/80 flex items-center justify-between">
+                <span className="text-xs text-slate-400">K8s Pods:</span>
+                <span className="font-mono font-bold text-white text-sm bg-sky-500/20 px-2 py-0.5 rounded text-sky-300 border border-sky-500/30">
+                  {activeTelemetry.pods} pods
+                </span>
+              </div>
+              <div className="bg-slate-950/60 p-2.5 rounded-xl border border-slate-800/80 flex items-center justify-between">
+                <span className="text-xs text-slate-400">GitOps Profile:</span>
+                <span className="font-mono font-bold text-emerald-400 text-xs flex items-center gap-1">
+                  <Shield className="w-3.5 h-3.5" /> Synchronized
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {/* Quick Launch Console Action Bar */}
+          <div className="pt-3 border-t border-slate-800 flex flex-wrap items-center justify-between gap-3">
+            <span className="text-xs font-bold text-slate-400">⚡ Jump directly to tools for <strong className="text-white font-mono">{selectedProj}</strong>:</span>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => onNavigateTab && onNavigateTab('provision')}
+                className="px-3.5 py-2 rounded-xl bg-sky-500 hover:bg-sky-400 text-slate-950 font-extrabold text-xs transition flex items-center gap-1.5 shadow-md shadow-sky-500/20"
+              >
+                <Terminal className="w-3.5 h-3.5" />
+                <span>Open Provisioner</span>
+              </button>
+              <button
+                onClick={() => onNavigateTab && onNavigateTab('vms')}
+                className="px-3.5 py-2 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-extrabold text-xs transition flex items-center gap-1.5 shadow-md shadow-purple-500/20"
+              >
+                <Cpu className="w-3.5 h-3.5" />
+                <span>VM Runtime</span>
+              </button>
+              <button
+                onClick={() => onNavigateTab && onNavigateTab('workloads')}
+                className="px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-xs transition flex items-center gap-1.5 border border-slate-700"
+              >
+                <Layers className="w-3.5 h-3.5" />
+                <span>Workloads</span>
+              </button>
+            </div>
+          </div>
         </div>
       </div>
     </div>
