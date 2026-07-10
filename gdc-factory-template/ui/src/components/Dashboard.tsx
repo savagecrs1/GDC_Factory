@@ -88,7 +88,7 @@ export default function Dashboard({ clusterName, projectId, setActiveTab }: Dash
   return (
     <div className="space-y-6">
       {/* Fleet Operations Center */}
-      <FleetOperationsCenter currentProject={projectId || 'gdc-edge-demo-1'} />
+      <FleetOperationsCenter currentProject={projectId || 'gdc-edge-demo-1'} onNavigateTab={setActiveTab} />
 
       {/* Top Status Banner */}
       <div className="glass-panel p-5 rounded-2xl flex flex-col md:flex-row items-start md:items-center justify-between gap-4 border-l-4 border-l-sky-500">

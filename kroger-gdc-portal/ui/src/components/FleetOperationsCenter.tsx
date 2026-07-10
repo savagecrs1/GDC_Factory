@@ -6,9 +6,10 @@ import { Globe, Server, Cpu, Activity, RefreshCw, Layers, Terminal, ArrowUpRight
 interface FleetProps {
   currentProject: string;
   onSelectProject?: (proj: string) => void;
+  onNavigateTab?: (tab: string) => void;
 }
 
-export default function FleetOperationsCenter({ currentProject, onSelectProject }: FleetProps) {
+export default function FleetOperationsCenter({ currentProject, onSelectProject, onNavigateTab }: FleetProps) {
   const [projects, setProjects] = useState<any[]>([]);
   const [fleetStats, setFleetStats] = useState<{
     totalClusters: number;
@@ -56,7 +57,7 @@ export default function FleetOperationsCenter({ currentProject, onSelectProject 
               </span>
             </div>
             <p className="text-xs text-slate-400 mt-0.5">
-              Real-time aggregation of bare-metal operations, provisioning jobs, and virtual machine runtimes across all enterprise projects.
+              Real-time aggregation of bare-metal operations, provisioning jobs, and virtual machine runtimes across all enterprise projects. Click any stat window below to jump directly to that operations console.
             </p>
           </div>
         </div>
@@ -77,46 +78,58 @@ export default function FleetOperationsCenter({ currentProject, onSelectProject 
       </div>
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="p-4 rounded-xl bg-slate-900/90 border border-slate-800 flex items-center justify-between">
+        <div
+          onClick={() => onNavigateTab && onNavigateTab('provision')}
+          className="p-4 rounded-xl bg-slate-900/90 border border-slate-800 hover:border-sky-500/50 hover:bg-slate-800/80 cursor-pointer transition group flex items-center justify-between shadow-sm hover:shadow-sky-500/10"
+        >
           <div>
-            <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Monitored GCP Projects</p>
+            <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider group-hover:text-sky-300 transition">Monitored GCP Projects</p>
             <p className="text-2xl font-black text-white mt-1">{projects.length}</p>
-            <p className="text-[10px] text-emerald-400 mt-1 flex items-center gap-1">✅ 100% IAM & ADC Authorized</p>
+            <p className="text-[10px] text-emerald-400 mt-1 flex items-center gap-1">👉 Click to open Provisioner →</p>
           </div>
-          <div className="w-10 h-10 rounded-xl bg-sky-500/10 border border-sky-500/20 flex items-center justify-center text-sky-400">
+          <div className="w-10 h-10 rounded-xl bg-sky-500/10 border border-sky-500/20 flex items-center justify-center text-sky-400 group-hover:scale-110 transition">
             <Layers className="w-5 h-5" />
           </div>
         </div>
 
-        <div className="p-4 rounded-xl bg-slate-900/90 border border-slate-800 flex items-center justify-between">
+        <div
+          onClick={() => onNavigateTab && onNavigateTab('workloads')}
+          className="p-4 rounded-xl bg-slate-900/90 border border-slate-800 hover:border-indigo-500/50 hover:bg-slate-800/80 cursor-pointer transition group flex items-center justify-between shadow-sm hover:shadow-indigo-500/10"
+        >
           <div>
-            <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Active Edge Clusters</p>
+            <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider group-hover:text-indigo-300 transition">Active Edge Clusters</p>
             <p className="text-2xl font-black text-white mt-1">{fleetStats.totalClusters}</p>
-            <p className="text-[10px] text-sky-400 mt-1">GDC Connected Bare-Metal</p>
+            <p className="text-[10px] text-sky-400 mt-1">👉 Click to view Workloads →</p>
           </div>
-          <div className="w-10 h-10 rounded-xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-indigo-400">
+          <div className="w-10 h-10 rounded-xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-indigo-400 group-hover:scale-110 transition">
             <Server className="w-5 h-5" />
           </div>
         </div>
 
-        <div className="p-4 rounded-xl bg-slate-900/90 border border-slate-800 flex items-center justify-between">
+        <div
+          onClick={() => onNavigateTab && onNavigateTab('vms')}
+          className="p-4 rounded-xl bg-slate-900/90 border border-slate-800 hover:border-purple-500/50 hover:bg-slate-800/80 cursor-pointer transition group flex items-center justify-between shadow-sm hover:shadow-purple-500/10"
+        >
           <div>
-            <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Active KubeVirt VMs</p>
+            <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider group-hover:text-purple-300 transition">Active KubeVirt VMs</p>
             <p className="text-2xl font-black text-white mt-1">{fleetStats.totalVms}</p>
-            <p className="text-[10px] text-purple-400 mt-1">Windows & Linux Workloads</p>
+            <p className="text-[10px] text-purple-400 mt-1">👉 Click to view VM Catalog →</p>
           </div>
-          <div className="w-10 h-10 rounded-xl bg-purple-500/10 border border-purple-500/20 flex items-center justify-center text-purple-400">
+          <div className="w-10 h-10 rounded-xl bg-purple-500/10 border border-purple-500/20 flex items-center justify-center text-purple-400 group-hover:scale-110 transition">
             <Cpu className="w-5 h-5" />
           </div>
         </div>
 
-        <div className="p-4 rounded-xl bg-slate-900/90 border border-slate-800 flex items-center justify-between">
+        <div
+          onClick={() => onNavigateTab && onNavigateTab('provision')}
+          className="p-4 rounded-xl bg-slate-900/90 border border-slate-800 hover:border-amber-500/50 hover:bg-slate-800/80 cursor-pointer transition group flex items-center justify-between shadow-sm hover:shadow-amber-500/10"
+        >
           <div>
-            <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Active IaC Provisioning</p>
+            <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider group-hover:text-amber-300 transition">Active IaC Provisioning</p>
             <p className="text-2xl font-black text-amber-400 mt-1">{fleetStats.activeDeployments}</p>
-            <p className="text-[10px] text-amber-300 mt-1 flex items-center gap-1">🔄 Terraform Job Executing</p>
+            <p className="text-[10px] text-amber-300 mt-1 flex items-center gap-1">👉 Click to monitor Build →</p>
           </div>
-          <div className="w-10 h-10 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400">
+          <div className="w-10 h-10 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400 group-hover:scale-110 transition">
             <Terminal className="w-5 h-5 animate-pulse" />
           </div>
         </div>
