@@ -155,7 +155,7 @@ export default function Dashboard({ clusterName, projectId, setActiveTab }: Dash
             className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white text-sm font-extrabold shadow-lg shadow-purple-500/20 transition"
             title="Automate deploy cluster -> deploy VMs -> benchmarks -> teardown -> report"
           >
-            🚀 E2E Test Suite
+            🚀 E2E Test Harness
           </button>
           <button
             onClick={fetchStatus}
