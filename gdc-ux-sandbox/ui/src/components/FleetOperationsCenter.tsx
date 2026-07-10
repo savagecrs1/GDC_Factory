@@ -275,7 +275,7 @@ export default function FleetOperationsCenter({ currentProject, onSelectProject,
                       return (
                         <div
                           key={cIdx}
-                          onClick={() => onNavigateTab && onNavigateTab('vms')}
+                          onClick={() => onNavigateTab && onNavigateTab('cluster-view')}
                           className="p-5 rounded-2xl bg-gradient-to-br from-slate-950 to-slate-900 border border-slate-800 hover:border-purple-500/60 cursor-pointer transition group shadow-lg flex flex-col justify-between space-y-4"
                         >
                           <div className="flex items-start justify-between">
