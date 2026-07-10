@@ -529,7 +529,8 @@ export default function FleetOperationsCenter({ currentProject, onSelectProject,
             </div>
           </div>
         </div>
-      )}
+      </div>
+    )}
     </div>
   );
 }
