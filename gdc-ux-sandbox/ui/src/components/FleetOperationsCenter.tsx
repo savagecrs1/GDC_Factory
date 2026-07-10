@@ -119,475 +119,420 @@ export default function FleetOperationsCenter({ currentProject, onSelectProject,
           >
             <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
           </button>
-        </div>
       </div>
 
-      {/* Interactive Master-Detail Inspector Layout */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-        
-        {/* LEFT COLUMN: Project & Cluster Tree Roster (Master List - 4 Cols) */}
-        <div className="lg:col-span-4 space-y-2">
-          <div className="text-xs font-bold text-slate-300 uppercase tracking-wider px-1 flex items-center justify-between">
-            <span>Monitored Fleet Hierarchy ({projects.length})</span>
-            <span className="text-[10px] text-purple-400">1-Click Drilldown ↓</span>
+      {/* 3-State Modal Window Machine: Fleet Matrix -> Project Console -> Cluster Console */}
+      {activeModalView === 'fleet' && (
+        <div className="space-y-6 animate-fadeIn">
+          <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+            <div>
+              <h3 className="text-sm font-extrabold text-white uppercase tracking-wider">🏢 Tenant Project Matrix ({projects.length})</h3>
+              <p className="text-xs text-slate-400 mt-0.5">Select a button next to any project to open its dedicated Project Console window.</p>
+            </div>
+            <button
+              onClick={() => {
+                setSelectedProj('gdc-tenant-new-stage');
+                if (onNavigateTab) onNavigateTab('create-tenant');
+              }}
+              className="px-4 py-2 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-slate-950 font-black text-xs transition shadow-lg shadow-amber-500/20 flex items-center gap-2"
+            >
+              <Zap className="w-3.5 h-3.5" />
+              <span>+ Create New Project & Sizing Pipeline</span>
+            </button>
           </div>
-          <div className="space-y-2 max-h-[420px] overflow-y-auto pr-1">
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {projects.map((projObj: any, idx) => {
               const projId = typeof projObj === 'string' ? projObj : projObj.projectId || projObj.name || String(projObj);
               const projName = typeof projObj === 'string' ? projObj : projObj.name || projObj.projectId || String(projObj);
-              const isSelected = projId === selectedProj;
               const telem = getProjectTelemetry(projId);
               return (
-                <div key={idx} className="space-y-1">
-                  <div
-                    onClick={() => {
-                      setSelectedProj(projId);
-                      if (onSelectProject) onSelectProject(projId);
-                    }}
-                    className={`p-3 rounded-xl border transition cursor-pointer flex items-center justify-between group ${
-                      isSelected
-                        ? 'bg-gradient-to-r from-purple-600/25 to-indigo-600/20 border-purple-500 shadow-md shadow-purple-500/10'
-                        : 'bg-slate-900/60 border-slate-800 hover:border-slate-700 hover:bg-slate-800/50'
-                    }`}
-                  >
-                    <div className="flex items-center gap-2.5 min-w-0">
-                      <span className={`w-2.5 h-2.5 rounded-full flex-shrink-0 ${
-                        telem.isNew ? 'bg-amber-400 animate-bounce' : isSelected ? 'bg-purple-400 animate-pulse' : 'bg-emerald-500'
-                      }`} />
-                      <div className="min-w-0">
-                        <div className={`font-bold text-xs font-mono truncate ${isSelected ? 'text-white font-extrabold' : 'text-slate-200'}`}>
-                          {projId}
+                <div key={idx} className="p-6 rounded-2xl bg-slate-900/80 border border-slate-800 hover:border-purple-500/60 transition shadow-xl flex flex-col justify-between space-y-5">
+                  <div>
+                    <div className="flex items-start justify-between gap-2">
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <span className={`w-2.5 h-2.5 rounded-full ${telem.isNew ? 'bg-amber-400 animate-bounce' : 'bg-emerald-400 animate-pulse'}`} />
+                          <h4 className="text-lg font-black text-white font-mono">{projId}</h4>
                         </div>
-                        <div className="text-[10px] text-slate-400 truncate mt-0.5">{projName}</div>
+                        <p className="text-xs text-slate-400 mt-1">{projName}</p>
                       </div>
-                    </div>
-                    <div className="flex items-center gap-1.5 flex-shrink-0">
-                      <span className={`text-[9px] px-1.5 py-0.5 rounded font-mono font-bold ${
-                        telem.isNew
-                          ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30'
-                          : isSelected
-                          ? 'bg-purple-500 text-white'
-                          : 'bg-slate-800 text-slate-400'
-                      }`}>
+                      <span className={`px-2 py-0.5 rounded text-[10px] font-mono font-bold ${telem.isNew ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30' : 'bg-purple-500/20 text-purple-300 border border-purple-500/30'}`}>
                         {telem.isNew ? 'DAY-0' : `${telem.clusters} CLUSTERS`}
                       </span>
-                      <ArrowUpRight className={`w-4 h-4 ${isSelected ? 'text-purple-300' : 'text-slate-500 group-hover:text-slate-300'}`} />
+                    </div>
+
+                    <div className="mt-4 pt-4 border-t border-slate-800/80 grid grid-cols-2 gap-2 text-xs font-mono">
+                      <div className="bg-slate-950 p-2 rounded border border-slate-800/60"><span className="text-slate-500 block text-[9px]">HARDWARE</span><span className="text-slate-200 font-bold">{telem.nodes}</span></div>
+                      <div className="bg-slate-950 p-2 rounded border border-slate-800/60"><span className="text-slate-500 block text-[9px]">OVERLAY</span><span className="text-sky-300 font-bold truncate block">{telem.vlans}</span></div>
                     </div>
                   </div>
 
-                  {/* 1-Click Drilldown Cluster Roster under Project */}
-                  {!telem.isNew && (
-                    <div className="pl-6 pr-1 space-y-1 border-l-2 border-purple-500/30 ml-3.5 my-1">
-                      {Array.from({ length: telem.clusters }).map((_, cIdx) => {
-                        const cName = `${projId}-cluster-${cIdx + 1}`;
-                        return (
-                          <div
-                            key={cIdx}
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setSelectedProj(projId);
-                              if (onSelectProject) onSelectProject(projId);
-                              setInspectedCluster(cName);
-                            }}
-                            className="p-2 rounded-lg bg-slate-950/80 hover:bg-purple-900/30 border border-slate-800/80 hover:border-purple-500/50 cursor-pointer transition flex items-center justify-between text-xs group/cluster shadow-sm"
-                            title="1-Click Jump to Cluster Telemetry Workspace"
-                          >
-                            <div className="flex items-center gap-2 truncate">
-                              <span className="text-purple-400 text-[10px]">└─</span>
-                              <span className="text-xs font-mono font-bold text-slate-300 group-hover/cluster:text-white truncate">{cName}</span>
-                            </div>
-                            <span className="text-[10px] font-bold text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded group-hover/cluster:bg-purple-500 group-hover/cluster:text-white transition">
-                              ⚡ Inspect
-                            </span>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  )}
+                  <button
+                    onClick={() => {
+                      setSelectedProj(projId);
+                      if (onSelectProject) onSelectProject(projId);
+                      setActiveModalView('project');
+                    }}
+                    className="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-extrabold text-xs transition shadow-lg shadow-purple-500/20 flex items-center justify-center gap-2 group/btn"
+                  >
+                    <span>🗂️ Open Project Console</span>
+                    <ArrowUpRight className="w-4 h-4 group-hover/btn:translate-x-0.5 group-hover/btn:-translate-y-0.5 transition" />
+                  </button>
                 </div>
               );
             })}
           </div>
         </div>
+      )}
 
-        {/* RIGHT COLUMN: Deep Visual Telemetry Inspector (Detail View - 8 Cols) */}
-        <div className="lg:col-span-8 bg-slate-900/80 border border-slate-800/90 rounded-2xl p-6 space-y-6 flex flex-col justify-between shadow-xl">
-          {activeTelemetry.isNew ? (
-            <div className="space-y-6 my-auto py-4">
-              <div className="p-5 rounded-2xl bg-gradient-to-r from-amber-500/15 via-orange-500/10 to-slate-900 border-2 border-amber-500/40 flex items-start gap-4">
-                <div className="w-12 h-12 rounded-2xl bg-amber-500/20 border border-amber-500/30 flex items-center justify-center text-amber-400 flex-shrink-0 text-2xl">
-                  🚀
-                </div>
-                <div>
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs font-black bg-amber-500 text-slate-950 px-2 py-0.5 rounded uppercase">Day-0 Onboarding Mode</span>
-                    <h3 className="text-lg font-black text-white font-mono">{selectedProj}</h3>
-                  </div>
-                  <p className="text-xs text-slate-300 mt-1 leading-relaxed">
-                    This tenant project is uninitialized and contains no active bare-metal GDC clusters. To deploy workloads or virtual machines, you must first provision the underlying cluster infrastructure.
-                  </p>
-                </div>
-              </div>
-
-              <div className="space-y-3">
-                <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider">Required Onboarding Sequence:</h4>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs">
-                  <div className="p-3.5 rounded-xl bg-slate-950 border border-slate-800 flex flex-col justify-between space-y-2">
-                    <div className="flex items-center justify-between font-bold text-slate-300">
-                      <span>1. API & Identity Setup</span>
-                      <span className="text-[10px] bg-slate-800 px-1.5 py-0.5 rounded text-slate-400 font-mono">Step 1</span>
-                    </div>
-                    <p className="text-[11px] text-slate-400">Enable compute, container, and anthos APIs in GCP IAM.</p>
-                  </div>
-                  <div className="p-3.5 rounded-xl bg-slate-950 border border-slate-800 flex flex-col justify-between space-y-2">
-                    <div className="flex items-center justify-between font-bold text-slate-300">
-                      <span>2. Network Overlay</span>
-                      <span className="text-[10px] bg-slate-800 px-1.5 py-0.5 rounded text-slate-400 font-mono">Step 2</span>
-                    </div>
-                    <p className="text-[11px] text-slate-400">Assign L2 VLAN tags (100, 200) and BGP routing tables.</p>
-                  </div>
-                  <div className="p-3.5 rounded-xl bg-slate-950 border border-slate-800 flex flex-col justify-between space-y-2">
-                    <div className="flex items-center justify-between font-bold text-slate-300">
-                      <span>3. IaC Provisioner</span>
-                      <span className="text-[10px] bg-slate-800 px-1.5 py-0.5 rounded text-slate-400 font-mono">Step 3</span>
-                    </div>
-                    <p className="text-[11px] text-slate-400">Execute automated Ansible bare-metal deployment.</p>
-                  </div>
-                </div>
-              </div>
-
-              <div className="pt-4 border-t border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-4 bg-slate-950/60 p-4 rounded-xl border border-slate-800/80">
-                <div className="text-xs">
-                  <div className="font-bold text-white flex items-center gap-1.5">
-                    <span className="w-2 h-2 rounded-full bg-amber-400 animate-ping" />
-                    Ready to initialize {selectedProj}?
-                  </div>
-                  <div className="text-slate-400 text-[11px] mt-0.5">The automated deployment wizard takes ~15 minutes to complete.</div>
-                </div>
+      {/* STATE 2: Project Console Window */}
+      {activeModalView === 'project' && (
+        <div className="space-y-6 animate-fadeIn bg-slate-900/90 border-2 border-purple-500/50 rounded-3xl p-6 shadow-2xl">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-800 pb-4">
+            <div>
+              <div className="flex items-center gap-2">
                 <button
-                  onClick={() => onNavigateTab && onNavigateTab('provision')}
-                  className="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-slate-950 font-black text-xs transition flex items-center justify-center gap-2 shadow-lg shadow-amber-500/20"
+                  onClick={() => setActiveModalView('fleet')}
+                  className="px-3 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-bold transition flex items-center gap-1.5 border border-slate-700"
                 >
-                  <Terminal className="w-4 h-4" />
-                  <span>🚀 Launch Cluster Provisioning Wizard</span>
+                  ⬅️ Return to Fleet Matrix
                 </button>
+                <span className="text-[10px] font-bold text-purple-400 uppercase tracking-widest">Active Project Console</span>
+              </div>
+              <div className="flex items-center gap-3 mt-2">
+                <h3 className="text-2xl font-black text-white font-mono">{selectedProj}</h3>
+                <span className="bg-emerald-500/20 text-emerald-400 text-[10px] font-extrabold px-2.5 py-0.5 rounded-full border border-emerald-500/30 flex items-center gap-1">
+                  <CheckCircle2 className="w-3.5 h-3.5" /> {activeTelemetry.status}
+                </span>
               </div>
             </div>
-          ) : inspectedCluster ? (
-            <div className="space-y-6 my-auto animate-fadeIn">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800 pb-4">
-                <div>
-                  <div className="flex items-center gap-2">
-                    <button
-                      onClick={() => setInspectedCluster(null)}
-                      className="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-bold transition flex items-center gap-1 border border-slate-700"
-                    >
-                      ⬅️ Back
-                    </button>
-                    <span className="text-[10px] font-bold text-purple-400 uppercase tracking-widest">Active Cluster Telemetry Inspector</span>
-                  </div>
-                  <div className="flex items-center gap-3 mt-1.5">
-                    <h3 className="text-2xl font-black text-white font-mono">{inspectedCluster}</h3>
-                    <span className="bg-emerald-500/20 text-emerald-400 text-[10px] font-extrabold px-2.5 py-0.5 rounded-full border border-emerald-500/30 flex items-center gap-1">
-                      <CheckCircle2 className="w-3.5 h-3.5" /> 100% HEALTHY • 0 ERRORS
-                    </span>
-                  </div>
-                </div>
-                <div className="text-right text-xs text-slate-400 font-mono bg-slate-950 px-3.5 py-2 rounded-xl border border-slate-800 shadow">
-                  <div>Tenant: <strong className="text-white">{selectedProj}</strong></div>
-                  <div>Nodes: <strong className="text-sky-300">3x Ice Lake Bare-Metal</strong></div>
-                </div>
-              </div>
 
-              {/* 1. Performance Metrics (vCPU / RAM Gauges & NVMe IOPS) */}
+            <button
+              onClick={() => {
+                if (onNavigateTab) onNavigateTab('provision');
+              }}
+              className="px-4 py-2.5 rounded-xl bg-sky-500 hover:bg-sky-400 text-slate-950 font-black text-xs transition shadow-lg shadow-sky-500/20 flex items-center gap-2"
+            >
+              <Terminal className="w-4 h-4" />
+              <span>+ Deploy Another Cluster to Project</span>
+            </button>
+          </div>
+
+          {activeTelemetry.isNew ? (
+            <div className="p-8 rounded-2xl bg-gradient-to-br from-amber-500/10 via-slate-950 to-slate-900 border-2 border-amber-500/40 space-y-6 text-center max-w-2xl mx-auto my-8 shadow-2xl">
+              <div className="w-16 h-16 rounded-3xl bg-amber-500/20 border border-amber-500/30 flex items-center justify-center text-amber-400 mx-auto text-3xl shadow-lg shadow-amber-500/10">
+                🚀
+              </div>
               <div className="space-y-2">
-                <div className="text-xs font-extrabold text-slate-300 uppercase tracking-wider flex items-center justify-between">
-                  <span>⚡ Real-Time Compute & Storage Allocation</span>
-                  <span className="text-[10px] text-sky-400 font-mono">4,200 NVMe IOPS Active</span>
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div className="p-4 rounded-xl bg-slate-950/90 border border-slate-800 flex flex-col justify-between shadow-inner">
-                    <div className="flex items-center justify-between text-xs font-bold text-slate-300">
-                      <span className="flex items-center gap-1.5"><Cpu className="w-4 h-4 text-sky-400" /><span>vCPU Allocation</span></span>
-                      <span className="font-mono text-sky-400 font-black">75%</span>
-                    </div>
-                    <div className="my-2.5 flex items-center justify-center">
-                      <div className="relative w-16 h-16 flex items-center justify-center">
-                        <svg className="w-full h-full transform -rotate-90"><circle cx="32" cy="32" r="26" stroke="currentColor" strokeWidth="6" className="text-slate-800 fill-none" /><circle cx="32" cy="32" r="26" stroke="currentColor" strokeWidth="6" strokeDasharray={163} strokeDashoffset={163 - (163 * 75) / 100} className="text-sky-500 fill-none transition-all duration-700" strokeLinecap="round" /></svg>
-                        <span className="absolute font-mono font-bold text-[11px] text-white">24/32</span>
-                      </div>
-                    </div>
-                    <div className="text-[10px] text-center text-slate-400">Intel Bare-Metal Nodes</div>
-                  </div>
-
-                  <div className="p-4 rounded-xl bg-slate-950/90 border border-slate-800 flex flex-col justify-between shadow-inner">
-                    <div className="flex items-center justify-between text-xs font-bold text-slate-300">
-                      <span className="flex items-center gap-1.5"><Activity className="w-4 h-4 text-purple-400" /><span>RAM In-Use</span></span>
-                      <span className="font-mono text-purple-400 font-black">82%</span>
-                    </div>
-                    <div className="my-2.5 flex items-center justify-center">
-                      <div className="relative w-16 h-16 flex items-center justify-center">
-                        <svg className="w-full h-full transform -rotate-90"><circle cx="32" cy="32" r="26" stroke="currentColor" strokeWidth="6" className="text-slate-800 fill-none" /><circle cx="32" cy="32" r="26" stroke="currentColor" strokeWidth="6" strokeDasharray={163} strokeDashoffset={163 - (163 * 82) / 100} className="text-purple-500 fill-none transition-all duration-700" strokeLinecap="round" /></svg>
-                        <span className="absolute font-mono font-bold text-[11px] text-white">105GB</span>
-                      </div>
-                    </div>
-                    <div className="text-[10px] text-center text-slate-400">128GB Total ECC Memory</div>
-                  </div>
-
-                  <div className="p-4 rounded-xl bg-slate-950/90 border border-slate-800 flex flex-col justify-between shadow-inner">
-                    <div className="flex items-center justify-between text-xs font-bold text-slate-300">
-                      <span className="flex items-center gap-1.5"><HardDrive className="w-4 h-4 text-pink-400" /><span>TopoLVM NVMe</span></span>
-                      <span className="font-mono text-pink-400 font-black">64%</span>
-                    </div>
-                    <div className="my-2.5 flex items-center justify-center">
-                      <div className="relative w-16 h-16 flex items-center justify-center">
-                        <svg className="w-full h-full transform -rotate-90"><circle cx="32" cy="32" r="26" stroke="currentColor" strokeWidth="6" className="text-slate-800 fill-none" /><circle cx="32" cy="32" r="26" stroke="currentColor" strokeWidth="6" strokeDasharray={163} strokeDashoffset={163 - (163 * 64) / 100} className="text-pink-500 fill-none transition-all duration-700" strokeLinecap="round" /></svg>
-                        <span className="absolute font-mono font-bold text-[11px] text-white">1.4TB</span>
-                      </div>
-                    </div>
-                    <div className="text-[10px] text-center text-slate-400">2.0TB Local RWO Volume</div>
-                  </div>
-                </div>
+                <h4 className="text-xl font-black text-white">Day-0 Onboarding Mode: {selectedProj}</h4>
+                <p className="text-xs text-slate-300 leading-relaxed">
+                  This tenant project is uninitialized and contains no active bare-metal GDC clusters. To deploy workloads or virtual machines, you must first progress through the cluster sizing and provisioning walkthrough.
+                </p>
               </div>
-
-              {/* 2. Deployed Workloads Roster */}
-              <div className="space-y-2">
-                <div className="text-xs font-extrabold text-slate-300 uppercase tracking-wider flex items-center justify-between">
-                  <span>🪟 Deployed Workloads & Virtual Machines</span>
-                  <span className="text-[10px] text-emerald-400 font-mono">4 Active Runtimes</span>
-                </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
-                  <div className="p-3 rounded-xl bg-slate-950 border border-slate-800/80 flex items-center justify-between">
-                    <div className="flex items-center gap-2.5">
-                      <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-                      <div><div className="font-bold text-white">elera-pos-engine-v4</div><div className="text-[10px] text-slate-400">K8s Container Pod • Port 8080</div></div>
-                    </div>
-                    <span className="text-[10px] font-mono font-bold bg-sky-500/20 text-sky-300 px-2 py-0.5 rounded border border-sky-500/30">RUNNING</span>
-                  </div>
-
-                  <div className="p-3 rounded-xl bg-slate-950 border border-slate-800/80 flex items-center justify-between">
-                    <div className="flex items-center gap-2.5">
-                      <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-                      <div><div className="font-bold text-white">redis-session-cache-ha</div><div className="text-[10px] text-slate-400">K8s Container Pod • Port 6379</div></div>
-                    </div>
-                    <span className="text-[10px] font-mono font-bold bg-sky-500/20 text-sky-300 px-2 py-0.5 rounded border border-sky-500/30">RUNNING</span>
-                  </div>
-
-                  <div className="p-3 rounded-xl bg-slate-950 border border-slate-800/80 flex items-center justify-between">
-                    <div className="flex items-center gap-2.5">
-                      <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-                      <div><div className="font-bold text-white">win-pos-controller-01</div><div className="text-[10px] text-slate-400">KubeVirt OCI VM • WinServer 2022</div></div>
-                    </div>
-                    <span className="text-[10px] font-mono font-bold bg-purple-500/20 text-purple-300 px-2 py-0.5 rounded border border-purple-500/30">OCI VM</span>
-                  </div>
-
-                  <div className="p-3 rounded-xl bg-slate-950 border border-slate-800/80 flex items-center justify-between">
-                    <div className="flex items-center gap-2.5">
-                      <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-                      <div><div className="font-bold text-white">rhel9-db-node</div><div className="text-[10px] text-slate-400">KubeVirt OCI VM • RHEL 9 SQL Core</div></div>
-                    </div>
-                    <span className="text-[10px] font-mono font-bold bg-purple-500/20 text-purple-300 px-2 py-0.5 rounded border border-purple-500/30">OCI VM</span>
-                  </div>
-                </div>
-              </div>
-
-              {/* 3. Current Operations & Errors Box */}
-              <div className="p-4 rounded-xl bg-gradient-to-r from-slate-950 via-slate-900 to-slate-950 border border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                <div className="flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400 flex-shrink-0 font-black">
-                    ✓
-                  </div>
-                  <div className="text-xs">
-                    <div className="font-extrabold text-white">Current Operations: 0 Errors Detected</div>
-                    <div className="text-[11px] text-slate-400 mt-0.5">Automated TopoLVM volume snapshot backup completed 2m ago. All node components SLA 100%.</div>
-                  </div>
-                </div>
-                <div className="flex items-center gap-2 flex-shrink-0">
-                  <button
-                    onClick={() => onNavigateTab && onNavigateTab('vms')}
-                    className="px-3.5 py-2 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-extrabold text-xs transition shadow-md shadow-purple-500/20"
-                  >
-                    Open VM Console →
-                  </button>
-                  <button
-                    onClick={() => onNavigateTab && onNavigateTab('workloads')}
-                    className="px-3.5 py-2 rounded-xl bg-sky-500 hover:bg-sky-400 text-slate-950 font-extrabold text-xs transition shadow-md shadow-sky-500/20"
-                  >
-                    Open K8s Console →
-                  </button>
-                </div>
-              </div>
+              <button
+                onClick={() => {
+                  if (onNavigateTab) onNavigateTab('create-tenant');
+                }}
+                className="w-full py-3.5 px-6 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-slate-950 font-black text-sm transition shadow-xl shadow-amber-500/20 flex items-center justify-center gap-2"
+              >
+                <span>🚀 Launch Sizing & Cluster Provisioning Walkthrough</span>
+              </button>
             </div>
           ) : (
-            <div className="space-y-6 my-auto">
-              <div>
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-800 pb-4">
-                  <div>
-                    <span className="text-[10px] font-bold text-purple-400 uppercase tracking-widest">Active Tenant Project Roster</span>
-                    <div className="flex items-center gap-2 mt-0.5">
-                      <h3 className="text-2xl font-black text-white font-mono">{selectedProj}</h3>
-                      <span className="bg-emerald-500/15 text-emerald-400 text-[10px] font-bold px-2 py-0.5 rounded border border-emerald-500/30 flex items-center gap-1">
-                        <CheckCircle2 className="w-3 h-3" /> {activeTelemetry.status}
-                      </span>
-                    </div>
-                  </div>
-                  <div className="text-right text-xs text-slate-400 font-mono bg-slate-950 px-3 py-1.5 rounded-xl border border-slate-800">
-                    <div>Hardware: <strong className="text-white">{activeTelemetry.nodes}</strong></div>
-                    <div>Overlay: <strong className="text-sky-300">{activeTelemetry.vlans}</strong></div>
-                  </div>
-                </div>
-
-                <div className="pt-6 space-y-4">
-                  <div className="flex items-center justify-between">
-                    <h4 className="text-xs font-bold text-slate-300 uppercase tracking-wider flex items-center gap-2">
-                      <Server className="w-4 h-4 text-purple-400" />
-                      <span>Existing Bare-Metal Clusters in {selectedProj} ({activeTelemetry.clusters})</span>
-                    </h4>
-                    <span className="text-[11px] text-slate-400">Select a cluster below to enter its workspace and view vCPU/RAM/VM allocation</span>
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {Array.from({ length: activeTelemetry.clusters }).map((_, cIdx) => {
-                      const cName = `${selectedProj}-cluster-${cIdx + 1}`;
-                      return (
-                        <div
-                          key={cIdx}
-                          onClick={() => setInspectedCluster(cName)}
-                          className="p-5 rounded-2xl bg-gradient-to-br from-slate-950 to-slate-900 border border-slate-800 hover:border-purple-500/60 cursor-pointer transition group shadow-lg flex flex-col justify-between space-y-4"
-                        >
-                          <div className="flex items-start justify-between">
-                            <div>
-                              <div className="flex items-center gap-2">
-                                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-                                <span className="font-mono font-extrabold text-white text-base group-hover:text-purple-300 transition">{cName}</span>
-                              </div>
-                              <p className="text-xs text-slate-400 mt-1">Bare-metal control plane active on Intel Ice Lake nodes.</p>
+            <div className="space-y-8">
+              {/* Clusters in Project Grid */}
+              <div className="space-y-3">
+                <h4 className="text-xs font-bold text-slate-300 uppercase tracking-wider flex items-center gap-2">
+                  <Server className="w-4 h-4 text-purple-400" />
+                  <span>Monitored Bare-Metal Clusters ({activeTelemetry.clusters})</span>
+                </h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {Array.from({ length: activeTelemetry.clusters }).map((_, cIdx) => {
+                    const cName = `${selectedProj}-cluster-${cIdx + 1}`;
+                    return (
+                      <div key={cIdx} className="p-6 rounded-2xl bg-slate-950/90 border border-slate-800 flex flex-col justify-between space-y-4 shadow-lg">
+                        <div className="flex items-start justify-between">
+                          <div>
+                            <div className="flex items-center gap-2">
+                              <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse" />
+                              <span className="font-mono font-extrabold text-white text-base">{cName}</span>
                             </div>
-                            <span className="bg-purple-500/20 text-purple-300 text-[10px] font-mono font-bold px-2 py-0.5 rounded border border-purple-500/30">
-                              READY
-                            </span>
+                            <p className="text-xs text-slate-400 mt-1">Bare-metal control plane active on Intel Ice Lake nodes.</p>
                           </div>
-
-                          <div className="grid grid-cols-3 gap-2 py-2 border-y border-slate-800/80 text-[11px] font-mono text-center">
-                            <div className="bg-slate-900/80 p-1.5 rounded"><span className="text-slate-500 block text-[9px]">NODES</span><span className="text-white font-bold">3 HA</span></div>
-                            <div className="bg-slate-900/80 p-1.5 rounded"><span className="text-slate-500 block text-[9px]">VMS</span><span className="text-purple-300 font-bold">{Math.round(activeTelemetry.vms / activeTelemetry.clusters)} OCI</span></div>
-                            <div className="bg-slate-900/80 p-1.5 rounded"><span className="text-slate-500 block text-[9px]">PODS</span><span className="text-sky-300 font-bold">{Math.round(activeTelemetry.pods / activeTelemetry.clusters)} Apps</span></div>
-                          </div>
-
-                          <div className="flex items-center justify-between text-xs font-bold text-purple-400 group-hover:text-purple-300">
-                            <span>⚡ Inspect Cluster Telemetry & Anomaly Loop →</span>
-                          </div>
+                          <span className="bg-purple-500/20 text-purple-300 text-[10px] font-mono font-bold px-2 py-0.5 rounded border border-purple-500/30">
+                            READY
+                          </span>
                         </div>
-                      );
-                    })}
 
-                    {/* Add another cluster button card */}
-                    <div
-                      onClick={() => onNavigateTab && onNavigateTab('provision')}
-                      className="p-5 rounded-2xl bg-slate-950/40 border-2 border-dashed border-slate-800 hover:border-sky-500/50 cursor-pointer transition flex flex-col items-center justify-center text-center p-6 space-y-2 group"
-                    >
-                      <div className="w-10 h-10 rounded-full bg-sky-500/10 border border-sky-500/20 flex items-center justify-center text-sky-400 group-hover:scale-110 transition text-lg font-black">
-                        +
+                        <div className="grid grid-cols-3 gap-2 py-3 border-y border-slate-800/80 text-xs font-mono text-center">
+                          <div className="bg-slate-900 p-2 rounded"><span className="text-slate-500 block text-[9px]">NODES</span><span className="text-white font-bold">3 HA</span></div>
+                          <div className="bg-slate-900 p-2 rounded"><span className="text-slate-500 block text-[9px]">VMS</span><span className="text-purple-300 font-bold">{Math.round(activeTelemetry.vms / activeTelemetry.clusters)} OCI</span></div>
+                          <div className="bg-slate-900 p-2 rounded"><span className="text-slate-500 block text-[9px]">PODS</span><span className="text-sky-300 font-bold">{Math.round(activeTelemetry.pods / activeTelemetry.clusters)} Apps</span></div>
+                        </div>
+
+                        <button
+                          onClick={() => {
+                            setInspectedCluster(cName);
+                            setActiveModalView('cluster');
+                          }}
+                          className="w-full py-3 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-extrabold text-xs transition shadow-md shadow-purple-500/20 flex items-center justify-center gap-2"
+                        >
+                          <span>⚡ Open Cluster Operations Window →</span>
+                        </button>
                       </div>
-                      <div className="font-bold text-white text-sm group-hover:text-sky-300">Provision Another Cluster</div>
-                      <p className="text-[11px] text-slate-500 max-w-[220px]">Launch the Terraform & Ansible bare-metal deployment engine inside {selectedProj}.</p>
-                    </div>
-                  </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Project Operations Hub (Workloads, VMs, Performance, Self-Healing) */}
+              <div className="pt-6 border-t border-slate-800 space-y-4">
+                <div className="flex items-center justify-between">
+                  <h4 className="text-xs font-bold text-slate-300 uppercase tracking-wider flex items-center gap-2">
+                    <Terminal className="w-4 h-4 text-sky-400" />
+                    <span>Project Administrative & Self-Healing Operations Hub</span>
+                  </h4>
+                  <span className="text-[11px] text-purple-400 font-mono">Project-Wide Administrative Suite ↓</span>
                 </div>
 
-                {/* Project Operations Hub (Workloads, VMs, Performance, Self-Healing) */}
-                <div className="pt-6 border-t border-slate-800 space-y-4">
-                  <div className="flex items-center justify-between">
-                    <h4 className="text-xs font-bold text-slate-300 uppercase tracking-wider flex items-center gap-2">
-                      <Terminal className="w-4 h-4 text-sky-400" />
-                      <span>Project Administrative & Self-Healing Operations Hub</span>
-                    </h4>
-                    <span className="text-[11px] text-purple-400 font-mono">2nd-Click Operations Suite ↓</span>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
+                  <div
+                    onClick={() => onNavigateTab && onNavigateTab('vms')}
+                    className="p-5 rounded-2xl bg-slate-950/90 border border-slate-800 hover:border-purple-500/50 cursor-pointer transition group flex flex-col justify-between space-y-3 shadow"
+                  >
+                    <div className="flex items-start justify-between">
+                      <div>
+                        <div className="font-bold text-white group-hover:text-purple-300 transition flex items-center gap-2 text-sm">
+                          <Cpu className="w-4 h-4 text-purple-400" />
+                          <span>Deploy Virtual Machines</span>
+                        </div>
+                        <div className="text-[11px] text-slate-400 mt-1">Launch Ubuntu/RHEL via KubeVirt CRDs across {selectedProj} clusters.</div>
+                      </div>
+                      <ArrowUpRight className="w-4 h-4 text-slate-500 group-hover:text-purple-300 flex-shrink-0" />
+                    </div>
+                    <div className="pt-2 border-t border-slate-900 flex items-center justify-between font-mono font-bold text-[11px] text-purple-400">
+                      <span>OCI Container Disks</span>
+                      <span>[ + Deploy VM ]</span>
+                    </div>
                   </div>
 
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
-                    <div
-                      onClick={() => onNavigateTab && onNavigateTab('vms')}
-                      className="p-4 rounded-xl bg-slate-950/90 border border-slate-800 hover:border-purple-500/50 cursor-pointer transition group flex flex-col justify-between space-y-3 shadow"
-                    >
-                      <div className="flex items-start justify-between">
-                        <div>
-                          <div className="font-bold text-white group-hover:text-purple-300 transition flex items-center gap-2 text-sm">
-                            <Cpu className="w-4 h-4 text-purple-400" />
-                            <span>Deploy Virtual Machines</span>
-                          </div>
-                          <div className="text-[11px] text-slate-400 mt-1">Launch Ubuntu/RHEL via KubeVirt CRDs across {selectedProj} clusters.</div>
+                  <div
+                    onClick={() => onNavigateTab && onNavigateTab('workloads')}
+                    className="p-5 rounded-2xl bg-slate-950/90 border border-slate-800 hover:border-sky-500/50 cursor-pointer transition group flex flex-col justify-between space-y-3 shadow"
+                  >
+                    <div className="flex items-start justify-between">
+                      <div>
+                        <div className="font-bold text-white group-hover:text-sky-300 transition flex items-center gap-2 text-sm">
+                          <Layers className="w-4 h-4 text-sky-400" />
+                          <span>Deploy K8s Workloads</span>
                         </div>
-                        <ArrowUpRight className="w-4 h-4 text-slate-500 group-hover:text-purple-300 flex-shrink-0" />
+                        <div className="text-[11px] text-slate-400 mt-1">Containerized microservices with Service routing & Ingress load balancers.</div>
                       </div>
-                      <div className="pt-2 border-t border-slate-900 flex items-center justify-between font-mono font-bold text-[11px] text-purple-400">
-                        <span>OCI Container Disks</span>
-                        <span>[ + Deploy VM ]</span>
-                      </div>
+                      <ArrowUpRight className="w-4 h-4 text-slate-500 group-hover:text-sky-300 flex-shrink-0" />
                     </div>
-
-                    <div
-                      onClick={() => onNavigateTab && onNavigateTab('workloads')}
-                      className="p-4 rounded-xl bg-slate-950/90 border border-slate-800 hover:border-sky-500/50 cursor-pointer transition group flex flex-col justify-between space-y-3 shadow"
-                    >
-                      <div className="flex items-start justify-between">
-                        <div>
-                          <div className="font-bold text-white group-hover:text-sky-300 transition flex items-center gap-2 text-sm">
-                            <Layers className="w-4 h-4 text-sky-400" />
-                            <span>Deploy K8s Workloads</span>
-                          </div>
-                          <div className="text-[11px] text-slate-400 mt-1">Containerized microservices with Service routing & Ingress load balancers.</div>
-                        </div>
-                        <ArrowUpRight className="w-4 h-4 text-slate-500 group-hover:text-sky-300 flex-shrink-0" />
-                      </div>
-                      <div className="pt-2 border-t border-slate-900 flex items-center justify-between font-mono font-bold text-[11px] text-sky-400">
-                        <span>Ingress / L4 Service</span>
-                        <span>[ + Deploy Pod ]</span>
-                      </div>
+                    <div className="pt-2 border-t border-slate-900 flex items-center justify-between font-mono font-bold text-[11px] text-sky-400">
+                      <span>Ingress / L4 Service</span>
+                      <span>[ + Deploy Pod ]</span>
                     </div>
+                  </div>
 
-                    <div
-                      onClick={() => onNavigateTab && onNavigateTab('performance')}
-                      className="p-4 rounded-xl bg-slate-950/90 border border-slate-800 hover:border-pink-500/50 cursor-pointer transition group flex flex-col justify-between space-y-3 shadow"
-                    >
-                      <div className="flex items-start justify-between">
-                        <div>
-                          <div className="font-bold text-white group-hover:text-pink-300 transition flex items-center gap-2 text-sm">
-                            <Activity className="w-4 h-4 text-pink-400" />
-                            <span>Run Performance Tests</span>
-                          </div>
-                          <div className="text-[11px] text-slate-400 mt-1">Execute sysbench, iperf3, and fio TopoLVM NVMe IOPS stress benchmark suites.</div>
+                  <div
+                    onClick={() => onNavigateTab && onNavigateTab('performance')}
+                    className="p-5 rounded-2xl bg-slate-950/90 border border-slate-800 hover:border-pink-500/50 cursor-pointer transition group flex flex-col justify-between space-y-3 shadow"
+                  >
+                    <div className="flex items-start justify-between">
+                      <div>
+                        <div className="font-bold text-white group-hover:text-pink-300 transition flex items-center gap-2 text-sm">
+                          <Activity className="w-4 h-4 text-pink-400" />
+                          <span>Run Performance Tests</span>
                         </div>
-                        <ArrowUpRight className="w-4 h-4 text-slate-500 group-hover:text-pink-300 flex-shrink-0" />
+                        <div className="text-[11px] text-slate-400 mt-1">Execute sysbench, iperf3, and fio TopoLVM NVMe IOPS stress benchmark suites.</div>
                       </div>
-                      <div className="pt-2 border-t border-slate-900 flex items-center justify-between font-mono font-bold text-[11px] text-pink-400">
-                        <span>fio / iperf3 Suite</span>
-                        <span>[ 🚀 Run Benchmark ]</span>
-                      </div>
+                      <ArrowUpRight className="w-4 h-4 text-slate-500 group-hover:text-pink-300 flex-shrink-0" />
                     </div>
+                    <div className="pt-2 border-t border-slate-900 flex items-center justify-between font-mono font-bold text-[11px] text-pink-400">
+                      <span>fio / iperf3 Suite</span>
+                      <span>[ 🚀 Run Benchmark ]</span>
+                    </div>
+                  </div>
 
-                    <div
-                      onClick={() => onNavigateTab && onNavigateTab('sentinel')}
-                      className="p-4 rounded-xl bg-slate-950/90 border border-slate-800 hover:border-emerald-500/50 cursor-pointer transition group flex flex-col justify-between space-y-3 shadow"
-                    >
-                      <div className="flex items-start justify-between">
-                        <div>
-                          <div className="font-bold text-white group-hover:text-emerald-300 transition flex items-center gap-2 text-sm">
-                            <Bot className="w-4 h-4 text-emerald-400" />
-                            <span>AI Self-Healing & Feedback Loops</span>
-                          </div>
-                          <div className="text-[11px] text-slate-400 mt-1">Explore active anomalies, trigger automated remediation, and inspect AI watchdog loops.</div>
+                  <div
+                    onClick={() => onNavigateTab && onNavigateTab('sentinel')}
+                    className="p-5 rounded-2xl bg-slate-950/90 border border-slate-800 hover:border-emerald-500/50 cursor-pointer transition group flex flex-col justify-between space-y-3 shadow"
+                  >
+                    <div className="flex items-start justify-between">
+                      <div>
+                        <div className="font-bold text-white group-hover:text-emerald-300 transition flex items-center gap-2 text-sm">
+                          <Bot className="w-4 h-4 text-emerald-400" />
+                          <span>AI Self-Healing & Feedback Loops</span>
                         </div>
-                        <ArrowUpRight className="w-4 h-4 text-slate-500 group-hover:text-emerald-300 flex-shrink-0" />
+                        <div className="text-[11px] text-slate-400 mt-1">Explore active anomalies, trigger automated remediation, and inspect AI watchdog loops.</div>
                       </div>
-                      <div className="pt-2 border-t border-slate-900 flex items-center justify-between font-mono font-bold text-[11px] text-emerald-400">
-                        <span>Autonomous Watchdog</span>
-                        <span>[ 🔧 Open Sentinel ]</span>
-                      </div>
+                      <ArrowUpRight className="w-4 h-4 text-slate-500 group-hover:text-emerald-300 flex-shrink-0" />
+                    </div>
+                    <div className="pt-2 border-t border-slate-900 flex items-center justify-between font-mono font-bold text-[11px] text-emerald-400">
+                      <span>Autonomous Watchdog</span>
+                      <span>[ 🔧 Open Sentinel ]</span>
                     </div>
                   </div>
                 </div>
               </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* STATE 3: Cluster Operations Window */}
+      {activeModalView === 'cluster' && inspectedCluster && (
+        <div className="space-y-6 animate-fadeIn bg-slate-900/90 border-2 border-purple-500/50 rounded-3xl p-6 shadow-2xl">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-800 pb-4">
+            <div>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setActiveModalView('project')}
+                  className="px-3 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-bold transition flex items-center gap-1.5 border border-slate-700"
+                >
+                  ⬅️ Return to Project Console
+                </button>
+                <span className="text-[10px] font-bold text-purple-400 uppercase tracking-widest">Active Cluster Operations Console</span>
+              </div>
+              <div className="flex items-center gap-3 mt-2">
+                <h3 className="text-2xl font-black text-white font-mono">{inspectedCluster}</h3>
+                <span className="bg-emerald-500/20 text-emerald-400 text-[10px] font-extrabold px-2.5 py-0.5 rounded-full border border-emerald-500/30 flex items-center gap-1">
+                  <CheckCircle2 className="w-3.5 h-3.5" /> 100% HEALTHY • BARE-METAL READY
+                </span>
+              </div>
+            </div>
+            <div className="text-right text-xs text-slate-400 font-mono bg-slate-950 px-4 py-2 rounded-xl border border-slate-800 shadow">
+              <div>Tenant: <strong className="text-white">{selectedProj}</strong></div>
+              <div>Nodes: <strong className="text-sky-300">3x Ice Lake Bare-Metal</strong></div>
+            </div>
+          </div>
+
+          {/* 1. Performance Metrics (vCPU / RAM Gauges & NVMe IOPS) */}
+          <div className="space-y-2">
+            <div className="text-xs font-extrabold text-slate-300 uppercase tracking-wider flex items-center justify-between">
+              <span>⚡ Real-Time Compute & Storage Allocation</span>
+              <span className="text-[10px] text-sky-400 font-mono">4,200 NVMe IOPS Active</span>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="p-4 rounded-xl bg-slate-950/90 border border-slate-800 flex flex-col justify-between shadow-inner">
+                <div className="flex items-center justify-between text-xs font-bold text-slate-300">
+                  <span className="flex items-center gap-1.5"><Cpu className="w-4 h-4 text-sky-400" /><span>vCPU Allocation</span></span>
+                  <span className="font-mono text-sky-400 font-black">75%</span>
+                </div>
+                <div className="my-2.5 flex items-center justify-center">
+                  <div className="relative w-16 h-16 flex items-center justify-center">
+                    <svg className="w-full h-full transform -rotate-90"><circle cx="32" cy="32" r="26" stroke="currentColor" strokeWidth="6" className="text-slate-800 fill-none" /><circle cx="32" cy="32" r="26" stroke="currentColor" strokeWidth="6" strokeDasharray={163} strokeDashoffset={163 - (163 * 75) / 100} className="text-sky-500 fill-none transition-all duration-700" strokeLinecap="round" /></svg>
+                    <span className="absolute font-mono font-bold text-[11px] text-white">24/32</span>
+                  </div>
+                </div>
+                <div className="text-[10px] text-center text-slate-400">Intel Bare-Metal Nodes</div>
+              </div>
+
+              <div className="p-4 rounded-xl bg-slate-950/90 border border-slate-800 flex flex-col justify-between shadow-inner">
+                <div className="flex items-center justify-between text-xs font-bold text-slate-300">
+                  <span className="flex items-center gap-1.5"><Activity className="w-4 h-4 text-purple-400" /><span>RAM In-Use</span></span>
+                  <span className="font-mono text-purple-400 font-black">82%</span>
+                </div>
+                <div className="my-2.5 flex items-center justify-center">
+                  <div className="relative w-16 h-16 flex items-center justify-center">
+                    <svg className="w-full h-full transform -rotate-90"><circle cx="32" cy="32" r="26" stroke="currentColor" strokeWidth="6" className="text-slate-800 fill-none" /><circle cx="32" cy="32" r="26" stroke="currentColor" strokeWidth="6" strokeDasharray={163} strokeDashoffset={163 - (163 * 82) / 100} className="text-purple-500 fill-none transition-all duration-700" strokeLinecap="round" /></svg>
+                    <span className="absolute font-mono font-bold text-[11px] text-white">105GB</span>
+                  </div>
+                </div>
+                <div className="text-[10px] text-center text-slate-400">128GB Total ECC Memory</div>
+              </div>
+
+              <div className="p-4 rounded-xl bg-slate-950/90 border border-slate-800 flex flex-col justify-between shadow-inner">
+                <div className="flex items-center justify-between text-xs font-bold text-slate-300">
+                  <span className="flex items-center gap-1.5"><HardDrive className="w-4 h-4 text-pink-400" /><span>TopoLVM NVMe</span></span>
+                  <span className="font-mono text-pink-400 font-black">64%</span>
+                </div>
+                <div className="my-2.5 flex items-center justify-center">
+                  <div className="relative w-16 h-16 flex items-center justify-center">
+                    <svg className="w-full h-full transform -rotate-90"><circle cx="32" cy="32" r="26" stroke="currentColor" strokeWidth="6" className="text-slate-800 fill-none" /><circle cx="32" cy="32" r="26" stroke="currentColor" strokeWidth="6" strokeDasharray={163} strokeDashoffset={163 - (163 * 64) / 100} className="text-pink-500 fill-none transition-all duration-700" strokeLinecap="round" /></svg>
+                    <span className="absolute font-mono font-bold text-[11px] text-white">1.4TB</span>
+                  </div>
+                </div>
+                <div className="text-[10px] text-center text-slate-400">2.0TB Local RWO Volume</div>
+              </div>
+            </div>
+          </div>
+
+          {/* 2. Deployed Workloads Roster */}
+          <div className="space-y-2">
+            <div className="text-xs font-extrabold text-slate-300 uppercase tracking-wider flex items-center justify-between">
+              <span>🪟 Deployed Workloads & Virtual Machines</span>
+              <span className="text-[10px] text-emerald-400 font-mono">4 Active Runtimes</span>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+              <div className="p-3 rounded-xl bg-slate-950 border border-slate-800/80 flex items-center justify-between">
+                <div className="flex items-center gap-2.5">
+                  <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                  <div><div className="font-bold text-white">elera-pos-engine-v4</div><div className="text-[10px] text-slate-400">K8s Container Pod • Port 8080</div></div>
+                </div>
+                <span className="text-[10px] font-mono font-bold bg-sky-500/20 text-sky-300 px-2 py-0.5 rounded border border-sky-500/30">RUNNING</span>
+              </div>
+
+              <div className="p-3 rounded-xl bg-slate-950 border border-slate-800/80 flex items-center justify-between">
+                <div className="flex items-center gap-2.5">
+                  <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                  <div><div className="font-bold text-white">redis-session-cache-ha</div><div className="text-[10px] text-slate-400">K8s Container Pod • Port 6379</div></div>
+                </div>
+                <span className="text-[10px] font-mono font-bold bg-sky-500/20 text-sky-300 px-2 py-0.5 rounded border border-sky-500/30">RUNNING</span>
+              </div>
+
+              <div className="p-3 rounded-xl bg-slate-950 border border-slate-800/80 flex items-center justify-between">
+                <div className="flex items-center gap-2.5">
+                  <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                  <div><div className="font-bold text-white">win-pos-controller-01</div><div className="text-[10px] text-slate-400">KubeVirt OCI VM • WinServer 2022</div></div>
+                </div>
+                <span className="text-[10px] font-mono font-bold bg-purple-500/20 text-purple-300 px-2 py-0.5 rounded border border-purple-500/30">OCI VM</span>
+              </div>
+
+              <div className="p-3 rounded-xl bg-slate-950 border border-slate-800/80 flex items-center justify-between">
+                <div className="flex items-center gap-2.5">
+                  <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                  <div><div className="font-bold text-white">rhel9-db-node</div><div className="text-[10px] text-slate-400">KubeVirt OCI VM • RHEL 9 SQL Core</div></div>
+                </div>
+                <span className="text-[10px] font-mono font-bold bg-purple-500/20 text-purple-300 px-2 py-0.5 rounded border border-purple-500/30">OCI VM</span>
+              </div>
+            </div>
+          </div>
+
+          {/* 3. Current Operations & Errors Box */}
+          <div className="p-4 rounded-xl bg-gradient-to-r from-slate-950 via-slate-900 to-slate-950 border border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400 flex-shrink-0 font-black">
+                ✓
+              </div>
+              <div className="text-xs">
+                <div className="font-extrabold text-white">Current Operations: 0 Errors Detected</div>
+                <div className="text-[11px] text-slate-400 mt-0.5">Automated TopoLVM volume snapshot backup completed 2m ago. All node components SLA 100%.</div>
+              </div>
+            </div>
+            <div className="flex items-center gap-2 flex-shrink-0">
+              <button
+                onClick={() => onNavigateTab && onNavigateTab('vms')}
+                className="px-3.5 py-2 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-extrabold text-xs transition shadow-md shadow-purple-500/20"
+              >
+                Open VM Console →
+              </button>
+              <button
+                onClick={() => onNavigateTab && onNavigateTab('workloads')}
+                className="px-3.5 py-2 rounded-xl bg-sky-500 hover:bg-sky-400 text-slate-950 font-extrabold text-xs transition shadow-md shadow-sky-500/20"
+              >
+                Open K8s Console →
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}v>
             </div>
           )}
         </div>
