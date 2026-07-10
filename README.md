@@ -87,4 +87,5 @@ Open **`http://localhost:3000`** in your browser.
 
 ## 🏗️ Architecture & Component Reference
 
-For a complete engineering deep-dive into the frontend technology stack (**Next.js 16**, **React 19**, **Vanilla CSS Glassmorphism**), component modules (`PerformanceDashboard.tsx`, `ProvisionWizard.tsx`, `ConfigSyncManager.tsx`), and Node.js child process command execution, reference **`FRONTEND_ARCHITECTURE.md`** in this repository.
+* **`FRONTEND_ARCHITECTURE.md`**: Complete engineering deep-dive into the frontend technology stack (**Next.js 16**, **React 19**, **Vanilla CSS Glassmorphism**), component modules (`PerformanceDashboard.tsx`, `ProvisionWizard.tsx`, `ConfigSyncManager.tsx`), and Node.js child process command execution.
+* **`PROJECT_HISTORY_AND_ROADMAP.md`**: Comprehensive changelog of all major features built (Theme Studio, 3 Operating Modes, Workflow Safety Guards, Multi-Lane POS Emulation, MongoDB TopoLVM Bench, ContainerDisks, and GitOps test workloads) and strategic ideas for future efficiency optimizations.
