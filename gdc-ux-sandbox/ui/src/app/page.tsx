@@ -10,6 +10,7 @@ import NetworkManager from '@/components/NetworkManager';
 import SentinelManager from '@/components/SentinelManager';
 import ConfigSyncManager from '@/components/ConfigSyncManager';
 import PerformanceDashboard from '@/components/PerformanceDashboard';
+import TenantCreationPipeline from '@/components/TenantCreationPipeline';
 import { ConfigProvider } from '@/components/ConfigProvider';
 import Sidebar from '@/components/Sidebar';
 
@@ -47,6 +48,15 @@ export default function Home() {
           <main className="w-full max-w-[1920px] mx-auto px-4 md:px-8 lg:px-12 space-y-6 pb-12">
             {activeTab === 'dashboard' && (
               <Dashboard clusterName={clusterName} projectId={projectId} setActiveTab={setActiveTab} />
+            )}
+            {activeTab === 'create-tenant' && (
+              <TenantCreationPipeline
+                onComplete={(newProj) => {
+                  setProjectId(newProj.projectId || 'retail-edge-store-402');
+                  setActiveTab('dashboard');
+                }}
+                onCancel={() => setActiveTab('dashboard')}
+              />
             )}
             {activeTab === 'provision' && (
               <ProvisionWizard

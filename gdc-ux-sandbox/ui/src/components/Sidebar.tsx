@@ -18,6 +18,7 @@ export default function Sidebar({ activeTab, setActiveTab, clusterName }: Sideba
 
   const navItems = [
     { id: 'dashboard', label: 'Fleet Overview', icon: Activity, badge: 'HOME' },
+    { id: 'create-tenant', label: '+ Onboard Tenant Pipeline', icon: Terminal, badge: 'NEW' },
     { id: 'provision', label: 'Cluster Provisioner', icon: Terminal },
     { id: 'vms', label: 'GDC VM Runtime', icon: Cpu, badge: 'OCI' },
     { id: 'workloads', label: 'K8s Workloads', icon: Layers },

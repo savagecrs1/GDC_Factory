@@ -102,11 +102,14 @@ export default function FleetOperationsCenter({ currentProject, onSelectProject,
 
         <div className="flex items-center gap-2">
           <button
-            onClick={() => setSelectedProj('gdc-tenant-new-stage')}
-            className="flex items-center gap-1.5 text-xs text-amber-300 bg-amber-500/10 hover:bg-amber-500/20 px-3 py-1.5 rounded-xl border border-amber-500/30 font-bold transition shadow-sm"
-            title="Simulate adding a new uninitialized tenant project"
+            onClick={() => {
+              setSelectedProj('gdc-tenant-new-stage');
+              if (onNavigateTab) onNavigateTab('create-tenant');
+            }}
+            className="flex items-center gap-1.5 text-xs text-amber-300 bg-amber-500/10 hover:bg-amber-500/20 px-3.5 py-2 rounded-xl border border-amber-500/40 font-extrabold transition shadow-md shadow-amber-500/10 scale-105"
+            title="Launch 5-Phase Full-Stack Tenant & Cluster Creation Pipeline"
           >
-            <span>+ Onboard New Tenant</span>
+            <span>⚡ + Onboard Tenant Pipeline</span>
           </button>
           <button
             onClick={() => setLoading(!loading)}
