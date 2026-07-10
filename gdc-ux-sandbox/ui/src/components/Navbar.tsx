@@ -87,33 +87,16 @@ export default function Navbar({
             </span>
           </div>
         ) : (
-          <nav className="flex items-center gap-1 bg-slate-900/80 p-1 rounded-xl border border-slate-800/80">
+          <div className="flex items-center gap-2">
             <button
               onClick={() => setActiveTab('dashboard')}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-purple-300 text-xs font-bold transition mr-1 border border-purple-500/30 shadow-sm"
+              className="flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white text-xs font-extrabold transition shadow-lg shadow-purple-500/20 border border-purple-400/30"
               title="Return to Multi-Cluster Fleet Overview"
             >
-              ⬅️ Overview
+              <span>⬅️</span>
+              <span>Back to Fleet Overview</span>
             </button>
-            {navItems.filter(item => item.id !== 'dashboard').map((item) => {
-              const Icon = item.icon;
-              const isActive = activeTab === item.id;
-              return (
-                <button
-                  key={item.id}
-                  onClick={() => setActiveTab(item.id)}
-                  className={`flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-medium transition-all duration-200 ${
-                    isActive
-                      ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white font-bold shadow-md shadow-purple-500/25'
-                      : 'text-slate-400 hover:text-white hover:bg-slate-800/50'
-                  }`}
-                >
-                  <Icon className={`w-3.5 h-3.5 ${isActive ? 'text-white' : 'text-slate-400'}`} />
-                  {item.label}
-                </button>
-              );
-            })}
-          </nav>
+          </div>
         )}
 
         {/* Auth, Studio & Environment Switcher */}
