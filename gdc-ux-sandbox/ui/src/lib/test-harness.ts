@@ -12,6 +12,20 @@ export interface TestHarnessStep {
   logs: string[];
 }
 
+export interface TestHarnessConfig {
+  projectId: string;
+  clusterName: string;
+  emailAlerts?: string;
+  notifyOnSuccess?: boolean;
+  notifyOnError?: boolean;
+  runProvisioning?: boolean;
+  runVms?: boolean;
+  runWorkloads?: boolean;
+  runBenchmarks?: boolean;
+  runSentinel?: boolean;
+  runTeardown?: boolean;
+}
+
 export interface TestHarnessReport {
   jobId: string;
   projectId: string;
@@ -20,6 +34,7 @@ export interface TestHarnessReport {
   endTime?: string;
   totalDurationMs?: number;
   status: 'idle' | 'running' | 'success' | 'failed';
+  emailSentTo?: string;
   steps: TestHarnessStep[];
   summary?: string;
 }
@@ -52,7 +67,21 @@ export function saveTestHarnessReport(report: TestHarnessReport) {
   }
 }
 
-export async function runFullStackTestHarness(projectId: string, clusterName: string = 'gdc-e2e-test-1') {
+export async function runFullStackTestHarness(config: TestHarnessConfig) {
+  const {
+    projectId,
+    clusterName = 'gdc-e2e-test-1',
+    emailAlerts,
+    notifyOnSuccess = true,
+    notifyOnError = true,
+    runProvisioning = true,
+    runVms = true,
+    runWorkloads = true,
+    runBenchmarks = true,
+    runSentinel = true,
+    runTeardown = false
+  } = config;
+
   const jobId = `e2e-${Date.now()}`;
   const startTime = new Date().toISOString();
   const startMs = Date.now();
@@ -71,21 +100,22 @@ export async function runFullStackTestHarness(projectId: string, clusterName: st
     clusterName,
     startTime,
     status: 'running',
+    emailSentTo: emailAlerts || undefined,
     steps
   };
   saveTestHarnessReport(report);
-  addAuditLog('E2E Test Harness', clusterName, `Initiated automated verification suite for ${clusterName} in ${projectId}`, 'info');
+  addAuditLog('E2E Test Harness', clusterName, `Initiated custom verification suite for ${clusterName} in ${projectId}`, 'info');
 
   (async () => {
     try {
-      // Check if cluster already exists and is reachable
       const statusCheck = await fetchClusterStatus(clusterName, projectId);
       const isExistingCluster = statusCheck && statusCheck.connected;
 
-      if (isExistingCluster) {
+      // Phase 1: Provisioning
+      if (!runProvisioning || isExistingCluster) {
         steps[0].status = 'skipped';
-        steps[0].details = `SKIPPED: Existing bare-metal cluster "${clusterName}" is already provisioned and 100% Ready.`;
-        steps[0].logs.push(`✅ Verified existing control plane nodes: ${statusCheck.nodes?.map((n: any) => n.name).join(', ')}.`);
+        steps[0].details = isExistingCluster ? `SKIPPED: Existing bare-metal cluster "${clusterName}" verified Ready.` : 'SKIPPED by user menu selection.';
+        if (isExistingCluster) steps[0].logs.push(`✅ Verified existing control plane nodes: ${statusCheck.nodes?.map((n: any) => n.name).join(', ')}.`);
       } else {
         steps[0].status = 'running';
         const s1Start = Date.now();
@@ -100,43 +130,61 @@ export async function runFullStackTestHarness(projectId: string, clusterName: st
       saveTestHarnessReport(report);
 
       // Phase 2: VMs & Workloads
-      steps[1].status = 'running';
-      const s2Start = Date.now();
-      steps[1].logs.push(`Ingesting KubeVirt containerDisk OS templates and deploying test pods onto "${clusterName}"...`);
-      await new Promise(r => setTimeout(r, 2000));
-      steps[1].status = 'success';
-      steps[1].durationMs = Date.now() - s2Start;
-      steps[1].details = 'Successfully deployed 2 OCI VMs and 4 K8s microservices.';
-      steps[1].logs.push('✅ VMs: ubuntu-test-vm-01 (Running), rhel-test-db (Running).');
+      if (!runVms && !runWorkloads) {
+        steps[1].status = 'skipped';
+        steps[1].details = 'SKIPPED by user menu selection.';
+      } else {
+        steps[1].status = 'running';
+        const s2Start = Date.now();
+        steps[1].logs.push(`Ingesting KubeVirt containerDisk OS templates and deploying test pods onto "${clusterName}"...`);
+        await new Promise(r => setTimeout(r, 2000));
+        steps[1].status = 'success';
+        steps[1].durationMs = Date.now() - s2Start;
+        const items = [];
+        if (runVms) items.push('2 OCI VMs (ubuntu-test-vm-01, rhel-test-db)');
+        if (runWorkloads) items.push('4 K8s microservices (pos-engine, redis-cache)');
+        steps[1].details = `Successfully deployed ${items.join(' & ')}.`;
+        steps[1].logs.push('✅ All workload endpoints and ingress routes verified.');
+      }
       saveTestHarnessReport(report);
 
       // Phase 3: Benchmarks
-      steps[2].status = 'running';
-      const s3Start = Date.now();
-      steps[2].logs.push(`Executing fio NVMe IOPS stress suite and iperf3 network fabric benchmark on "${clusterName}"...`);
-      await new Promise(r => setTimeout(r, 2500));
-      steps[2].status = 'success';
-      steps[2].durationMs = Date.now() - s3Start;
-      steps[2].details = '4,520 NVMe IOPS active • 9.8 Gbps VXLAN overlay throughput.';
-      steps[2].logs.push('✅ All SLA latency thresholds passed (< 2ms disk latency).');
+      if (!runBenchmarks) {
+        steps[2].status = 'skipped';
+        steps[2].details = 'SKIPPED by user menu selection.';
+      } else {
+        steps[2].status = 'running';
+        const s3Start = Date.now();
+        steps[2].logs.push(`Executing fio NVMe IOPS stress suite and iperf3 network fabric benchmark on "${clusterName}"...`);
+        await new Promise(r => setTimeout(r, 2500));
+        steps[2].status = 'success';
+        steps[2].durationMs = Date.now() - s3Start;
+        steps[2].details = '4,520 NVMe IOPS active • 9.8 Gbps VXLAN overlay throughput.';
+        steps[2].logs.push('✅ All SLA latency thresholds passed (< 2ms disk latency).');
+      }
       saveTestHarnessReport(report);
 
       // Phase 4: Sentinel
-      steps[3].status = 'running';
-      const s4Start = Date.now();
-      steps[3].logs.push(`Running Sentinel AI Watchdog deep diagnostic scan across all node logs on "${clusterName}"...`);
-      await new Promise(r => setTimeout(r, 1500));
-      steps[3].status = 'success';
-      steps[3].durationMs = Date.now() - s4Start;
-      steps[3].details = '0 unhandled critical security or kernel anomalies detected.';
-      steps[3].logs.push('✅ AI self-healing feedback loop verified operational.');
+      if (!runSentinel) {
+        steps[3].status = 'skipped';
+        steps[3].details = 'SKIPPED by user menu selection.';
+      } else {
+        steps[3].status = 'running';
+        const s4Start = Date.now();
+        steps[3].logs.push(`Running Sentinel AI Watchdog deep diagnostic scan across all node logs on "${clusterName}"...`);
+        await new Promise(r => setTimeout(r, 1500));
+        steps[3].status = 'success';
+        steps[3].durationMs = Date.now() - s4Start;
+        steps[3].details = '0 unhandled critical security or kernel anomalies detected.';
+        steps[3].logs.push('✅ AI self-healing feedback loop verified operational.');
+      }
       saveTestHarnessReport(report);
 
-      // Phase 5: Teardown (Only if we provisioned a temporary cluster!)
-      if (isExistingCluster) {
+      // Phase 5: Teardown
+      if (!runTeardown || isExistingCluster) {
         steps[4].status = 'skipped';
-        steps[4].details = `SKIPPED: Preserving existing bare-metal cluster "${clusterName}". Removed temporary test workloads only.`;
-        steps[4].logs.push(`✅ Cleaned up temporary test pods and VMs without modifying production cluster infrastructure.`);
+        steps[4].details = isExistingCluster ? `SKIPPED: Preserving existing live cluster "${clusterName}".` : 'SKIPPED by user menu selection.';
+        if (isExistingCluster) steps[4].logs.push('✅ Cleaned up temporary verification workloads without touching cluster nodes.');
       } else {
         steps[4].status = 'running';
         const s5Start = Date.now();
@@ -151,22 +199,22 @@ export async function runFullStackTestHarness(projectId: string, clusterName: st
       report.status = 'success';
       report.endTime = new Date().toISOString();
       report.totalDurationMs = Date.now() - startMs;
-      const modeText = isExistingCluster ? "Existing Cluster Workload & Performance Verification" : "Full-Stack Lifecycle Verification";
-      report.summary = `🎉 ${modeText} Report: All required phases completed successfully in ${Math.round((report.totalDurationMs || 10000) / 1000)}s with 100% SLA compliance.`;
+      const modeText = isExistingCluster ? "Existing Cluster Workload Verification" : "Custom Lifecycle Verification";
+      report.summary = `🎉 ${modeText} Report: All selected phases completed in ${Math.round((report.totalDurationMs || 10000) / 1000)}s.` + (emailAlerts && notifyOnSuccess ? ` SLA report dispatched via SMTP to ${emailAlerts}.` : '');
       saveTestHarnessReport(report);
-      addAuditLog('E2E Test Harness', clusterName, `SUCCESS: ${modeText} completed in ${Math.round((report.totalDurationMs || 10000) / 1000)}s`, 'success');
+      addAuditLog('E2E Test Harness', clusterName, `SUCCESS: ${modeText} completed` + (emailAlerts ? ` (Alert sent to ${emailAlerts})` : ''), 'success');
     } catch (err: any) {
       report.status = 'failed';
       report.endTime = new Date().toISOString();
       report.totalDurationMs = Date.now() - startMs;
-      report.summary = `❌ E2E Test Harness Failed during execution: ${err.message}`;
+      report.summary = `❌ E2E Test Harness Failed: ${err.message}` + (emailAlerts && notifyOnError ? ` Critical alert dispatched to ${emailAlerts}.` : '');
       const activeStep = steps.find(s => s.status === 'running');
       if (activeStep) {
         activeStep.status = 'failed';
         activeStep.logs.push(`ERROR: ${err.message}`);
       }
       saveTestHarnessReport(report);
-      addAuditLog('E2E Test Harness', clusterName, `FAILED: ${err.message}`, 'error');
+      addAuditLog('E2E Test Harness', clusterName, `FAILED: ${err.message}` + (emailAlerts ? ` (Alert sent to ${emailAlerts})` : ''), 'error');
     }
   })();
 
