@@ -22,26 +22,6 @@ export default function ConfigSyncManager({ clusterName, projectId }: ConfigSync
   const [auth, setAuth] = useState('none');
   const [secretRef, setSecretRef] = useState('git-creds-secret');
   const [period, setPeriod] = useState('15s');
-  const [checkoutReceipt, setCheckoutReceipt] = useState<any>(null);
-  const [testingCheckout, setTestingCheckout] = useState(false);
-
-  const handleTestCheckout = async () => {
-    setTestingCheckout(true);
-    setCheckoutReceipt(null);
-    try {
-      const res = await fetch('/api/kubernetes/checkout', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ clusterName, projectId }),
-      });
-      const data = await res.json();
-      if (data.receipt) setCheckoutReceipt(data.receipt);
-    } catch (err) {
-      console.error('Checkout simulation error:', err);
-    } finally {
-      setTestingCheckout(false);
-    }
-  };
 
   const fetchRootSyncs = () => {
     setLoading(true);
@@ -174,7 +154,7 @@ spec:
           </h3>
           <span className="text-[11px] text-slate-500 font-mono">1-Click GitOps Setup</span>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
           <button
             type="button"
             onClick={() => applyPreset('root-sync-grocery-pos', 'https://github.com/savagecrs1/gdc-vm-configs.git', '/kroger-gdc-portal/gitops-profiles/grocery-store-emulator', 'none', '300s')}
@@ -182,11 +162,27 @@ spec:
           >
             <div>
               <div className="flex items-center justify-between">
-                <span className="font-bold text-white text-xs group-hover:text-sky-300 transition">🏪 Standard Grocery POS Profile</span>
+                <span className="font-bold text-white text-xs group-hover:text-sky-300 transition">🏪 Grocery POS Profile</span>
                 <span className="text-[10px] bg-sky-500/10 text-sky-400 px-2 py-0.5 rounded border border-sky-500/20 font-mono">/grocery-pos</span>
               </div>
               <p className="text-[11px] text-slate-400 mt-1 leading-snug">
-                Deploys store POS engine, smart cart gateway, and localized transaction logging pods across all 3 bare metal nodes.
+                Deploys store POS engine, smart cart gateway, and localized transaction logging pods across bare metal nodes.
+              </p>
+            </div>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => applyPreset('root-sync-mongo-perf', 'https://github.com/savagecrs1/gdc-vm-configs.git', '/kroger-gdc-portal/gitops-profiles/mongo-performance-test', 'none', '300s')}
+            className="p-3 rounded-xl bg-slate-900/80 hover:bg-slate-800/80 border border-slate-700/80 text-left transition flex flex-col justify-between group"
+          >
+            <div>
+              <div className="flex items-center justify-between">
+                <span className="font-bold text-white text-xs group-hover:text-sky-300 transition">🍃 MongoDB TopoLVM Bench</span>
+                <span className="text-[10px] bg-emerald-500/10 text-emerald-400 px-2 py-0.5 rounded border border-emerald-500/20 font-mono">/mongo-perf</span>
+              </div>
+              <p className="text-[11px] text-slate-400 mt-1 leading-snug">
+                Deploys Kroger isc-utility MongoDB performance test suite across TopoLVM RWO storage volumes.
               </p>
             </div>
           </button>
@@ -198,11 +194,11 @@ spec:
           >
             <div>
               <div className="flex items-center justify-between">
-                <span className="font-bold text-white text-xs group-hover:text-sky-300 transition">🤖 MFC Robotics & AI Vision</span>
+                <span className="font-bold text-white text-xs group-hover:text-sky-300 transition">🤖 MFC Robotics & Vision</span>
                 <span className="text-[10px] bg-amber-500/10 text-amber-400 px-2 py-0.5 rounded border border-amber-500/20 font-mono">/mfc-robotics</span>
               </div>
               <p className="text-[11px] text-slate-400 mt-1 leading-snug">
-                Installs automated fulfillment aisle telemetry, Robin SDS persistent storage, and high-speed MQTT message brokers.
+                Installs automated fulfillment aisle telemetry, Robin SDS storage, and high-speed MQTT message brokers.
               </p>
             </div>
           </button>
@@ -214,11 +210,11 @@ spec:
           >
             <div>
               <div className="flex items-center justify-between">
-                <span className="font-bold text-white text-xs group-hover:text-sky-300 transition">🔒 PCI-DSS Compliance Bundle</span>
+                <span className="font-bold text-white text-xs group-hover:text-sky-300 transition">🔒 PCI-DSS Bundle</span>
                 <span className="text-[10px] bg-emerald-500/10 text-emerald-400 px-2 py-0.5 rounded border border-emerald-500/20 font-mono">/pci-dss-v4</span>
               </div>
               <p className="text-[11px] text-slate-400 mt-1 leading-snug">
-                Enforces OPA Gatekeeper zero-trust network policies, mTLS mesh encryption, and strict container security contexts.
+                Enforces OPA Gatekeeper zero-trust network policies, mTLS mesh encryption, and strict security contexts.
               </p>
             </div>
           </button>
@@ -455,39 +451,6 @@ spec:
             <pre className="p-3.5 bg-slate-950 rounded-xl border border-slate-800 text-[11px] font-mono text-sky-300 overflow-x-auto leading-relaxed">
               {generatedYaml}
             </pre>
-          </div>
-
-          {/* Cashier Checkout Simulator Box */}
-          <div className="glass-panel p-5 rounded-2xl border border-emerald-500/30 bg-emerald-950/10 space-y-3">
-            <div className="flex items-center justify-between">
-              <div>
-                <h4 className="text-xs font-bold text-emerald-400 uppercase tracking-wider flex items-center gap-2">
-                  🛒 Store Register & PIN Pad Transaction Simulator
-                </h4>
-                <p className="text-[11px] text-slate-400 mt-0.5">
-                  Executes a live checkout transaction from the POS register pod across the PCI VLAN to the payment gateway.
-                </p>
-              </div>
-              <button
-                onClick={handleTestCheckout}
-                disabled={testingCheckout}
-                className="px-3.5 py-2 bg-emerald-500 hover:bg-emerald-400 disabled:opacity-50 text-slate-950 font-bold text-xs rounded-xl shadow-lg shadow-emerald-500/20 flex items-center gap-1.5 transition flex-shrink-0"
-              >
-                {testingCheckout ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <span>💳 Test Cashier Checkout</span>}
-              </button>
-            </div>
-
-            {checkoutReceipt && (
-              <div className="p-4 rounded-xl bg-slate-950 border border-emerald-500/40 space-y-2 text-xs font-mono text-slate-300 animate-fadeIn">
-                <div className="flex justify-between items-center border-b border-slate-800 pb-2 text-emerald-400 font-bold">
-                  <span>RECEIPT: {checkoutReceipt.transaction_id || 'POS-SIM'}</span>
-                  <span>{checkoutReceipt.total_paid}</span>
-                </div>
-                <pre className="text-[11px] overflow-x-auto text-slate-300 leading-relaxed">
-                  {JSON.stringify(checkoutReceipt, null, 2)}
-                </pre>
-              </div>
-            )}
           </div>
         </div>
       </div>

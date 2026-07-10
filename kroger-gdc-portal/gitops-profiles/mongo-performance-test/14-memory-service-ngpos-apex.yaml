@@ -1,0 +1,68 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: memory-service
+  namespace: ngpos-apex
+  labels:
+    app: memory-service
+    app.kubernetes.io/part-of: cluster-performance-test
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: memory-service
+  template:
+    metadata:
+      labels:
+        app: memory-service
+    spec:
+      imagePullSecrets:
+      - name: jfrog-secret
+      containers:
+      - name: memory-service
+        image: krogertechnology-docker-prod.jfrog.io/ecs_docker_repo/perf-memory-service:mongo-v4
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 8080
+          name: http
+        env:
+        - name: DATABASE_SERVICE_URL
+          value: http://database-service.ngpos-apex.svc.cluster.local:8080
+        - name: MEMORY_ALLOC_MB
+          value: "100"
+        - name: MEMORY_RETAIN_MS
+          value: "100"
+        resources:
+          requests:
+            cpu: "1"
+            memory: "2Gi"
+          limits:
+            memory: "4Gi"
+        readinessProbe:
+          httpGet:
+            path: /healthz
+            port: 8080
+          initialDelaySeconds: 3
+          periodSeconds: 5
+        livenessProbe:
+          httpGet:
+            path: /healthz
+            port: 8080
+          initialDelaySeconds: 10
+          periodSeconds: 10
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: memory-service
+  namespace: ngpos-apex
+  labels:
+    app: memory-service
+spec:
+  type: ClusterIP
+  selector:
+    app: memory-service
+  ports:
+  - port: 8080
+    targetPort: 8080
+    name: http

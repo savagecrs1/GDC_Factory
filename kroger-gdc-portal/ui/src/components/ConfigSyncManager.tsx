@@ -154,7 +154,7 @@ spec:
           </h3>
           <span className="text-[11px] text-slate-500 font-mono">1-Click GitOps Setup</span>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
           <button
             type="button"
             onClick={() => applyPreset('root-sync-grocery-pos', 'https://github.com/savagecrs1/gdc-vm-configs.git', '/kroger-gdc-portal/gitops-profiles/grocery-store-emulator', 'none', '300s')}
@@ -162,11 +162,27 @@ spec:
           >
             <div>
               <div className="flex items-center justify-between">
-                <span className="font-bold text-white text-xs group-hover:text-sky-300 transition">🏪 Standard Grocery POS Profile</span>
+                <span className="font-bold text-white text-xs group-hover:text-sky-300 transition">🏪 Grocery POS Profile</span>
                 <span className="text-[10px] bg-sky-500/10 text-sky-400 px-2 py-0.5 rounded border border-sky-500/20 font-mono">/grocery-pos</span>
               </div>
               <p className="text-[11px] text-slate-400 mt-1 leading-snug">
-                Deploys store POS engine, smart cart gateway, and localized transaction logging pods across all 3 bare metal nodes.
+                Deploys store POS engine, smart cart gateway, and localized transaction logging pods across bare metal nodes.
+              </p>
+            </div>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => applyPreset('root-sync-mongo-perf', 'https://github.com/savagecrs1/gdc-vm-configs.git', '/kroger-gdc-portal/gitops-profiles/mongo-performance-test', 'none', '300s')}
+            className="p-3 rounded-xl bg-slate-900/80 hover:bg-slate-800/80 border border-slate-700/80 text-left transition flex flex-col justify-between group"
+          >
+            <div>
+              <div className="flex items-center justify-between">
+                <span className="font-bold text-white text-xs group-hover:text-sky-300 transition">🍃 MongoDB TopoLVM Bench</span>
+                <span className="text-[10px] bg-emerald-500/10 text-emerald-400 px-2 py-0.5 rounded border border-emerald-500/20 font-mono">/mongo-perf</span>
+              </div>
+              <p className="text-[11px] text-slate-400 mt-1 leading-snug">
+                Deploys Kroger isc-utility MongoDB performance test suite across TopoLVM RWO storage volumes.
               </p>
             </div>
           </button>
@@ -178,11 +194,11 @@ spec:
           >
             <div>
               <div className="flex items-center justify-between">
-                <span className="font-bold text-white text-xs group-hover:text-sky-300 transition">🤖 MFC Robotics & AI Vision</span>
+                <span className="font-bold text-white text-xs group-hover:text-sky-300 transition">🤖 MFC Robotics & Vision</span>
                 <span className="text-[10px] bg-amber-500/10 text-amber-400 px-2 py-0.5 rounded border border-amber-500/20 font-mono">/mfc-robotics</span>
               </div>
               <p className="text-[11px] text-slate-400 mt-1 leading-snug">
-                Installs automated fulfillment aisle telemetry, Robin SDS persistent storage, and high-speed MQTT message brokers.
+                Installs automated fulfillment aisle telemetry, Robin SDS storage, and high-speed MQTT message brokers.
               </p>
             </div>
           </button>
@@ -194,11 +210,11 @@ spec:
           >
             <div>
               <div className="flex items-center justify-between">
-                <span className="font-bold text-white text-xs group-hover:text-sky-300 transition">🔒 PCI-DSS Compliance Bundle</span>
+                <span className="font-bold text-white text-xs group-hover:text-sky-300 transition">🔒 PCI-DSS Bundle</span>
                 <span className="text-[10px] bg-emerald-500/10 text-emerald-400 px-2 py-0.5 rounded border border-emerald-500/20 font-mono">/pci-dss-v4</span>
               </div>
               <p className="text-[11px] text-slate-400 mt-1 leading-snug">
-                Enforces OPA Gatekeeper zero-trust network policies, mTLS mesh encryption, and strict container security contexts.
+                Enforces OPA Gatekeeper zero-trust network policies, mTLS mesh encryption, and strict security contexts.
               </p>
             </div>
           </button>

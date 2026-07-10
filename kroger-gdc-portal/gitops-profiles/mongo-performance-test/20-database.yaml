@@ -1,0 +1,84 @@
+apiVersion: v1
+kind: Secret
+metadata:
+  name: mongodb-credentials
+  namespace: performance-test
+  labels:
+    app: mongodb
+type: Opaque
+stringData:
+  MONGO_INITDB_ROOT_USERNAME: perf
+  MONGO_INITDB_ROOT_PASSWORD: perf
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mongodb
+  namespace: performance-test
+  labels:
+    app: mongodb
+    app.kubernetes.io/part-of: cluster-performance-test
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mongodb
+  template:
+    metadata:
+      labels:
+        app: mongodb
+    spec:
+      imagePullSecrets:
+      - name: jfrog-secret
+      containers:
+      - name: mongodb
+        image: mongo:7.0
+        args: [ "--wiredTigerCacheSizeGB", "2" ]
+        envFrom:
+        - secretRef:
+            name: mongodb-credentials
+        env:
+        - name: MONGO_INITDB_DATABASE
+          value: "perf"
+        ports:
+        - containerPort: 27017
+          name: mongodb
+        resources:
+          requests:
+            cpu: "1000m"
+            memory: "3Gi"
+          limits:
+            memory: "4Gi"
+        readinessProbe:
+          exec:
+            command: [ "sh", "-c", "mongosh --eval \"db.adminCommand('ping')\"" ]
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        livenessProbe:
+          exec:
+            command: [ "sh", "-c", "mongosh --eval \"db.adminCommand('ping')\"" ]
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        volumeMounts:
+        - name: data
+          mountPath: /data/db
+      volumes:
+      # emptyDir keeps the test stack ephemeral; swap for a PVC to persist data.
+      - name: data
+        emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mongodb
+  namespace: performance-test
+  labels:
+    app: mongodb
+spec:
+  type: ClusterIP
+  selector:
+    app: mongodb
+  ports:
+  - port: 27017
+    targetPort: 27017
+    name: mongodb
