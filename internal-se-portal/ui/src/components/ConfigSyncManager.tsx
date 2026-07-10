@@ -157,7 +157,7 @@ spec:
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
           <button
             type="button"
-            onClick={() => applyPreset('root-sync-grocery-pos', 'https://github.com/savagecrs1/gdc-vm-configs.git', '/kroger-gdc-portal/gitops-profiles/grocery-store-emulator', 'none', '300s')}
+            onClick={() => applyPreset('root-sync-grocery-pos', 'https://github.com/savagecrs1/GDC_Factory.git', '/kroger-gdc-portal/gitops-profiles/grocery-store-emulator', 'none', '300s')}
             className="p-3 rounded-xl bg-slate-900/80 hover:bg-slate-800/80 border border-slate-700/80 text-left transition flex flex-col justify-between group"
           >
             <div>
@@ -173,7 +173,7 @@ spec:
 
           <button
             type="button"
-            onClick={() => applyPreset('root-sync-mongo-perf', 'https://github.com/savagecrs1/gdc-vm-configs.git', '/kroger-gdc-portal/gitops-profiles/mongo-performance-test', 'none', '300s')}
+            onClick={() => applyPreset('root-sync-mongo-perf', 'https://github.com/savagecrs1/GDC_Factory.git', '/kroger-gdc-portal/gitops-profiles/mongo-performance-test', 'none', '300s')}
             className="p-3 rounded-xl bg-slate-900/80 hover:bg-slate-800/80 border border-slate-700/80 text-left transition flex flex-col justify-between group"
           >
             <div>
