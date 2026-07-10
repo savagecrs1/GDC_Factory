@@ -29,7 +29,7 @@ export default function Sidebar({ activeTab, setActiveTab, clusterName }: Sideba
 
   return (
     <aside
-      className={`glass-panel border-r border-slate-800 flex flex-col justify-between transition-all duration-300 relative z-40 bg-gradient-to-b from-slate-950 via-slate-900/95 to-slate-950 ${
+      className={`glass-panel border-r border-slate-800 flex flex-col justify-between transition-all duration-300 relative z-40 bg-gradient-to-b from-slate-950 via-slate-900/95 to-slate-950 h-screen sticky top-0 flex-shrink-0 ${
         isCollapsed ? 'w-20' : 'w-64'
       }`}
     >
@@ -42,7 +42,7 @@ export default function Sidebar({ activeTab, setActiveTab, clusterName }: Sideba
         {isCollapsed ? <ChevronRight className="w-3.5 h-3.5" /> : <ChevronLeft className="w-3.5 h-3.5" />}
       </button>
 
-      <div className="p-4 space-y-6 overflow-y-auto">
+      <div className="p-4 space-y-6 overflow-y-auto flex-1 min-h-0">
         {/* Navigation Header */}
         <div className={`flex items-center gap-3 px-2 py-1 ${isCollapsed ? 'justify-center' : ''}`}>
           <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-purple-500 to-indigo-600 flex items-center justify-center text-white font-black text-sm shadow-md shadow-purple-500/20">
@@ -90,7 +90,7 @@ export default function Sidebar({ activeTab, setActiveTab, clusterName }: Sideba
       </div>
 
       {/* Integrated Resource Allocation Meter */}
-      <div className={`p-4 border-t border-slate-800/80 bg-slate-950/80 ${isCollapsed ? 'px-2' : ''}`}>
+      <div className={`p-4 border-t border-slate-800/80 bg-slate-950/90 flex-shrink-0 ${isCollapsed ? 'px-2' : ''}`}>
         {!isCollapsed ? (
           <div className="space-y-3">
             <div className="flex items-center justify-between text-[11px] font-bold text-slate-300">
