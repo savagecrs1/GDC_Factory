@@ -16,8 +16,8 @@ export default function SentinelManager({ clusterName: initialCluster, projectId
   const [fixResult, setFixResult] = useState<{ id: string; success: boolean; message: string } | null>(null);
 
   // Form inputs
-  const [projectId, setProjectId] = useState(initialProject || 'kroger-store-test1');
-  const [clusterName, setClusterName] = useState(initialCluster || 'kroger-store-001');
+  const [projectId, setProjectId] = useState(initialProject || 'gdc-edge-demo-1');
+  const [clusterName, setClusterName] = useState(initialCluster || 'gdc-edge-cluster-1');
 
   useEffect(() => {
     if (initialProject) setProjectId(initialProject);
@@ -30,7 +30,7 @@ export default function SentinelManager({ clusterName: initialCluster, projectId
   const [iterations, setIterations] = useState(5);
   const [billingAccountId, setBillingAccountId] = useState('0150AE-F3AB84-9BC087');
   const [availableProjects, setAvailableProjects] = useState<any[]>([
-    { id: 'kroger-store-test1', name: 'Kroger Store Test 1' },
+    { id: 'gdc-edge-demo-1', name: 'GDC Edge Demo Project' },
     { id: 'vdc-18818', name: 'GDC Demo VDC 18818' },
     { id: 'core-edge-dm1', name: 'Core Edge DM1 (Admin WS)' },
   ]);

@@ -10,7 +10,7 @@ interface ThemeStudioModalProps {
 }
 
 const PRESET_THEMES = [
-  { label: '🟢 Kroger Emerald', hex: '#10b981', vertical: 'retail' },
+  { label: '🟢 Forest Green', hex: '#10b981', vertical: 'retail' },
   { label: '🟠 Home Depot Orange', hex: '#f97316', vertical: 'retail' },
   { label: '🔴 Target Red', hex: '#ef4444', vertical: 'retail' },
   { label: '🔵 Walmart Blue', hex: '#0071ce', vertical: 'retail' },

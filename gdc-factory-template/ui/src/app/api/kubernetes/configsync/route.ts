@@ -78,7 +78,7 @@ function runKubectl(cmd: string, clusterName: string, projectId: string): { succ
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const clusterName = searchParams.get('clusterName') || 'abm-cluster-1';
-  const projectId = searchParams.get('projectId') || 'kroger-store-test1';
+  const projectId = searchParams.get('projectId') || 'gdc-edge-demo-1';
 
   try {
     const res = runKubectl('get rootsyncs.configsync.gke.io -n config-management-system -o json', clusterName, projectId);
@@ -118,7 +118,7 @@ export async function POST(request: Request) {
     const body = await request.json();
     const {
       clusterName = 'abm-cluster-1',
-      projectId = 'kroger-store-test1',
+      projectId = 'gdc-edge-demo-1',
       name = 'root-sync-custom',
       repo,
       branch = 'main',
@@ -198,7 +198,7 @@ export async function DELETE(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
     const clusterName = searchParams.get('clusterName') || 'abm-cluster-1';
-    const projectId = searchParams.get('projectId') || 'kroger-store-test1';
+    const projectId = searchParams.get('projectId') || 'gdc-edge-demo-1';
     const name = searchParams.get('name');
 
     if (!name) {

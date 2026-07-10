@@ -57,7 +57,7 @@ ui/src/components/
 ## 4. Key Component Deep-Dives
 
 ### 4.1 `PerformanceDashboard.tsx` (Metrics & Performance Analyzer)
-Designed to visualize headless distributed microservice benchmarks (such as the Kroger `isc-utility-project` MongoDB TopoLVM suite):
+Designed to visualize headless distributed microservice benchmarks (such as the Enterprise MongoDB TopoLVM suite):
 * **Workload Suite Selector**: Lets engineers switch between POS Commerce lookups, PCI-DSS DUKPT encryption stress tests, TopoLVM NVMe block I/O benchmarks, and multi-VLAN VXLAN throughput tests.
 * **Interactive Load Concurrency Slider**: Scales synthetic worker threads from `1` to `32`, dynamically recalculating system throughput (TPS/RPS) and disk/network I/O.
 * **4-Stage Latency Waterfall Attribution**: Deconstructs total end-to-end checkout duration into granular visual percentage bars across *Network Overlay Encapsulation*, *CPU Cryptographic Processing*, *Database Catalog Lookup*, and *Storage Block Commit I/O*.

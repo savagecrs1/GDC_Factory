@@ -58,7 +58,7 @@ export default function Navbar({
             {config.logoUrl ? (
               <img src={config.logoUrl} alt={config.customerName} className="h-14 md:h-16 w-auto object-contain drop-shadow-md" />
             ) : (
-              <img src="/kroger-logo.svg" alt="Kroger" className="h-14 md:h-16 w-auto object-contain drop-shadow-md" />
+              <img src="/globe.svg" alt="GDC" className="h-14 md:h-16 w-auto object-contain drop-shadow-md" />
             )}
           </div>
           <div>

@@ -19,9 +19,9 @@ interface ConfigContextType {
 }
 
 const DEFAULT_CONFIG: PortalConfig = {
-  customerName: "Kroger Retail Edge",
+  customerName: "GDC Edge Operations",
   logoUrl: "",
-  primaryHex: "#10b981",
+  primaryHex: "#38bdf8",
   colorMode: "dark",
   operatingMode: "live",
   industryVertical: "retail",
@@ -43,7 +43,7 @@ export function ConfigProvider({ children }: { children: React.ReactNode }) {
   const applyThemeToDom = (cfg: PortalConfig) => {
     if (typeof document === 'undefined') return;
     const root = document.documentElement;
-    root.style.setProperty('--color-primary', cfg.primaryHex || '#10b981');
+    root.style.setProperty('--color-primary', cfg.primaryHex || '#38bdf8');
     if (cfg.colorMode === 'light') {
       root.classList.add('theme-light');
       root.classList.remove('theme-dark');

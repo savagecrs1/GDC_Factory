@@ -65,8 +65,8 @@ export default function PerformanceDashboard({ clusterName, projectId }: Perform
       desc = "Evaluates Multus secondary network interface throughput and 1410 MTU clamping packet efficiency.";
     } else if (prof === 'mongo_perf') {
       p50 = 6.8; p95 = 14.2; p99 = 22.1; tps = 5400; readMb = 620; writeMb = 510; netMb = 85;
-      title = "Kroger isc-utility MongoDB TopoLVM Storage Bench";
-      desc = "Deploys Kroger MongoDB performance suite across TopoLVM RWO storage volumes to stress B-tree indexes and disk sync.";
+      title = "Enterprise MongoDB TopoLVM Storage Bench";
+      desc = "Deploys Enterprise MongoDB performance suite across TopoLVM RWO storage volumes to stress B-tree indexes and disk sync.";
     }
 
     // Scale slightly with concurrency
@@ -167,7 +167,7 @@ export default function PerformanceDashboard({ clusterName, projectId }: Perform
 
           <div className="flex items-center gap-2 bg-slate-950/80 px-4 py-2.5 rounded-xl border border-slate-800 font-mono text-xs text-slate-300">
             <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-            <span>Target: <strong className="text-white">{clusterName}</strong> ({projectId || 'kroger-test-2'})</span>
+            <span>Target: <strong className="text-white">{clusterName}</strong> ({projectId || 'gdc-edge-demo-1'})</span>
           </div>
         </div>
       </div>
@@ -198,7 +198,7 @@ export default function PerformanceDashboard({ clusterName, projectId }: Perform
                     { id: 'pci_crypto', label: '🔒 PCI-DSS DUKPT Encryption Bench', desc: 'Stress-tests cryptographic tokenization across isolated VLAN 3430', icon: Lock, color: 'text-amber-400 border-amber-500/40 bg-amber-950/20' },
                     { id: 'topolvm_io', label: '💾 TopoLVM Local NVMe Block I/O Test', desc: 'Measures RWO PVC sequential throughput & IOPS on logical volume group', icon: HardDrive, color: 'text-emerald-400 border-emerald-500/40 bg-emerald-950/20' },
                     { id: 'vxlan_overlay', label: '🌐 Multi-VLAN VXLAN Overlay Throughput', desc: 'Evaluates Multus secondary network interface bandwidth & MTU efficiency', icon: Network, color: 'text-indigo-400 border-indigo-500/40 bg-indigo-950/20' },
-                    { id: 'mongo_perf', label: '🍃 Kroger isc-utility MongoDB TopoLVM Bench', desc: 'Deploys MongoDB performance suite across TopoLVM RWO storage volumes', icon: Database, color: 'text-teal-400 border-teal-500/40 bg-teal-950/20' }
+                    { id: 'mongo_perf', label: '🍃 Enterprise MongoDB TopoLVM Bench', desc: 'Deploys MongoDB performance suite across TopoLVM RWO storage volumes', icon: Database, color: 'text-teal-400 border-teal-500/40 bg-teal-950/20' }
                   ].map((p: any) => (
                     <button
                       key={p.id}

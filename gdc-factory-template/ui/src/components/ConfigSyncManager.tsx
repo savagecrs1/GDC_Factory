@@ -25,7 +25,7 @@ export default function ConfigSyncManager({ clusterName, projectId }: ConfigSync
 
   const fetchRootSyncs = () => {
     setLoading(true);
-    fetch(`/api/kubernetes/configsync?clusterName=${encodeURIComponent(clusterName)}&projectId=${encodeURIComponent(projectId || 'kroger-store-test1')}`)
+    fetch(`/api/kubernetes/configsync?clusterName=${encodeURIComponent(clusterName)}&projectId=${encodeURIComponent(projectId || 'gdc-edge-demo-1')}`)
       .then((res) => res.json())
       .then((data) => {
         if (data.rootSyncs) {
@@ -71,7 +71,7 @@ export default function ConfigSyncManager({ clusterName, projectId }: ConfigSync
     if (!confirm(`Are you sure you want to remove RootSync '${syncName}'? physical node configurations will no longer receive automated GitOps updates.`)) return;
     
     try {
-      const res = await fetch(`/api/kubernetes/configsync?clusterName=${encodeURIComponent(clusterName)}&projectId=${encodeURIComponent(projectId || 'kroger-store-test1')}&name=${encodeURIComponent(syncName)}`, {
+      const res = await fetch(`/api/kubernetes/configsync?clusterName=${encodeURIComponent(clusterName)}&projectId=${encodeURIComponent(projectId || 'gdc-edge-demo-1')}&name=${encodeURIComponent(syncName)}`, {
         method: 'DELETE',
       });
       const data = await res.json();
@@ -121,7 +121,7 @@ spec:
           </div>
           <div>
             <h2 className="text-xl font-bold text-white flex items-center gap-2">
-              Kroger GitOps & Workload Continuous Sync
+              Enterprise GitOps & Workload Continuous Sync
               <span className="text-xs bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 px-2 py-0.5 rounded-full font-mono font-normal">
                 Anthos Config Management v1.18
               </span>
@@ -145,7 +145,7 @@ spec:
         </div>
       )}
 
-      {/* Preset Kroger Retail Profile Selector */}
+      {/* Preset Workload Profile Selector */}
       <div className="glass-panel p-5 rounded-2xl border border-slate-800 space-y-3">
         <div className="flex items-center justify-between">
           <h3 className="text-xs font-semibold text-slate-300 uppercase tracking-wider flex items-center gap-2">
@@ -167,38 +167,6 @@ spec:
               </div>
               <p className="text-[11px] text-slate-400 mt-1 leading-snug">
                 Deploys NGINX edge web server (NodePort 30080) and Redis session cache for automated GitOps reconciliation testing.
-              </p>
-            </div>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => applyPreset('root-sync-grocery-pos', 'https://github.com/savagecrs1/GDC_Factory.git', '/kroger-gdc-portal/gitops-profiles/grocery-store-emulator', 'none', '300s')}
-            className="p-3 rounded-xl bg-slate-900/80 hover:bg-slate-800/80 border border-slate-700/80 text-left transition flex flex-col justify-between group"
-          >
-            <div>
-              <div className="flex items-center justify-between">
-                <span className="font-bold text-white text-xs group-hover:text-sky-300 transition">🏪 Grocery POS Profile</span>
-                <span className="text-[10px] bg-sky-500/10 text-sky-400 px-2 py-0.5 rounded border border-sky-500/20 font-mono">/grocery-pos</span>
-              </div>
-              <p className="text-[11px] text-slate-400 mt-1 leading-snug">
-                Deploys store POS engine, smart cart gateway, and localized transaction logging pods across bare metal nodes.
-              </p>
-            </div>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => applyPreset('root-sync-mongo-perf', 'https://github.com/savagecrs1/GDC_Factory.git', '/kroger-gdc-portal/gitops-profiles/mongo-performance-test', 'none', '300s')}
-            className="p-3 rounded-xl bg-slate-900/80 hover:bg-slate-800/80 border border-slate-700/80 text-left transition flex flex-col justify-between group"
-          >
-            <div>
-              <div className="flex items-center justify-between">
-                <span className="font-bold text-white text-xs group-hover:text-sky-300 transition">🍃 MongoDB TopoLVM Bench</span>
-                <span className="text-[10px] bg-emerald-500/10 text-emerald-400 px-2 py-0.5 rounded border border-emerald-500/20 font-mono">/mongo-perf</span>
-              </div>
-              <p className="text-[11px] text-slate-400 mt-1 leading-snug">
-                Deploys Kroger isc-utility MongoDB performance test suite across TopoLVM RWO storage volumes.
               </p>
             </div>
           </button>

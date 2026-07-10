@@ -4,7 +4,7 @@ import { startSentinelLoop, stopSentinelLoop, clearSentinelLoop, getSentinelStat
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { action, projectId = 'kroger-store-test1', clusterName = 'sentinel-test-cluster', iterations = 3, billingAccountId = '0150AE-F3AB84-9BC087' } = body;
+    const { action, projectId = 'gdc-edge-demo-1', clusterName = 'sentinel-test-cluster', iterations = 3, billingAccountId = '0150AE-F3AB84-9BC087' } = body;
 
     if (action === 'start') {
       startSentinelLoop(projectId, clusterName, iterations, billingAccountId).catch((err) => {

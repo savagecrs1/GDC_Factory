@@ -27,7 +27,7 @@ fi
 echo "🔍 Verifying GCP project '${PROJECT_ID}' exists and is accessible..."
 if ! gcloud projects describe "${PROJECT_ID}" >/dev/null 2>&1; then
   echo "❌ ERROR: Project '${PROJECT_ID}' does not exist or you do not have permission to access it!"
-  echo "💡 Tip: Check for typos in the project ID. For example, use 'kroger-store-test1' instead of 'gem-kroger-store-test1'."
+  echo "💡 Tip: Check for typos in the project ID. For example, use 'gdc-edge-demo-1' instead of 'gem-gdc-edge-demo-1'."
   exit 1
 fi
 

@@ -5,9 +5,9 @@ import path from 'path';
 const CONFIG_PATH = path.resolve(process.cwd(), '..', 'portal.config.json');
 
 const DEFAULT_CONFIG = {
-  customerName: "Kroger Retail Edge",
+  customerName: "GDC Edge Operations",
   logoUrl: "",
-  primaryHex: "#10b981",
+  primaryHex: "#38bdf8",
   colorMode: "dark",
   operatingMode: "live",
   industryVertical: "retail",

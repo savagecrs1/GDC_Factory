@@ -163,7 +163,7 @@ export default function NetworkManager({ clusterName, projectId }: NetworkManage
               Create Secondary VLAN Network (GDC Network CRD)
             </h3>
             <div className="flex items-center gap-2 flex-wrap">
-              <span className="text-[11px] font-semibold text-slate-400 uppercase">Kroger Presets:</span>
+              <span className="text-[11px] font-semibold text-slate-400 uppercase">Standard Edge VLAN Presets:</span>
               <button
                 type="button"
                 onClick={() => {

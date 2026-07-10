@@ -1,21 +1,21 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-const KROGER_CATALOG = [
-  { upc: "000111104285", name: "Kroger Gallon Whole Milk", price: 3.29, category: "Dairy", promo: null },
-  { upc: "000111108421", name: "Private Selection Honey Turkey", price: 7.49, category: "Deli", promo: "Kroger Plus Card: -$1.50 Off" },
+const ENTERPRISE_CATALOG = [
+  { upc: "000111104285", name: "Enterprise Gallon Whole Milk", price: 3.29, category: "Dairy", promo: null },
+  { upc: "000111108421", name: "Private Selection Honey Turkey", price: 7.49, category: "Deli", promo: "Enterprise Plus Card: -$1.50 Off" },
   { upc: "000111101923", name: "Honeycrisp Apples (3 lbs)", price: 5.99, category: "Produce", promo: null },
-  { upc: "000111109912", name: "Kroger Large Eggs 18ct", price: 3.89, category: "Dairy", promo: "Digital Coupon: -$0.50 Off" },
+  { upc: "000111109912", name: "Enterprise Large Eggs 18ct", price: 3.89, category: "Dairy", promo: "Digital Coupon: -$0.50 Off" },
   { upc: "000111105512", name: "Private Selection Sumatran Coffee", price: 8.99, category: "Grocery", promo: "Buy 1 Get 1 50% Off" },
   { upc: "000111103341", name: "Simple Truth Organic Baby Spinach", price: 3.49, category: "Produce", promo: null },
-  { upc: "000111107762", name: "Kroger Sharp Cheddar Cheese Block", price: 2.99, category: "Dairy", promo: null },
+  { upc: "000111107762", name: "Enterprise Sharp Cheddar Cheese Block", price: 2.99, category: "Dairy", promo: null },
   { upc: "000111102214", name: "Heritage Farm Chicken Breast (3lb)", price: 9.99, category: "Meat", promo: "Mega Sale: -$2.00 Off" },
-  { upc: "000111106631", name: "Kroger Creamy Peanut Butter (40oz)", price: 4.29, category: "Grocery", promo: null },
+  { upc: "000111106631", name: "Enterprise Creamy Peanut Butter (40oz)", price: 4.29, category: "Grocery", promo: null },
   { upc: "000111108899", name: "Private Selection Sourdough Bread", price: 3.99, category: "Bakery", promo: null },
   { upc: "000111104412", name: "Simple Truth Organic Almond Milk", price: 3.79, category: "Dairy", promo: null },
-  { upc: "000111101102", name: "Kroger Frozen Strawberries (16oz)", price: 2.79, category: "Frozen", promo: "Digital Coupon: -$0.30 Off" },
-  { upc: "000111109001", name: "Kroger Pure Olive Oil (32oz)", price: 11.49, category: "Grocery", promo: null },
+  { upc: "000111101102", name: "Enterprise Frozen Strawberries (16oz)", price: 2.79, category: "Frozen", promo: "Digital Coupon: -$0.30 Off" },
+  { upc: "000111109001", name: "Enterprise Pure Olive Oil (32oz)", price: 11.49, category: "Grocery", promo: null },
   { upc: "000111103399", name: "Private Selection Sea Salt Caramel Ice Cream", price: 5.49, category: "Frozen", promo: null },
-  { upc: "000111107123", name: "Kroger Paper Towels (6 Mega Rolls)", price: 8.49, category: "Household", promo: "Kroger Plus Card: -$1.00 Off" }
+  { upc: "000111107123", name: "Enterprise Paper Towels (6 Mega Rolls)", price: 8.49, category: "Household", promo: "Enterprise Plus Card: -$1.00 Off" }
 ];
 
 function generateLaneLifecycle(laneIndex: number, baseItemCount: number, clusterName: string) {
@@ -31,7 +31,7 @@ function generateLaneLifecycle(laneIndex: number, baseItemCount: number, cluster
   let promoDiscountTotal = 0;
 
   for (let i = 0; i < count; i++) {
-    const catalogItem = KROGER_CATALOG[(laneIndex * 3 + i) % KROGER_CATALOG.length];
+    const catalogItem = ENTERPRISE_CATALOG[(laneIndex * 3 + i) % ENTERPRISE_CATALOG.length];
     const itemPrice = Number((catalogItem.price + ((laneIndex % 3) * 0.15)).toFixed(2));
     
     // Simulate cashier scanning time per item (350ms to 750ms in real life)
@@ -104,7 +104,7 @@ function generateLaneLifecycle(laneIndex: number, baseItemCount: number, cluster
         status: "APPROVED",
         auth_code: `EMV_${Math.floor(100000 + Math.random() * 900000)}`,
         terminal: `VERIFONE_M400_${laneId}_VLAN3430`,
-        merchant: "KROGER_STORE_002",
+        merchant: "GDC_STORE_001",
         network_segment: "VLAN 3430 CDE Isolated (172.18.0.0/16)",
         pci_encryption: "DUKPT Point-to-Point Validated (AES-256)",
         timestamp: new Date().toISOString()
@@ -115,7 +115,7 @@ function generateLaneLifecycle(laneIndex: number, baseItemCount: number, cluster
 
 export async function POST(req: NextRequest) {
   try {
-    const { clusterName = 'kroger-store-002', projectId = 'kroger-test-2', itemCount = 12, laneCount = 6 } = await req.json();
+    const { clusterName = 'gdc-edge-cluster-1', projectId = 'gdc-edge-demo-1', itemCount = 12, laneCount = 6 } = await req.json();
     const count = Math.max(1, Math.min(50, Number(itemCount) || 12));
     const lanesToSimulate = Math.max(1, Math.min(24, Number(laneCount) || 6));
 

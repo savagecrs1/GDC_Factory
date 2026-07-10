@@ -35,7 +35,7 @@ You can customize the portal for any customer in real time during a meeting or p
 2. In the top right navigation bar (next to the user profile badge), click **`🎨 Theme Studio`** (or press `Ctrl + Shift + T` if keyboard shortcuts are enabled).
 3. In the studio modal, configure:
    * **🏢 Customer Identity**: Company name (e.g., *Target Retail Edge*, *Home Depot SO*, *Ford Edge Studio*) and logo URL.
-   * **🎨 Brand Color Accent**: Pick a custom Hex color or select from SE quick presets (*Kroger Emerald*, *Home Depot Orange*, *Target Red*, *Walmart Blue*, *Google Cloud Blue*, *Caterpillar Gold*).
+   * **🎨 Brand Color Accent**: Pick a custom Hex color or select from SE quick presets (*Forest Green*, *Home Depot Orange*, *Target Red*, *Walmart Blue*, *Google Cloud Blue*, *Caterpillar Gold*).
    * **Sliders for Operating Mode**: Switch instantly between *Emulate Mode*, *Argolis Sandbox*, or *Live Production*.
    * **👁️ Active Portal Modules**: Toggle individual navigation tabs on/off to customize views for store operators versus Kubernetes cloud architects.
 4. Click **`✨ Apply White-Label Configuration`**! Your settings are immediately saved to `portal.config.json` and persisted across server restarts.
