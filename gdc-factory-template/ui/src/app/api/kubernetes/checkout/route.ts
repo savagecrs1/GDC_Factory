@@ -91,8 +91,8 @@ function generateLaneLifecycle(laneIndex: number, baseItemCount: number, cluster
     promotions: promotionsApplied,
     receipt: {
       transaction_id: `POS_TX_2026_${Math.floor(10000 + Math.random() * 90000)}_${laneIndex + 1}`,
-      store: `${clusterName} (Hybrid PCI Edge)`,
-      vlan_source: `Non-PCI Store Ops VLAN 3130 -> Pod elera-${laneId.toLowerCase()}`,
+      store: `${clusterName} (Hybrid Edge SO)`,
+      vlan_source: `Secondary Store Ops VLAN 100 -> Pod elera-${laneId.toLowerCase()}`,
       cashier: laneName,
       items,
       raw_subtotal: `$${rawSubtotal.toFixed(2)}`,
@@ -106,7 +106,7 @@ function generateLaneLifecycle(laneIndex: number, baseItemCount: number, cluster
         terminal: `VERIFONE_M400_${laneId}_VLAN3430`,
         merchant: "GDC_STORE_001",
         network_segment: "VLAN 3430 CDE Isolated (172.18.0.0/16)",
-        pci_encryption: "DUKPT Point-to-Point Validated (AES-256)",
+        sec_encryption: "DUKPT Point-to-Point Validated (AES-256)",
         timestamp: new Date().toISOString()
       }
     }

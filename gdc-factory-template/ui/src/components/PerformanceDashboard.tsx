@@ -8,7 +8,7 @@ interface PerformanceDashboardProps {
   projectId?: string;
 }
 
-type BenchmarkProfile = 'pos_commerce' | 'pci_crypto' | 'topolvm_io' | 'vxlan_overlay' | 'mongo_perf';
+type BenchmarkProfile = 'pos_commerce' | 'sec_crypto' | 'topolvm_io' | 'vxlan_overlay' | 'mongo_perf';
 
 export default function PerformanceDashboard({ clusterName, projectId }: PerformanceDashboardProps) {
   const [profile, setProfile] = useState<BenchmarkProfile>('pos_commerce');
@@ -51,10 +51,10 @@ export default function PerformanceDashboard({ clusterName, projectId }: Perform
     let title = "POS Commerce Catalog Lookup & DB Transaction Bench";
     let desc = "Simulates concurrent SKU database lookups and itemized cart commits across VLAN 3130.";
 
-    if (prof === 'pci_crypto') {
+    if (prof === 'sec_crypto') {
       p50 = 24.8; p95 = 48.2; p99 = 72.4; tps = 950; readMb = 80; writeMb = 40; netMb = 110;
-      title = "PCI-DSS DUKPT Point-to-Point Encryption Bench";
-      desc = "Stress-tests cryptographic AES-256 tokenization handshakes across isolated VLAN 3430 overlay.";
+      title = "Enterprise DUKPT Point-to-Point Encryption Bench";
+      desc = "Stress-tests cryptographic AES-256 tokenization handshakes across isolated VLAN 200 overlay.";
     } else if (prof === 'topolvm_io') {
       p50 = 4.2; p95 = 11.8; p99 = 18.5; tps = 4200; readMb = 820; writeMb = 640; netMb = 20;
       title = "TopoLVM Local NVMe Block Persistent Volume I/O Bench";
@@ -80,8 +80,8 @@ export default function PerformanceDashboard({ clusterName, projectId }: Perform
     netMb = Math.floor(netMb * Math.pow(concMultiplier, 0.7));
 
     // Latency waterfall percentage breakdown
-    const netPct = prof === 'vxlan_overlay' ? 45 : prof === 'pci_crypto' ? 35 : 15;
-    const cpuPct = prof === 'pci_crypto' ? 45 : 25;
+    const netPct = prof === 'vxlan_overlay' ? 45 : prof === 'sec_crypto' ? 35 : 15;
+    const cpuPct = prof === 'sec_crypto' ? 45 : 25;
     const dbPct = prof === 'pos_commerce' ? 45 : 15;
     const ioPct = 100 - (netPct + cpuPct + dbPct);
 
@@ -195,7 +195,7 @@ export default function PerformanceDashboard({ clusterName, projectId }: Perform
                 <div className="space-y-2">
                   {[
                     { id: 'pos_commerce', label: '🚀 POS Commerce Catalog & DB Bench', desc: 'Simulates SKU database lookups & basket transactions over VLAN 3130', icon: Database, color: 'text-sky-400 border-sky-500/40 bg-sky-950/20' },
-                    { id: 'pci_crypto', label: '🔒 PCI-DSS DUKPT Encryption Bench', desc: 'Stress-tests cryptographic tokenization across isolated VLAN 3430', icon: Lock, color: 'text-amber-400 border-amber-500/40 bg-amber-950/20' },
+                    { id: 'sec_crypto', label: '🔒 Enterprise DUKPT Encryption Bench', desc: 'Stress-tests cryptographic tokenization across isolated VLAN 200', icon: Lock, color: 'text-amber-400 border-amber-500/40 bg-amber-950/20' },
                     { id: 'topolvm_io', label: '💾 TopoLVM Local NVMe Block I/O Test', desc: 'Measures RWO PVC sequential throughput & IOPS on logical volume group', icon: HardDrive, color: 'text-emerald-400 border-emerald-500/40 bg-emerald-950/20' },
                     { id: 'vxlan_overlay', label: '🌐 Multi-VLAN VXLAN Overlay Throughput', desc: 'Evaluates Multus secondary network interface bandwidth & MTU efficiency', icon: Network, color: 'text-indigo-400 border-indigo-500/40 bg-indigo-950/20' },
                     { id: 'mongo_perf', label: '🍃 Enterprise MongoDB TopoLVM Bench', desc: 'Deploys MongoDB performance suite across TopoLVM RWO storage volumes', icon: Database, color: 'text-teal-400 border-teal-500/40 bg-teal-950/20' }

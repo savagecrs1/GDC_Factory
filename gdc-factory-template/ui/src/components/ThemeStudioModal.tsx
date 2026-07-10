@@ -24,7 +24,7 @@ const ALL_TABS = [
   { id: 'provision', label: 'Cluster Provisioner' },
   { id: 'vms', label: 'GDC VM Runtime' },
   { id: 'workloads', label: 'K8s Workloads' },
-  { id: 'networks', label: 'VLAN & PCI Networks' },
+  { id: 'networks', label: 'VLAN & Secondary Networks' },
   { id: 'configsync', label: 'GitOps Config Sync' },
   { id: 'performance', label: 'Performance & Metrics' },
   { id: 'sentinel', label: 'AI Sentinel Engine' },

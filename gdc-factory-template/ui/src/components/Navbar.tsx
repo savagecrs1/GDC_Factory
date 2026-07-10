@@ -40,7 +40,7 @@ export default function Navbar({
     { id: 'provision', label: 'Cluster Provisioner', icon: Terminal },
     { id: 'vms', label: 'GDC VM Runtime', icon: Cpu },
     { id: 'workloads', label: 'K8s Workloads', icon: Layers },
-    { id: 'networks', label: 'VLAN & PCI Networks', icon: Network },
+    { id: 'networks', label: 'VLAN & Secondary Networks', icon: Network },
     { id: 'configsync', label: 'GitOps Config Sync', icon: GitBranch },
     { id: 'performance', label: 'Performance & Metrics', icon: BarChart3 },
     { id: 'sentinel', label: 'AI Sentinel Engine', icon: Bot },

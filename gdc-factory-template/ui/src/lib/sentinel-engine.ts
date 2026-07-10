@@ -157,7 +157,7 @@ async function runLoopStep(loop: SentinelState, billingAccountId: string): Promi
     await new Promise((resolve) => setTimeout(resolve, 5000));
     
     addSentinelLog(loop, `  -> [Test 1/3] Deploying POS engine container workload on ${loop.targetCluster}... PASS`);
-    addSentinelLog(loop, `  -> [Test 2/3] Provisioning secondary Multus VLAN (pci-vlan-100)... PASS`);
+    addSentinelLog(loop, `  -> [Test 2/3] Provisioning secondary Multus VLAN (secondary-vlan-100)... PASS`);
     addSentinelLog(loop, `  -> [Test 3/3] Pinging Service ClusterIP over VXLAN overlay... PASS`);
     addSentinelLog(loop, `✅ Phase 2 Complete: All automated regression tests passed 100%.`);
 

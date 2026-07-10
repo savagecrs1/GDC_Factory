@@ -195,7 +195,7 @@ spec:
               </span>
             </div>
             <p className="text-sm text-slate-400 mt-0.5">
-              Manage container deployments, Service routing, and PCI Multus network attachments across <strong className="text-slate-200">{clusterName}</strong>
+              Manage container deployments, Service routing, and Secondary Multus network attachments across <strong className="text-slate-200">{clusterName}</strong>
             </p>
           </div>
         </div>
@@ -330,7 +330,7 @@ spec:
                 className="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-sky-500 font-mono"
               >
                 <option value="default">Default Pod Net (kube0)</option>
-                <option value="pci-vlan-123">pci-vlan-123 (VLAN 123 - PCI)</option>
+                <option value="secondary-vlan-100">secondary-vlan-100 (VLAN 100 - Secondary Net)</option>
                 <option value="tenant-vlan-456">tenant-vlan-456 (VLAN 456)</option>
                 {availableNetworks.map((n: any, idx: number) => (
                   <option key={idx} value={n.name}>{n.name} (VLAN {n.vlanId})</option>

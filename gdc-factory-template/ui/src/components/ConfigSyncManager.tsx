@@ -189,13 +189,13 @@ spec:
 
           <button
             type="button"
-            onClick={() => applyPreset('root-sync-pci-security', 'https://github.com/google-cloud-platform/anthos-config-management-samples.git', '/policies/pci-dss-v4', 'token')}
+            onClick={() => applyPreset('root-sync-zero-trust', 'https://github.com/google-cloud-platform/anthos-config-management-samples.git', '/policies/zero-trust-v4', 'token')}
             className="p-3 rounded-xl bg-slate-900/80 hover:bg-slate-800/80 border border-slate-700/80 text-left transition flex flex-col justify-between group"
           >
             <div>
               <div className="flex items-center justify-between">
-                <span className="font-bold text-white text-xs group-hover:text-sky-300 transition">🔒 PCI-DSS Bundle</span>
-                <span className="text-[10px] bg-emerald-500/10 text-emerald-400 px-2 py-0.5 rounded border border-emerald-500/20 font-mono">/pci-dss-v4</span>
+                <span className="font-bold text-white text-xs group-hover:text-sky-300 transition">🔒 Zero-Trust Security Bundle</span>
+                <span className="text-[10px] bg-emerald-500/10 text-emerald-400 px-2 py-0.5 rounded border border-emerald-500/20 font-mono">/zero-trust-v4</span>
               </div>
               <p className="text-[11px] text-slate-400 mt-1 leading-snug">
                 Enforces OPA Gatekeeper zero-trust network policies, mTLS mesh encryption, and strict security contexts.

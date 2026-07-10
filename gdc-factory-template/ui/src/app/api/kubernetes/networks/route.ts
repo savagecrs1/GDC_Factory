@@ -19,7 +19,7 @@ const DEFAULT_NETWORKS = [
     iface: 'vxlan0'
   },
   {
-    name: 'non-pci-network-3130',
+    name: 'tenant-a-vlan-100',
     vlanId: '3130',
     subnet: '192.168.88.0/24',
     vipPool: '192.168.88.65-192.168.88.126',
@@ -28,7 +28,7 @@ const DEFAULT_NETWORKS = [
     iface: 'gdcenet0.3130'
   },
   {
-    name: 'pci-network-3430',
+    name: 'tenant-b-vlan-200',
     vlanId: '3430',
     subnet: '192.168.80.0/24',
     vipPool: '192.168.80.65-192.168.80.126',
@@ -77,7 +77,7 @@ export async function GET(request: Request) {
       vlanId: n.metadata?.annotations?.['networking.gke.io/gdce-vlan-id'] || 'N/A',
       subnet: n.spec?.l2NetworkConfig?.prefixLength4 ? `Subnet /${n.spec?.l2NetworkConfig?.prefixLength4}` : 'Custom Subnet',
       vipPool: n.spec?.gateway4 ? `Gateway: ${n.spec?.gateway4}` : 'Auto-assigned Pool',
-      purpose: n.metadata?.name?.includes('pci') ? 'PCI-DSS Regulated Workload Traffic' : 'Secondary VLAN Overlay',
+      purpose: n.metadata?.name?.includes('tenant-b') ? 'High-Priority Secondary Workload Traffic' : 'Secondary VLAN Overlay',
       status: 'Active',
       iface: n.spec?.nodeInterfaceMatcher?.interfaceName || `gdcenet0.${n.metadata?.annotations?.['networking.gke.io/gdce-vlan-id']}`
     }));

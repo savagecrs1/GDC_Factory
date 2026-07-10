@@ -15,11 +15,11 @@ export default function NetworkManager({ clusterName, projectId }: NetworkManage
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
   // Form state
-  const [name, setName] = useState('pci-cardholder-vlan');
+  const [name, setName] = useState('secondary-vlan-100');
   const [vlanId, setVlanId] = useState('100');
   const [subnet, setSubnet] = useState('10.100.0.0/24');
   const [vipPool, setVipPool] = useState('10.100.0.200-10.100.0.250');
-  const [purpose, setPurpose] = useState('PCI-DSS Regulated Workloads & Database Traffic');
+  const [purpose, setPurpose] = useState('High-Priority Secondary VLAN Traffic');
 
   const fetchNetworks = () => {
     setLoading(true);
@@ -111,13 +111,13 @@ export default function NetworkManager({ clusterName, projectId }: NetworkManage
           </div>
           <div>
             <div className="flex items-center gap-2.5">
-              <h2 className="text-xl font-bold text-white">Secondary VLAN & PCI Network Manager</h2>
+              <h2 className="text-xl font-bold text-white">VLAN & Secondary Network Manager</h2>
               <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
                 Multus L2 Enabled
               </span>
             </div>
             <p className="text-sm text-slate-400 mt-0.5">
-              Configure strict broadcast domain isolation (`gdcenet0.&lt;VLAN&gt;`) for PCI-DSS and tenant segmentation in <strong className="text-slate-200">{clusterName}</strong>
+              Configure strict broadcast domain isolation (`gdcenet0.&lt;VLAN&gt;`) for multi-tenant and secondary workload segmentation in <strong className="text-slate-200">{clusterName}</strong>
             </p>
           </div>
         </div>
@@ -180,7 +180,7 @@ export default function NetworkManager({ clusterName, projectId }: NetworkManage
               <button
                 type="button"
                 onClick={() => {
-                  setName('non-pci-network-3130');
+                  setName('tenant-a-vlan-100');
                   setVlanId('3130');
                   setSubnet('192.168.88.0/24');
                   setVipPool('192.168.88.65-192.168.88.126');
@@ -188,12 +188,12 @@ export default function NetworkManager({ clusterName, projectId }: NetworkManage
                 }}
                 className="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 text-xs font-semibold transition"
               >
-                VLAN 3130 (Non-PCI)
+                VLAN 100 (Tenant A)
               </button>
               <button
                 type="button"
                 onClick={() => {
-                  setName('pci-network-3430');
+                  setName('tenant-b-vlan-200');
                   setVlanId('3430');
                   setSubnet('192.168.80.0/24');
                   setVipPool('192.168.80.65-192.168.80.126');
@@ -201,7 +201,7 @@ export default function NetworkManager({ clusterName, projectId }: NetworkManage
                 }}
                 className="px-2.5 py-1 rounded-lg bg-amber-500/20 hover:bg-amber-500/30 border border-amber-500/40 text-amber-200 text-xs font-semibold transition"
               >
-                VLAN 3430 (PCI CDE)
+                VLAN 200 (Tenant B)
               </button>
             </div>
           </div>
@@ -212,7 +212,7 @@ export default function NetworkManager({ clusterName, projectId }: NetworkManage
                 type="text"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                placeholder="e.g. pci-cardholder-vlan"
+                placeholder="e.g. secondary-vlan-100"
                 className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-indigo-500"
                 required
               />
@@ -259,7 +259,7 @@ export default function NetworkManager({ clusterName, projectId }: NetworkManage
                 type="text"
                 value={purpose}
                 onChange={(e) => setPurpose(e.target.value)}
-                placeholder="e.g. PCI-DSS Cardholder traffic isolation"
+                placeholder="e.g. Dedicated secondary VLAN overlay"
                 className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-indigo-500"
               />
             </div>
