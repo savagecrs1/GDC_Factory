@@ -41,6 +41,7 @@ resource "google_compute_instance" "gdc_vms" {
   zone         = var.zone
   project                   = var.project_id
   allow_stopping_for_update = true
+  deletion_protection = false
 
   # Match GDCc Ice Lake CPU platform (E2 instances do not support setting min_cpu_platform)
   min_cpu_platform = startswith(var.machine_type, "e2-") ? null : "Intel Ice Lake"

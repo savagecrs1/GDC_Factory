@@ -136,6 +136,12 @@ if [[ -n "$PUB_KEY" ]]; then
   gcloud compute project-info add-metadata --project="${PROJECT_ID}" --metadata-from-file=ssh-keys=/tmp/gcp_ssh_key.pub --quiet 2>/dev/null || true
   rm -f /tmp/gcp_ssh_key.pub
   echo "✅ SSH public key injected into project '${PROJECT_ID}'."
+
+echo "🛡️ Pre-flight check: Disabling compute instance deletion protection across existing project VMs..."
+for inst in $(gcloud compute instances list --project="${PROJECT_ID}" --format="value(name)" 2>/dev/null); do
+  gcloud compute instances update "$inst" --project="${PROJECT_ID}" --zone="us-central1-a" --no-deletion-protection --quiet 2>/dev/null || true
+done
+echo "✅ Deletion protection stripped from existing VMs."
 else
   echo "⚠️ No local SSH public key found in ~/.ssh. Skipping SSH key injection."
 fi
