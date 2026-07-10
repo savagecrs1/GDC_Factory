@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { executeAutoRemediate, updateTriageStatus, clearTriageReports } from '@/lib/ai-watchdog';
+import { executeAutoRemediate, updateTriageStatus, clearTriageReports, diagnoseClusterVisibility } from '@/lib/ai-watchdog';
 
 export async function POST(request: Request) {
   try {
@@ -9,6 +9,12 @@ export async function POST(request: Request) {
     if (action === 'clear') {
       clearTriageReports();
       return NextResponse.json({ success: true, message: 'All active triage reports cleared.' });
+    }
+
+    if (action === 'diagnose') {
+      const { clusterName, projectId } = body;
+      const report = diagnoseClusterVisibility(clusterName || 'abm-cluster-1', projectId || 'core-edge-dm1');
+      return NextResponse.json({ success: true, message: 'Diagnostic audit initiated.', report });
     }
 
     if (!id) {

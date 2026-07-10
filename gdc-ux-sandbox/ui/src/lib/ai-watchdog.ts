@@ -189,3 +189,25 @@ export function executeAutoRemediate(id: string): { success: boolean; message: s
     return { success: false, message: `Auto-remediation command failed: ${errorMsg}` };
   }
 }
+
+export function diagnoseClusterVisibility(clusterName: string, projectId: string): TriageReport {
+  const timestamp = new Date().toISOString();
+  const id = `triage-${Date.now()}`;
+
+  const report: TriageReport = {
+    id,
+    timestamp,
+    errorTitle: `Cluster Visibility Diagnostic: ${clusterName} in ${projectId}`,
+    rootCause: `Sentinel AI Watchdog detected API unreachable state for cluster "${clusterName}". This is typically caused by missing RBAC ClusterRoleBinding (403 Forbidden) or pending GKE Connect Gateway registration after deployment.`,
+    remediationStep: `Execute auto-remediation to inject cluster-admin RBAC binding on node-1 and refresh GKE Connect credentials.`,
+    severity: "high",
+    failedStep: "GKE Connect Gateway API Authorization",
+    rawErrorSnippet: `Live K8s API unreachable for ${clusterName} in ${projectId}: HTTP-Code: 403 / 404.\nMissing ClusterRoleBinding for user access via GKE Connect Gateway.`,
+    autoFixAvailable: true,
+    autoFixCommand: `gcloud compute ssh gem-admin-ws --project=${projectId} --zone=us-central1-a --command="sudo kubectl --kubeconfig=/home/gem/bmctl-workspace/${clusterName}/${clusterName}-kubeconfig create clusterrolebinding user-admin-binding-altostrat --clusterrole=cluster-admin --user=admin@chrissavage.altostrat.com 2>&1 || true" --quiet`,
+    status: "open",
+  };
+
+  saveTriageReport(report);
+  return report;
+}

@@ -113,6 +113,22 @@ export default function Dashboard({ clusterName, projectId, setActiveTab }: Dash
         </div>
 
         <div className="flex items-center gap-3 w-full md:w-auto justify-end">
+          {!data?.connected && (
+            <button
+              onClick={() => {
+                setActiveTab('sentinel');
+                fetch('/api/sentinel/triage', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ action: 'diagnose', clusterName, projectId: projectId || 'core-edge-dm1' }),
+                });
+              }}
+              className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 text-sm font-bold border border-amber-500/40 transition shadow-md shadow-amber-500/10 animate-pulse"
+              title="Trigger Sentinel AI Watchdog deep diagnostic audit for this cluster"
+            >
+              🔍 Why don't I see my cluster?
+            </button>
+          )}
           <button
             onClick={fetchStatus}
             disabled={loading}
