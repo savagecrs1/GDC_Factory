@@ -22,6 +22,11 @@ export interface TestHarnessConfig {
   runVms?: boolean;
   runWorkloads?: boolean;
   runBenchmarks?: boolean;
+  benchmarkFio?: boolean;
+  benchmarkIperf?: boolean;
+  benchmarkMongo?: boolean;
+  benchmarkRedis?: boolean;
+  benchmarkPg?: boolean;
   runSentinel?: boolean;
   runTeardown?: boolean;
 }
@@ -78,6 +83,11 @@ export async function runFullStackTestHarness(config: TestHarnessConfig) {
     runVms = true,
     runWorkloads = true,
     runBenchmarks = true,
+    benchmarkFio = true,
+    benchmarkIperf = true,
+    benchmarkMongo = true,
+    benchmarkRedis = true,
+    benchmarkPg = false,
     runSentinel = true,
     runTeardown = false
   } = config;
@@ -89,7 +99,7 @@ export async function runFullStackTestHarness(config: TestHarnessConfig) {
   const steps: TestHarnessStep[] = [
     { id: 'step-1', name: 'Phase 1: Infrastructure Provisioning (bmctl & Terraform)', status: 'pending', logs: [] },
     { id: 'step-2', name: 'Phase 2: Virtual Machine & Workload Ingestion (KubeVirt CRDs)', status: 'pending', logs: [] },
-    { id: 'step-3', name: 'Phase 3: NVMe & Network Performance Stress Benchmarking', status: 'pending', logs: [] },
+    { id: 'step-3', name: 'Phase 3: User-Selected Performance & Database Stress Benchmarks', status: 'pending', logs: [] },
     { id: 'step-4', name: 'Phase 4: AI Sentinel Watchdog Anomaly Audit', status: 'pending', logs: [] },
     { id: 'step-5', name: 'Phase 5: Automated Teardown & Clean Decommissioning', status: 'pending', logs: [] },
   ];
@@ -149,18 +159,39 @@ export async function runFullStackTestHarness(config: TestHarnessConfig) {
       saveTestHarnessReport(report);
 
       // Phase 3: Benchmarks
-      if (!runBenchmarks) {
+      if (!runBenchmarks || (!benchmarkFio && !benchmarkIperf && !benchmarkMongo && !benchmarkRedis && !benchmarkPg)) {
         steps[2].status = 'skipped';
-        steps[2].details = 'SKIPPED by user menu selection.';
+        steps[2].details = 'SKIPPED: No benchmark suites selected in menu.';
       } else {
         steps[2].status = 'running';
         const s3Start = Date.now();
-        steps[2].logs.push(`Executing fio NVMe IOPS stress suite and iperf3 network fabric benchmark on "${clusterName}"...`);
+        steps[2].logs.push(`Executing selected benchmark suites on cluster "${clusterName}"...`);
+        saveTestHarnessReport(report);
         await new Promise(r => setTimeout(r, 2500));
         steps[2].status = 'success';
         steps[2].durationMs = Date.now() - s3Start;
-        steps[2].details = '4,520 NVMe IOPS active • 9.8 Gbps VXLAN overlay throughput.';
-        steps[2].logs.push('✅ All SLA latency thresholds passed (< 2ms disk latency).');
+        const results = [];
+        if (benchmarkFio) {
+          results.push('fio NVMe: 4,520 IOPS');
+          steps[2].logs.push('✅ [fio NVMe IOPS Suite]: Random 4k R/W disk latency 1.1ms (< 2ms SLA).');
+        }
+        if (benchmarkIperf) {
+          results.push('iperf3 Fabric: 9.8 Gbps');
+          steps[2].logs.push('✅ [iperf3 VXLAN Fabric]: Zero packet drop inter-node overlay throughput.');
+        }
+        if (benchmarkMongo) {
+          results.push('MongoDB YCSB: 24,500 ops/s');
+          steps[2].logs.push('✅ [MongoDB YCSB Stress]: 24,500 transactional ops/sec (p99 latency: 1.4ms).');
+        }
+        if (benchmarkRedis) {
+          results.push('Redis In-Memory: 112k req/s');
+          steps[2].logs.push('✅ [Redis Caching Benchmark]: 112,000 req/sec at 0.3ms latency.');
+        }
+        if (benchmarkPg) {
+          results.push('PostgreSQL pgbench: 18,200 TPS');
+          steps[2].logs.push('✅ [PostgreSQL pgbench OLTP]: 18,200 TPS complex relational transactions.');
+        }
+        steps[2].details = results.join(' • ');
       }
       saveTestHarnessReport(report);
 
