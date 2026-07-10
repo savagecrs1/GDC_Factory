@@ -33,9 +33,7 @@ export default function Home() {
   return (
     <ConfigProvider>
       <div className="min-h-screen bg-slate-950 text-slate-100 flex font-sans antialiased selection:bg-sky-500 selection:text-white">
-        {activeTab !== 'dashboard' && (
-          <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} clusterName={clusterName} />
-        )}
+        <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} clusterName={clusterName} />
         <div className="flex-1 flex flex-col min-w-0 overflow-y-auto">
           <Navbar
             activeTab={activeTab}
