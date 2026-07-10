@@ -29,6 +29,11 @@ export default function Dashboard({ clusterName, projectId, setActiveTab }: Dash
     runVms: true,
     runWorkloads: true,
     runBenchmarks: true,
+    benchmarkFio: true,
+    benchmarkIperf: true,
+    benchmarkMongo: true,
+    benchmarkRedis: true,
+    benchmarkPg: false,
     runSentinel: true,
     runTeardown: false
   });
@@ -328,8 +333,32 @@ export default function Dashboard({ clusterName, projectId, setActiveTab }: Dash
                   </label>
                   <label className="flex items-center gap-2.5 cursor-pointer">
                     <input type="checkbox" checked={harnessConfig.runBenchmarks} onChange={e => setHarnessConfig({...harnessConfig, runBenchmarks: e.target.checked})} className="rounded bg-slate-800 border-slate-600 text-purple-500 focus:ring-0" />
-                    <span><strong>Phase 3:</strong> Execute NVMe IOPS Stress Benchmarks & Fabric Load Tests</span>
+                    <span><strong>Phase 3:</strong> Execute Performance & Database Stress Benchmarks</span>
                   </label>
+                  {harnessConfig.runBenchmarks && (
+                    <div className="pl-6 grid grid-cols-1 md:grid-cols-2 gap-1.5 text-[11px] text-purple-300 border-l border-purple-500/30 ml-2 py-1">
+                      <label className="flex items-center gap-2 cursor-pointer">
+                        <input type="checkbox" checked={harnessConfig.benchmarkFio} onChange={e => setHarnessConfig({...harnessConfig, benchmarkFio: e.target.checked})} className="rounded bg-slate-800 border-slate-600 text-purple-500 focus:ring-0" />
+                        <span>fio NVMe IOPS Stress Suite</span>
+                      </label>
+                      <label className="flex items-center gap-2 cursor-pointer">
+                        <input type="checkbox" checked={harnessConfig.benchmarkIperf} onChange={e => setHarnessConfig({...harnessConfig, benchmarkIperf: e.target.checked})} className="rounded bg-slate-800 border-slate-600 text-purple-500 focus:ring-0" />
+                        <span>iperf3 VXLAN Fabric Load Test</span>
+                      </label>
+                      <label className="flex items-center gap-2 cursor-pointer">
+                        <input type="checkbox" checked={harnessConfig.benchmarkMongo} onChange={e => setHarnessConfig({...harnessConfig, benchmarkMongo: e.target.checked})} className="rounded bg-slate-800 border-slate-600 text-purple-500 focus:ring-0" />
+                        <span>MongoDB YCSB Transaction Benchmark</span>
+                      </label>
+                      <label className="flex items-center gap-2 cursor-pointer">
+                        <input type="checkbox" checked={harnessConfig.benchmarkRedis} onChange={e => setHarnessConfig({...harnessConfig, benchmarkRedis: e.target.checked})} className="rounded bg-slate-800 border-slate-600 text-purple-500 focus:ring-0" />
+                        <span>Redis In-Memory Caching Benchmark</span>
+                      </label>
+                      <label className="flex items-center gap-2 cursor-pointer col-span-1 md:col-span-2">
+                        <input type="checkbox" checked={harnessConfig.benchmarkPg} onChange={e => setHarnessConfig({...harnessConfig, benchmarkPg: e.target.checked})} className="rounded bg-slate-800 border-slate-600 text-purple-500 focus:ring-0" />
+                        <span>PostgreSQL pgbench OLTP Relational Stress Test</span>
+                      </label>
+                    </div>
+                  )}
                   <label className="flex items-center gap-2.5 cursor-pointer">
                     <input type="checkbox" checked={harnessConfig.runSentinel} onChange={e => setHarnessConfig({...harnessConfig, runSentinel: e.target.checked})} className="rounded bg-slate-800 border-slate-600 text-purple-500 focus:ring-0" />
                     <span><strong>Phase 4:</strong> Run AI Sentinel Watchdog Anomaly & Kernel Audit</span>
