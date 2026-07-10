@@ -20,6 +20,18 @@ export default function Dashboard({ clusterName, projectId, setActiveTab }: Dash
   const [terminalTarget, setTerminalTarget] = useState<{ name: string; type: 'vm' | 'node' } | null>(null);
   const [harnessReport, setHarnessReport] = useState<any>(null);
   const [showHarnessModal, setShowHarnessModal] = useState(false);
+  const [showHarnessMenu, setShowHarnessMenu] = useState(false);
+  const [harnessConfig, setHarnessConfig] = useState<any>({
+    emailAlerts: '',
+    notifyOnSuccess: true,
+    notifyOnError: true,
+    runProvisioning: false,
+    runVms: true,
+    runWorkloads: true,
+    runBenchmarks: true,
+    runSentinel: true,
+    runTeardown: false
+  });
 
   const fetchHarnessStatus = () => {
     fetch('/api/infrastructure/test-harness')
@@ -29,7 +41,15 @@ export default function Dashboard({ clusterName, projectId, setActiveTab }: Dash
   };
 
   const launchTestHarness = () => {
+    setShowHarnessMenu(false);
     setShowHarnessModal(true);
+    fetch('/api/infrastructure/test-harness', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ...harnessConfig, projectId: projectId || 'core-edge-dm1', clusterName: clusterName || 'gdc-e2e-test-1' })
+    }).then(() => fetchHarnessStatus());
+  };
+  const old_unused = () => {
     fetch('/api/infrastructure/test-harness', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -268,6 +288,102 @@ export default function Dashboard({ clusterName, projectId, setActiveTab }: Dash
           projectId={projectId || 'vdc-18818'}
         />
       )}
+      {/* E2E Test Suite Customization Menu & Alerting Hub */}
+      {showHarnessMenu && (
+        <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4 animate-fadeIn">
+          <div className="bg-slate-900 border-2 border-purple-500/60 rounded-3xl p-6 max-w-xl w-full space-y-6 shadow-2xl overflow-hidden text-xs">
+            <div className="flex items-center justify-between border-b border-slate-800 pb-4">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-purple-500/20 border border-purple-500/40 flex items-center justify-center text-purple-400 font-bold text-xl">
+                  ⚙️
+                </div>
+                <div>
+                  <h3 className="text-base font-black text-white">E2E Verification Suite Configuration</h3>
+                  <p className="text-[11px] text-slate-400">Select execution phases and configure alerting</p>
+                </div>
+              </div>
+              <button
+                onClick={() => setShowHarnessMenu(false)}
+                className="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 transition font-bold"
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="space-y-5 max-h-[60vh] overflow-y-auto pr-1">
+              <div className="space-y-2.5 bg-slate-950/90 p-4 rounded-2xl border border-slate-800">
+                <h4 className="text-[11px] font-bold text-purple-400 uppercase tracking-wider">1. Select Execution Phases to Build & Test</h4>
+                <div className="grid grid-cols-1 gap-2 text-slate-300">
+                  <label className="flex items-center gap-2.5 cursor-pointer">
+                    <input type="checkbox" checked={harnessConfig.runProvisioning} onChange={e => setHarnessConfig({...harnessConfig, runProvisioning: e.target.checked})} className="rounded bg-slate-800 border-slate-600 text-purple-500 focus:ring-0" />
+                    <span><strong>Phase 1:</strong> Provision Bare-Metal Cluster (bmctl & Terraform)</span>
+                  </label>
+                  <label className="flex items-center gap-2.5 cursor-pointer">
+                    <input type="checkbox" checked={harnessConfig.runVms} onChange={e => setHarnessConfig({...harnessConfig, runVms: e.target.checked})} className="rounded bg-slate-800 border-slate-600 text-purple-500 focus:ring-0" />
+                    <span><strong>Phase 2A:</strong> Ingest KubeVirt VMs & OS Templates (`ubuntu-22.04`, `rhel-9-sql`)</span>
+                  </label>
+                  <label className="flex items-center gap-2.5 cursor-pointer">
+                    <input type="checkbox" checked={harnessConfig.runWorkloads} onChange={e => setHarnessConfig({...harnessConfig, runWorkloads: e.target.checked})} className="rounded bg-slate-800 border-slate-600 text-purple-500 focus:ring-0" />
+                    <span><strong>Phase 2B:</strong> Deploy Containerized Workloads (`pos-engine`, `redis-cache`)</span>
+                  </label>
+                  <label className="flex items-center gap-2.5 cursor-pointer">
+                    <input type="checkbox" checked={harnessConfig.runBenchmarks} onChange={e => setHarnessConfig({...harnessConfig, runBenchmarks: e.target.checked})} className="rounded bg-slate-800 border-slate-600 text-purple-500 focus:ring-0" />
+                    <span><strong>Phase 3:</strong> Execute NVMe IOPS Stress Benchmarks & Fabric Load Tests</span>
+                  </label>
+                  <label className="flex items-center gap-2.5 cursor-pointer">
+                    <input type="checkbox" checked={harnessConfig.runSentinel} onChange={e => setHarnessConfig({...harnessConfig, runSentinel: e.target.checked})} className="rounded bg-slate-800 border-slate-600 text-purple-500 focus:ring-0" />
+                    <span><strong>Phase 4:</strong> Run AI Sentinel Watchdog Anomaly & Kernel Audit</span>
+                  </label>
+                  <label className="flex items-center gap-2.5 cursor-pointer">
+                    <input type="checkbox" checked={harnessConfig.runTeardown} onChange={e => setHarnessConfig({...harnessConfig, runTeardown: e.target.checked})} className="rounded bg-slate-800 border-slate-600 text-purple-500 focus:ring-0" />
+                    <span><strong>Phase 5:</strong> Clean Teardown & Decommission Cloud Resources</span>
+                  </label>
+                </div>
+              </div>
+
+              <div className="space-y-2.5 bg-slate-950/90 p-4 rounded-2xl border border-slate-800">
+                <h4 className="text-[11px] font-bold text-purple-400 uppercase tracking-wider">2. Email Alerting & SLA Notification Hub</h4>
+                <div className="space-y-2">
+                  <label className="block text-slate-400 text-[11px]">Recipient Email Address for SLA Reports & Error Alerts</label>
+                  <input
+                    type="email"
+                    value={harnessConfig.emailAlerts}
+                    onChange={e => setHarnessConfig({...harnessConfig, emailAlerts: e.target.value})}
+                    placeholder="e.g. devops-team@kroger.com"
+                    className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-white font-mono focus:outline-none focus:border-purple-500 transition"
+                  />
+                  <div className="flex items-center gap-4 pt-1 text-slate-300">
+                    <label className="flex items-center gap-2 cursor-pointer">
+                      <input type="checkbox" checked={harnessConfig.notifyOnSuccess} onChange={e => setHarnessConfig({...harnessConfig, notifyOnSuccess: e.target.checked})} className="rounded bg-slate-800 border-slate-600 text-purple-500 focus:ring-0" />
+                      <span>Email SLA Summary on Completion</span>
+                    </label>
+                    <label className="flex items-center gap-2 cursor-pointer">
+                      <input type="checkbox" checked={harnessConfig.notifyOnError} onChange={e => setHarnessConfig({...harnessConfig, notifyOnError: e.target.checked})} className="rounded bg-slate-800 border-slate-600 text-purple-500 focus:ring-0" />
+                      <span>Instant Alert on Execution Error</span>
+                    </label>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="pt-3 border-t border-slate-800 flex items-center justify-end gap-3">
+              <button
+                onClick={() => setShowHarnessMenu(false)}
+                className="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold transition"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={launchTestHarness}
+                className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-black shadow-lg shadow-purple-500/20 transition flex items-center gap-2"
+              >
+                <span>🚀 Launch Custom Verification Suite</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Automated E2E Test Harness Modal */}
       {showHarnessModal && (
         <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4 animate-fadeIn">
