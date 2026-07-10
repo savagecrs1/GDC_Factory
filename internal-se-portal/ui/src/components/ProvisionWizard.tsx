@@ -318,6 +318,17 @@ export default function ProvisionWizard({
               </>
             )}
           </button>
+
+          {(!isDeploying && (error || logs.some(l => l.level === 'error'))) && (
+            <button
+              onClick={startDeployment}
+              disabled={!projectId || !clusterName}
+              className="w-full py-2.5 rounded-xl bg-emerald-500/20 hover:bg-emerald-500/30 border border-emerald-500/50 text-emerald-300 font-bold text-xs flex items-center justify-center gap-1.5 transition shadow-md animate-bounce"
+            >
+              <RefreshCw className="w-3.5 h-3.5" />
+              <span>🔄 Retry Provisioning Step</span>
+            </button>
+          )}
         </div>
 
         <div className="pt-2 border-t border-slate-800 text-[11px] text-slate-400 space-y-1">
