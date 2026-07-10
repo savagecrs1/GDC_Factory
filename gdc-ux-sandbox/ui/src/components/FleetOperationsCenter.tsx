@@ -527,6 +527,7 @@ export default function FleetOperationsCenter({ currentProject, onSelectProject,
                 Open K8s Console →
               </button>
             </div>
+          </div>
         </div>
       )}
     </div>
