@@ -34,8 +34,14 @@ export default function Dashboard({ clusterName, projectId, setActiveTab }: Dash
     benchmarkRedis: true,
     benchmarkPg: false,
     runSentinel: true,
-    runTeardown: false
+    runTeardown: false,
+    smtpHost: '',
+    smtpPort: '587',
+    smtpUser: '',
+    smtpPass: '',
+    smtpFrom: 'gdc-sentinel-alerts@altostrat.com'
   });
+  const [showSmtpSettings, setShowSmtpSettings] = useState(false);
 
   const fetchHarnessStatus = () => {
     fetch('/api/infrastructure/test-harness')
@@ -649,16 +655,19 @@ export default function Dashboard({ clusterName, projectId, setActiveTab }: Dash
 
               <div className="space-y-2.5 bg-slate-950/90 p-4 rounded-2xl border border-slate-800">
                 <h4 className="text-[11px] font-bold text-purple-400 uppercase tracking-wider">2. Email Alerting & SLA Notification Hub</h4>
-                <div className="space-y-2">
-                  <label className="block text-slate-400 text-[11px]">Recipient Email Address for SLA Reports & Error Alerts</label>
-                  <input
-                    type="email"
-                    value={harnessConfig.emailAlerts}
-                    onChange={e => setHarnessConfig({...harnessConfig, emailAlerts: e.target.value})}
-                    placeholder="e.g. devops-team@kroger.com"
-                    className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-white font-mono focus:outline-none focus:border-purple-500 transition"
-                  />
-                  <div className="flex items-center gap-4 pt-1 text-slate-300">
+                <div className="space-y-3">
+                  <div>
+                    <label className="block text-slate-400 text-[11px] mb-1">Recipient Email Address for SLA Reports & Error Alerts</label>
+                    <input
+                      type="email"
+                      value={harnessConfig.emailAlerts}
+                      onChange={e => setHarnessConfig({...harnessConfig, emailAlerts: e.target.value})}
+                      placeholder="e.g. devops-team@kroger.com"
+                      className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-white font-mono focus:outline-none focus:border-purple-500 transition"
+                    />
+                  </div>
+
+                  <div className="flex items-center gap-4 text-slate-300">
                     <label className="flex items-center gap-2 cursor-pointer">
                       <input type="checkbox" checked={harnessConfig.notifyOnSuccess} onChange={e => setHarnessConfig({...harnessConfig, notifyOnSuccess: e.target.checked})} className="rounded bg-slate-800 border-slate-600 text-purple-500 focus:ring-0" />
                       <span>Email SLA Summary on Completion</span>
@@ -667,6 +676,45 @@ export default function Dashboard({ clusterName, projectId, setActiveTab }: Dash
                       <input type="checkbox" checked={harnessConfig.notifyOnError} onChange={e => setHarnessConfig({...harnessConfig, notifyOnError: e.target.checked})} className="rounded bg-slate-800 border-slate-600 text-purple-500 focus:ring-0" />
                       <span>Instant Alert on Execution Error</span>
                     </label>
+                  </div>
+
+                  <div className="pt-2 border-t border-slate-800">
+                    <button
+                      type="button"
+                      onClick={() => setShowSmtpSettings(!showSmtpSettings)}
+                      className="text-purple-400 hover:text-purple-300 font-bold flex items-center gap-1.5 transition text-[11px] outline-none"
+                    >
+                      <span>{showSmtpSettings ? "▼ Hide SMTP Relay Credentials" : "► Configure Custom SMTP Server Settings (Gmail / SendGrid)"}</span>
+                    </button>
+                    
+                    {showSmtpSettings && (
+                      <div className="mt-3.5 space-y-2.5 border-l-2 border-purple-500/30 pl-3.5 animate-fadeIn">
+                        <div className="grid grid-cols-3 gap-2">
+                          <div className="col-span-2">
+                            <label className="block text-[10px] text-slate-400 mb-0.5">SMTP Host</label>
+                            <input type="text" value={harnessConfig.smtpHost} onChange={e => setHarnessConfig({...harnessConfig, smtpHost: e.target.value})} placeholder="smtp.gmail.com" className="w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1 text-white font-mono" />
+                          </div>
+                          <div>
+                            <label className="block text-[10px] text-slate-400 mb-0.5">SMTP Port</label>
+                            <input type="text" value={harnessConfig.smtpPort} onChange={e => setHarnessConfig({...harnessConfig, smtpPort: e.target.value})} placeholder="587" className="w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1 text-white font-mono" />
+                          </div>
+                        </div>
+                        <div className="grid grid-cols-2 gap-2">
+                          <div>
+                            <label className="block text-[10px] text-slate-400 mb-0.5">SMTP User</label>
+                            <input type="text" value={harnessConfig.smtpUser} onChange={e => setHarnessConfig({...harnessConfig, smtpUser: e.target.value})} placeholder="user@gmail.com" className="w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1 text-white font-mono" />
+                          </div>
+                          <div>
+                            <label className="block text-[10px] text-slate-400 mb-0.5">SMTP Password</label>
+                            <input type="password" value={harnessConfig.smtpPass} onChange={e => setHarnessConfig({...harnessConfig, smtpPass: e.target.value})} placeholder="••••••••" className="w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1 text-white font-mono" />
+                          </div>
+                        </div>
+                        <div>
+                          <label className="block text-[10px] text-slate-400 mb-0.5">From Address</label>
+                          <input type="email" value={harnessConfig.smtpFrom} onChange={e => setHarnessConfig({...harnessConfig, smtpFrom: e.target.value})} placeholder="gdc-sentinel-alerts@altostrat.com" className="w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1 text-white font-mono" />
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
