@@ -54,20 +54,19 @@ export default function Dashboard({ clusterName, projectId, setActiveTab }: Dash
       body: JSON.stringify({ ...harnessConfig, projectId: projectId || 'core-edge-dm1', clusterName: clusterName || 'gdc-e2e-test-1' })
     }).then(() => fetchHarnessStatus());
   };
-  const old_unused = () => {
-    fetch('/api/infrastructure/test-harness', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ projectId: projectId || 'core-edge-dm1', clusterName: 'gdc-e2e-test-1' })
-    }).then(() => fetchHarnessStatus());
-  };
+
 
   useEffect(() => {
-    if (showHarnessModal) {
-      const t = setInterval(fetchHarnessStatus, 1000);
+    fetchHarnessStatus();
+  }, []);
+
+  useEffect(() => {
+    const isRunning = harnessReport && harnessReport.status === "running";
+    if (showHarnessModal || isRunning) {
+      const t = setInterval(fetchHarnessStatus, 1500);
       return () => clearInterval(t);
     }
-  }, [showHarnessModal]);
+  }, [showHarnessModal, harnessReport?.status]);
 
   const fetchStatus = () => {
     setLoading(true);

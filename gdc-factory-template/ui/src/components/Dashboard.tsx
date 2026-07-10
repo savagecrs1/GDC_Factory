@@ -54,20 +54,19 @@ export default function Dashboard({ clusterName, projectId, setActiveTab }: Dash
       body: JSON.stringify({ ...harnessConfig, projectId: projectId || 'core-edge-dm1', clusterName: clusterName || 'gdc-e2e-test-1' })
     }).then(() => fetchHarnessStatus());
   };
-  const old_unused = () => {
-    fetch('/api/infrastructure/test-harness', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ projectId: projectId || 'core-edge-dm1', clusterName: 'gdc-e2e-test-1' })
-    }).then(() => fetchHarnessStatus());
-  };
+
 
   useEffect(() => {
-    if (showHarnessModal) {
-      const t = setInterval(fetchHarnessStatus, 1000);
+    fetchHarnessStatus();
+  }, []);
+
+  useEffect(() => {
+    const isRunning = harnessReport && harnessReport.status === "running";
+    if (showHarnessModal || isRunning) {
+      const t = setInterval(fetchHarnessStatus, 1500);
       return () => clearInterval(t);
     }
-  }, [showHarnessModal]);
+  }, [showHarnessModal, harnessReport?.status]);
 
   const fetchStatus = () => {
     setLoading(true);
@@ -202,6 +201,32 @@ export default function Dashboard({ clusterName, projectId, setActiveTab }: Dash
           </button>
         </div>
       </div>
+
+      {/* Active Background Test Harness Progress Banner */}
+      {harnessReport && harnessReport.status === "running" && (
+        <div className="bg-slate-900 border border-purple-500/30 p-4.5 rounded-2xl flex flex-col md:flex-row items-start md:items-center justify-between gap-4 shadow-lg shadow-purple-500/5 animate-fadeIn">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-xl bg-purple-500/10 border border-purple-500/20 flex items-center justify-center text-purple-400 font-bold animate-pulse text-sm">
+              ⚡
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="font-extrabold text-white text-xs uppercase tracking-wider">Active E2E Test Suite Running</span>
+                <span className="w-1.5 h-1.5 rounded-full bg-purple-400 animate-ping" />
+              </div>
+              <p className="text-xs text-slate-400 mt-1">
+                Current Phase: <strong className="text-purple-300">{(harnessReport.steps || []).find((s: any) => s.status === "running")?.name || "Preparing environment..."}</strong>
+              </p>
+            </div>
+          </div>
+          <button
+            onClick={() => setShowHarnessModal(true)}
+            className="flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-purple-600/20 hover:bg-purple-600/30 text-purple-300 text-xs font-bold border border-purple-500/30 transition shadow-sm"
+          >
+            🔍 View Active Progress Logs
+          </button>
+        </div>
+      )}
 
       {/* Metrics Cards Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6">
