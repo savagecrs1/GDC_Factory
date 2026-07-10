@@ -38,6 +38,17 @@
   async: 3600
   poll: 60
   register: cluster_create
+  ignore_errors: yes
+
+- name: Check if cluster kubeconfig was generated successfully
+  stat:
+    path: "{{ gem_home }}/bmctl-workspace/{{ cluster_name }}/{{ cluster_name }}-kubeconfig"
+  register: kubeconfig_stat
+
+- name: Fail if cluster kubeconfig was not created
+  fail:
+    msg: "Cluster creation failed and kubeconfig was not generated."
+  when: not kubeconfig_stat.stat.exists
 
 - name: Display cluster creation output
   debug:
@@ -61,7 +72,7 @@
       name: cluster-admin
       apiGroup: rbac.authorization.k8s.io
     EOF
-  when: cluster_create is not failed
+  when: kubeconfig_stat.stat.exists
 
 - name: Create ClusterRoleBinding for admin user accounts via GKE Connect Gateway
   become: yes
@@ -81,6 +92,4 @@
       apiGroup: rbac.authorization.k8s.io
     EOF
   loop: "{{ gcp_admin_users | default([]) }}"
-  when: cluster_create is not failed
-
-
+  when: kubeconfig_stat.stat.exists
