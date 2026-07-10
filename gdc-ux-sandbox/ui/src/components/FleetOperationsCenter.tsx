@@ -452,7 +452,7 @@ export default function FleetOperationsCenter({ currentProject, onSelectProject,
                       return (
                         <div
                           key={cIdx}
-                          onClick={() => onNavigateTab && onNavigateTab('cluster-view')}
+                          onClick={() => setInspectedCluster(cName)}
                           className="p-5 rounded-2xl bg-gradient-to-br from-slate-950 to-slate-900 border border-slate-800 hover:border-purple-500/60 cursor-pointer transition group shadow-lg flex flex-col justify-between space-y-4"
                         >
                           <div className="flex items-start justify-between">
@@ -475,7 +475,7 @@ export default function FleetOperationsCenter({ currentProject, onSelectProject,
                           </div>
 
                           <div className="flex items-center justify-between text-xs font-bold text-purple-400 group-hover:text-purple-300">
-                            <span>🖥️ Enter Cluster Workspace & Telemetry →</span>
+                            <span>⚡ Inspect Cluster Telemetry & Anomaly Loop →</span>
                           </div>
                         </div>
                       );
@@ -494,26 +494,98 @@ export default function FleetOperationsCenter({ currentProject, onSelectProject,
                     </div>
                   </div>
                 </div>
-              </div>
 
-              {/* Quick Launch Console Action Bar */}
-              <div className="pt-4 border-t border-slate-800 flex flex-wrap items-center justify-between gap-3">
-                <span className="text-xs font-bold text-slate-400">⚡ Tenant-level administrative actions:</span>
-                <div className="flex items-center gap-2">
-                  <button
-                    onClick={() => onNavigateTab && onNavigateTab('networks')}
-                    className="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-xs transition flex items-center gap-1.5 border border-slate-700"
-                  >
-                    <Network className="w-3.5 h-3.5 text-emerald-400" />
-                    <span>Manage VLANs & Overlays</span>
-                  </button>
-                  <button
-                    onClick={() => onNavigateTab && onNavigateTab('configsync')}
-                    className="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-xs transition flex items-center gap-1.5 border border-slate-700"
-                  >
-                    <Shield className="w-3.5 h-3.5 text-pink-400" />
-                    <span>GitOps Policy Sync</span>
-                  </button>
+                {/* Project Operations Hub (Workloads, VMs, Performance, Self-Healing) */}
+                <div className="pt-6 border-t border-slate-800 space-y-4">
+                  <div className="flex items-center justify-between">
+                    <h4 className="text-xs font-bold text-slate-300 uppercase tracking-wider flex items-center gap-2">
+                      <Terminal className="w-4 h-4 text-sky-400" />
+                      <span>Project Administrative & Self-Healing Operations Hub</span>
+                    </h4>
+                    <span className="text-[11px] text-purple-400 font-mono">2nd-Click Operations Suite ↓</span>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
+                    <div
+                      onClick={() => onNavigateTab && onNavigateTab('vms')}
+                      className="p-4 rounded-xl bg-slate-950/90 border border-slate-800 hover:border-purple-500/50 cursor-pointer transition group flex flex-col justify-between space-y-3 shadow"
+                    >
+                      <div className="flex items-start justify-between">
+                        <div>
+                          <div className="font-bold text-white group-hover:text-purple-300 transition flex items-center gap-2 text-sm">
+                            <Cpu className="w-4 h-4 text-purple-400" />
+                            <span>Deploy Virtual Machines</span>
+                          </div>
+                          <div className="text-[11px] text-slate-400 mt-1">Launch Ubuntu/RHEL via KubeVirt CRDs across {selectedProj} clusters.</div>
+                        </div>
+                        <ArrowUpRight className="w-4 h-4 text-slate-500 group-hover:text-purple-300 flex-shrink-0" />
+                      </div>
+                      <div className="pt-2 border-t border-slate-900 flex items-center justify-between font-mono font-bold text-[11px] text-purple-400">
+                        <span>OCI Container Disks</span>
+                        <span>[ + Deploy VM ]</span>
+                      </div>
+                    </div>
+
+                    <div
+                      onClick={() => onNavigateTab && onNavigateTab('workloads')}
+                      className="p-4 rounded-xl bg-slate-950/90 border border-slate-800 hover:border-sky-500/50 cursor-pointer transition group flex flex-col justify-between space-y-3 shadow"
+                    >
+                      <div className="flex items-start justify-between">
+                        <div>
+                          <div className="font-bold text-white group-hover:text-sky-300 transition flex items-center gap-2 text-sm">
+                            <Layers className="w-4 h-4 text-sky-400" />
+                            <span>Deploy K8s Workloads</span>
+                          </div>
+                          <div className="text-[11px] text-slate-400 mt-1">Containerized microservices with Service routing & Ingress load balancers.</div>
+                        </div>
+                        <ArrowUpRight className="w-4 h-4 text-slate-500 group-hover:text-sky-300 flex-shrink-0" />
+                      </div>
+                      <div className="pt-2 border-t border-slate-900 flex items-center justify-between font-mono font-bold text-[11px] text-sky-400">
+                        <span>Ingress / L4 Service</span>
+                        <span>[ + Deploy Pod ]</span>
+                      </div>
+                    </div>
+
+                    <div
+                      onClick={() => onNavigateTab && onNavigateTab('performance')}
+                      className="p-4 rounded-xl bg-slate-950/90 border border-slate-800 hover:border-pink-500/50 cursor-pointer transition group flex flex-col justify-between space-y-3 shadow"
+                    >
+                      <div className="flex items-start justify-between">
+                        <div>
+                          <div className="font-bold text-white group-hover:text-pink-300 transition flex items-center gap-2 text-sm">
+                            <Activity className="w-4 h-4 text-pink-400" />
+                            <span>Run Performance Tests</span>
+                          </div>
+                          <div className="text-[11px] text-slate-400 mt-1">Execute sysbench, iperf3, and fio TopoLVM NVMe IOPS stress benchmark suites.</div>
+                        </div>
+                        <ArrowUpRight className="w-4 h-4 text-slate-500 group-hover:text-pink-300 flex-shrink-0" />
+                      </div>
+                      <div className="pt-2 border-t border-slate-900 flex items-center justify-between font-mono font-bold text-[11px] text-pink-400">
+                        <span>fio / iperf3 Suite</span>
+                        <span>[ 🚀 Run Benchmark ]</span>
+                      </div>
+                    </div>
+
+                    <div
+                      onClick={() => onNavigateTab && onNavigateTab('sentinel')}
+                      className="p-4 rounded-xl bg-slate-950/90 border border-slate-800 hover:border-emerald-500/50 cursor-pointer transition group flex flex-col justify-between space-y-3 shadow"
+                    >
+                      <div className="flex items-start justify-between">
+                        <div>
+                          <div className="font-bold text-white group-hover:text-emerald-300 transition flex items-center gap-2 text-sm">
+                            <Bot className="w-4 h-4 text-emerald-400" />
+                            <span>AI Self-Healing & Feedback Loops</span>
+                          </div>
+                          <div className="text-[11px] text-slate-400 mt-1">Explore active anomalies, trigger automated remediation, and inspect AI watchdog loops.</div>
+                        </div>
+                        <ArrowUpRight className="w-4 h-4 text-slate-500 group-hover:text-emerald-300 flex-shrink-0" />
+                      </div>
+                      <div className="pt-2 border-t border-slate-900 flex items-center justify-between font-mono font-bold text-[11px] text-emerald-400">
+                        <span>Autonomous Watchdog</span>
+                        <span>[ 🔧 Open Sentinel ]</span>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
