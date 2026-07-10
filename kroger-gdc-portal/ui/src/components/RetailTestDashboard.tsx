@@ -1,7 +1,7 @@
 'use client';
 
-import React, { useState } from 'react';
-import { ShoppingCart, ShieldCheck, Activity, Cpu, Server, Zap, RefreshCw, CheckCircle2, Clock, Lock, Layers, Users, CreditCard } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { ShoppingCart, ShieldCheck, Activity, Cpu, Server, Zap, RefreshCw, CheckCircle2, Clock, Lock, Users, CreditCard, Play, FastForward, Sparkles, AlertCircle } from 'lucide-react';
 
 interface RetailTestDashboardProps {
   clusterName: string;
@@ -11,14 +11,24 @@ interface RetailTestDashboardProps {
 export default function RetailTestDashboard({ clusterName, projectId }: RetailTestDashboardProps) {
   const [itemCount, setItemCount] = useState<number>(12);
   const [laneCount, setLaneCount] = useState<number>(6);
+  const [simSpeed, setSimSpeed] = useState<'1x' | '3x' | 'instant'>('3x');
   const [selectedLaneIndex, setSelectedLaneIndex] = useState<number>(0);
   const [loading, setLoading] = useState(false);
   const [testResult, setTestResult] = useState<any>(null);
+
+  // Streaming lifecycle state
+  const [streamPhase, setStreamPhase] = useState<'idle' | 'scanning' | 'reconciling' | 'tokenizing' | 'tendered'>('idle');
+  const [scannedCount, setScannedCount] = useState<number>(0);
+  const timerRef = useRef<any>(null);
 
   const handleRunCheckout = async (itemsToRun?: number, lanesToRun?: number) => {
     const targetItems = itemsToRun || itemCount;
     const targetLanes = lanesToRun || laneCount;
     setLoading(true);
+    setStreamPhase('idle');
+    setScannedCount(0);
+    if (timerRef.current) clearInterval(timerRef.current);
+
     try {
       const res = await fetch('/api/kubernetes/checkout', {
         method: 'POST',
@@ -29,6 +39,13 @@ export default function RetailTestDashboard({ clusterName, projectId }: RetailTe
       if (data.success) {
         setTestResult(data);
         setSelectedLaneIndex(0);
+
+        if (simSpeed === 'instant') {
+          setScannedCount(targetItems);
+          setStreamPhase('tendered');
+        } else {
+          startStreamingLifecycle(data.lanes[0]?.item_count || targetItems);
+        }
       }
     } catch (err) {
       console.error('Error running multi-lane retail checkout:', err);
@@ -37,7 +54,33 @@ export default function RetailTestDashboard({ clusterName, projectId }: RetailTe
     }
   };
 
+  const startStreamingLifecycle = (maxItems: number) => {
+    setStreamPhase('scanning');
+    let current = 0;
+    const intervalMs = simSpeed === '1x' ? 450 : 120;
+
+    timerRef.current = setInterval(() => {
+      current += 1;
+      setScannedCount(current);
+      if (current >= maxItems) {
+        clearInterval(timerRef.current);
+        setStreamPhase('reconciling');
+        setTimeout(() => {
+          setStreamPhase('tokenizing');
+          setTimeout(() => {
+            setStreamPhase('tendered');
+          }, simSpeed === '1x' ? 1200 : 400);
+        }, simSpeed === '1x' ? 800 : 250);
+      }
+    }, intervalMs);
+  };
+
+  useEffect(() => {
+    return () => { if (timerRef.current) clearInterval(timerRef.current); };
+  }, []);
+
   const selectedLane = testResult?.lanes?.[selectedLaneIndex] || testResult?.lanes?.[0];
+  const visibleItems = selectedLane ? selectedLane.lifecycle_stream.slice(0, streamPhase === 'tendered' ? selectedLane.item_count : scannedCount) : [];
 
   return (
     <div className="space-y-6 animate-fadeIn">
@@ -50,13 +93,13 @@ export default function RetailTestDashboard({ clusterName, projectId }: RetailTe
             </div>
             <div>
               <h2 className="text-xl font-bold text-white flex items-center gap-2">
-                Kroger Retail Edge Sandbox & Multi-Lane Concurrency
+                Kroger Retail Edge Sandbox & Life-Like Concurrency
                 <span className="text-xs bg-sky-500/20 text-sky-400 border border-sky-500/30 px-2.5 py-0.5 rounded-full font-mono font-normal">
                   VLAN 3130 ↔ VLAN 3430
                 </span>
               </h2>
               <p className="text-slate-400 text-sm mt-1">
-                Simulate up to 24 concurrent store checkout lanes, measure aggregate DUKPT PIN pad tokenization speed, and monitor live bare-metal node telemetry.
+                Simulate cashier UPC item scanning, real-time promotional engine reconciliation, and DUKPT PIN pad payment tender across multiple lanes.
               </p>
             </div>
           </div>
@@ -75,7 +118,7 @@ export default function RetailTestDashboard({ clusterName, projectId }: RetailTe
             <div className="flex items-center justify-between border-b border-slate-800 pb-3">
               <h3 className="font-bold text-white text-md flex items-center gap-2">
                 <Users className="w-4 h-4 text-emerald-400" />
-                Store Checkout Concurrency Setup
+                Store Concurrency & Pace Controls
               </h3>
               <span className="text-[10px] bg-emerald-500/10 text-emerald-400 px-2 py-0.5 rounded border border-emerald-500/20 font-mono">
                 Multi-Lane Scaling
@@ -83,8 +126,35 @@ export default function RetailTestDashboard({ clusterName, projectId }: RetailTe
             </div>
 
             <div className="space-y-5">
-              {/* Lane Concurrency Slider */}
+              {/* Simulation Pace Selector */}
               <div>
+                <span className="text-[11px] text-slate-400 block mb-2 font-medium">Cashier Scanning Pace:</span>
+                <div className="grid grid-cols-3 gap-2">
+                  {[
+                    { id: '1x', label: '⚡ 1x Cashier Pace', desc: 'Life-like 450ms scan' },
+                    { id: '3x', label: '⏩ 3x Fast-Forward', desc: 'Accelerated test' },
+                    { id: 'instant', label: '🚀 Instant Peak', desc: '0ms max throughput' }
+                  ].map((spd: any) => (
+                    <button
+                      key={spd.id}
+                      type="button"
+                      onClick={() => setSimSpeed(spd.id)}
+                      disabled={loading}
+                      className={`p-2 rounded-xl text-left border transition flex flex-col justify-between ${
+                        simSpeed === spd.id
+                          ? 'bg-sky-500/20 border-sky-500/50 text-sky-300 font-bold'
+                          : 'bg-slate-900/80 border-slate-800 text-slate-400 hover:text-white hover:border-slate-700'
+                      }`}
+                    >
+                      <span className="text-xs">{spd.label}</span>
+                      <span className="text-[9px] text-slate-500 mt-0.5 font-normal">{spd.desc}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Lane Concurrency Slider */}
+              <div className="pt-2 border-t border-slate-800/80">
                 <div className="flex justify-between items-center mb-2">
                   <label className="text-xs font-semibold text-slate-300 uppercase tracking-wider flex items-center gap-1.5">
                     <CreditCard className="w-3.5 h-3.5 text-sky-400" /> Active Store Lanes (1 - 24 Lanes)
@@ -174,37 +244,37 @@ export default function RetailTestDashboard({ clusterName, projectId }: RetailTe
                 disabled={loading}
                 className="w-full py-3.5 rounded-xl bg-gradient-to-r from-emerald-500 via-teal-500 to-sky-600 hover:from-emerald-400 hover:to-sky-500 disabled:opacity-50 text-slate-950 font-bold text-sm shadow-lg shadow-emerald-500/20 flex items-center justify-center gap-2 transition mt-4"
               >
-                {loading ? <RefreshCw className="w-5 h-5 animate-spin" /> : <Zap className="w-5 h-5 fill-current" />}
-                <span>Execute {laneCount}-Lane Concurrency Test Across PCI VLAN</span>
+                {loading ? <RefreshCw className="w-5 h-5 animate-spin" /> : <Play className="w-5 h-5 fill-current" />}
+                <span>Start {laneCount}-Lane Live Checkout Stream ({simSpeed})</span>
               </button>
             </div>
 
             <div className="p-3.5 rounded-xl bg-slate-950/80 border border-slate-800/80 text-[11px] text-slate-400 space-y-1 leading-relaxed font-mono">
               <div className="text-slate-300 font-bold flex items-center gap-1.5 mb-1">
-                <ShieldCheck className="w-3.5 h-3.5 text-sky-400" />
-                Multi-Lane Network Assurance
+                <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+                Life-Like Lifecycle Progression
               </div>
               <p>
-                • Generates {laneCount} concurrent cashier pods across <span className="text-sky-300">VLAN 3130</span>.
+                1. 🔍 <strong className="text-white">UPC Lookup</strong>: Items picked up and scanned sequentially.
               </p>
               <p>
-                • Parallel DUKPT encryption handshakes across <span className="text-amber-300">VLAN 3430</span> without packet collision.
+                2. 🏷️ <strong className="text-white">Promo Reconciler</strong>: Evaluates Kroger Plus card & coupons.
               </p>
               <p>
-                • Measures aggregate store throughput (TPS) and P95 latency distribution.
+                3. 💳 <strong className="text-white">DUKPT Handshake</strong>: Secure PIN pad tender over VLAN 3430.
               </p>
             </div>
           </div>
         </div>
 
-        {/* Right Column: Multi-Lane Grid, Metrics, and Receipt (Col 7) */}
+        {/* Right Column: Multi-Lane Grid, Metrics, and Streaming Receipt (Col 7) */}
         <div className="lg:col-span-7 space-y-6">
           {/* Aggregate Store Concurrency Metrics Panel */}
           <div className="glass-panel p-6 rounded-2xl border border-slate-800 space-y-4">
             <div className="flex items-center justify-between border-b border-slate-800 pb-3">
               <h3 className="font-bold text-white text-md flex items-center gap-2">
                 <Activity className="w-4 h-4 text-sky-400" />
-                Aggregate Store Throughput & Latency Distribution
+                Aggregate Store Throughput & Latency Telemetry
               </h3>
               <span className="text-xs bg-slate-800 text-slate-300 px-2.5 py-1 rounded-md font-mono">
                 {testResult?.metrics ? `${testResult.metrics.totalLanes} Lanes Active` : 'Real-Time Telemetry'}
@@ -215,26 +285,26 @@ export default function RetailTestDashboard({ clusterName, projectId }: RetailTe
               <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                 <div className="p-3.5 rounded-xl bg-slate-950/90 border border-slate-800/80 space-y-1">
                   <span className="text-[10px] font-bold font-mono text-slate-500 uppercase block flex items-center gap-1">
-                    <Clock className="w-3 h-3 text-sky-400" /> AVG LATENCY
+                    <Clock className="w-3 h-3 text-sky-400" /> AVG E2E TIME
                   </span>
-                  <span className="text-xl font-bold font-mono text-white block">{testResult.metrics.avgLatencyMs} ms</span>
-                  <span className="text-[10px] text-emerald-400 block font-mono">P95: {testResult.metrics.p95LatencyMs} ms</span>
+                  <span className="text-xl font-bold font-mono text-white block">{testResult.metrics.avgE2eMs} ms</span>
+                  <span className="text-[10px] text-emerald-400 block font-mono">P95: {testResult.metrics.p95E2eMs} ms</span>
                 </div>
 
                 <div className="p-3.5 rounded-xl bg-slate-950/90 border border-slate-800/80 space-y-1">
                   <span className="text-[10px] font-bold font-mono text-slate-500 uppercase block flex items-center gap-1">
-                    <ShoppingCart className="w-3 h-3 text-emerald-400" /> TOTAL GROCERIES
+                    <ShoppingCart className="w-3 h-3 text-emerald-400" /> ITEMS SCANNED
                   </span>
                   <span className="text-xl font-bold font-mono text-emerald-400 block">{testResult.metrics.totalItemsScanned}</span>
-                  <span className="text-[10px] text-slate-400 block font-mono">Across all {testResult.metrics.totalLanes} lanes</span>
+                  <span className="text-[10px] text-slate-400 block font-mono">Across {testResult.metrics.totalLanes} lanes</span>
                 </div>
 
                 <div className="p-3.5 rounded-xl bg-slate-950/90 border border-slate-800/80 space-y-1">
                   <span className="text-[10px] font-bold font-mono text-slate-500 uppercase block flex items-center gap-1">
-                    <Lock className="w-3 h-3 text-amber-400" /> TOTAL REVENUE
+                    <Sparkles className="w-3 h-3 text-amber-400" /> PROMO SAVINGS
                   </span>
-                  <span className="text-xl font-bold font-mono text-amber-400 block">{testResult.metrics.totalRevenue}</span>
-                  <span className="text-[10px] text-slate-400 block font-mono">DUKPT Tokenized</span>
+                  <span className="text-xl font-bold font-mono text-amber-400 block">{testResult.metrics.totalPromoSavings}</span>
+                  <span className="text-[10px] text-slate-400 block font-mono">Kroger Plus Applied</span>
                 </div>
 
                 <div className="p-3.5 rounded-xl bg-slate-950/90 border border-slate-800/80 space-y-1">
@@ -242,12 +312,12 @@ export default function RetailTestDashboard({ clusterName, projectId }: RetailTe
                     <Zap className="w-3 h-3 text-indigo-400" /> STORE THROUGHPUT
                   </span>
                   <span className="text-xl font-bold font-mono text-indigo-300 block">{testResult.metrics.tpsRate} TPS</span>
-                  <span className="text-[10px] text-slate-400 block font-mono">Aggregate Peak Rate</span>
+                  <span className="text-[10px] text-slate-400 block font-mono">Total Paid: {testResult.metrics.totalRevenue}</span>
                 </div>
               </div>
             ) : (
               <div className="py-8 text-center text-slate-500 bg-slate-950/50 rounded-xl border border-slate-800/60 font-mono text-xs">
-                Select lane count and click execute on the left to test multi-lane register concurrency across the store network.
+                Select pace and click start on the left to watch live cashier scanning and promotion reconciliation.
               </div>
             )}
           </div>
@@ -258,7 +328,7 @@ export default function RetailTestDashboard({ clusterName, projectId }: RetailTe
               <div className="flex items-center justify-between border-b border-slate-800 pb-3">
                 <h3 className="font-bold text-white text-md flex items-center gap-2">
                   <Users className="w-4 h-4 text-emerald-400" />
-                  Active Store Register Lanes (Click to Inspect Receipt)
+                  Active Store Register Lanes (Click to Watch Stream)
                 </h3>
                 <span className="text-xs bg-emerald-500/20 text-emerald-300 px-2.5 py-0.5 rounded border border-emerald-500/30 font-mono font-bold">
                   {testResult.lanes.length} Lanes Online
@@ -279,16 +349,116 @@ export default function RetailTestDashboard({ clusterName, projectId }: RetailTe
                   >
                     <div className="flex justify-between items-center w-full">
                       <span className="font-bold text-xs">{lane.lane_id}</span>
-                      <span className="w-2 h-2 rounded-full bg-emerald-400" />
+                      <span className={`w-2 h-2 rounded-full ${streamPhase === 'tendered' ? 'bg-emerald-400' : 'bg-amber-400 animate-pulse'}`} />
                     </div>
                     <span className="text-[10px] text-slate-500 truncate block mt-1">{lane.lane_type}</span>
                     <div className="flex justify-between items-center mt-2 pt-1 border-t border-slate-800/80 text-[10px]">
-                      <span className="text-emerald-400 font-bold">{lane.receipt.total_paid}</span>
-                      <span className="text-slate-400">{lane.latency_ms}ms</span>
+                      <span className="text-emerald-400 font-bold">{streamPhase === 'tendered' ? lane.receipt.total_paid : 'Scanning...'}</span>
+                      <span className="text-slate-400">{lane.item_count} items</span>
                     </div>
                   </button>
                 ))}
               </div>
+            </div>
+          )}
+
+          {/* Live Streaming Itemized Receipt & Lifecycle Progress */}
+          {selectedLane && (
+            <div className="glass-panel p-6 rounded-2xl border border-emerald-500/40 bg-emerald-950/10 space-y-4 font-mono text-xs animate-fadeIn">
+              {/* Lifecycle Phase Progression Banner */}
+              <div className="p-3 rounded-xl bg-slate-950 border border-slate-800 flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  {streamPhase === 'scanning' && <RefreshCw className="w-4 h-4 text-sky-400 animate-spin" />}
+                  {streamPhase === 'reconciling' && <Sparkles className="w-4 h-4 text-amber-400 animate-pulse" />}
+                  {streamPhase === 'tokenizing' && <Lock className="w-4 h-4 text-indigo-400 animate-pulse" />}
+                  {streamPhase === 'tendered' && <CheckCircle2 className="w-4 h-4 text-emerald-400" />}
+                  <div>
+                    <span className="text-[10px] text-slate-500 font-bold uppercase block">ACTIVE LIFECYCLE PHASE</span>
+                    <span className="text-white font-bold">
+                      {streamPhase === 'scanning' && `🔍 CASHIER SCANNING ITEMS (${visibleItems.length}/${selectedLane.item_count})...`}
+                      {streamPhase === 'reconciling' && `🏷️ RECONCILING PROMOTIONS & PLUS CARD DISCOUNTS...`}
+                      {streamPhase === 'tokenizing' && `💳 DUKPT POINT-TO-POINT PIN PAD AUTHORIZATION...`}
+                      {streamPhase === 'tendered' && `✅ BASKET TENDERED & RECEIPT FINALIZED`}
+                    </span>
+                  </div>
+                </div>
+                <span className="text-emerald-400 font-bold text-sm bg-emerald-950/80 px-3 py-1 rounded border border-emerald-500/30">
+                  {streamPhase === 'tendered' ? selectedLane.receipt.total_paid : `$${(visibleItems.reduce((acc: number, i: any) => acc + parseFloat(i.unit_price.replace('$','')), 0)).toFixed(2)}`}
+                </span>
+              </div>
+
+              <div className="flex justify-between items-center border-b border-slate-800 pb-2 text-emerald-400 font-bold text-sm">
+                <span>RECEIPT STREAM: {selectedLane.lane_name}</span>
+                <span className="text-xs text-slate-400">TX: {selectedLane.receipt.transaction_id}</span>
+              </div>
+
+              {/* Itemized Live Stream */}
+              <div className="max-h-56 overflow-y-auto space-y-1.5 py-2 border-b border-slate-800/80 text-slate-300 pr-1">
+                {visibleItems.map((item: any, idx: number) => (
+                  <div key={idx} className="p-2 rounded bg-slate-950/80 border border-slate-900 flex flex-col gap-1 transition animate-fadeIn">
+                    <div className="flex justify-between items-center">
+                      <span>
+                        <span className="text-slate-500 font-mono text-[10px] mr-2">[{String(item.sequence).padStart(2, '0')}] UPC {item.upc}</span>
+                        <strong className="text-white">{item.name}</strong>
+                      </span>
+                      <span className="font-bold text-white">{item.unit_price}</span>
+                    </div>
+                    {item.promo && (
+                      <div className="flex justify-between items-center text-[11px] text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded border border-amber-500/20">
+                        <span>🏷️ PROMO: {item.promo.description}</span>
+                        <span className="font-bold">SAVED {item.promo.discount}</span>
+                      </div>
+                    )}
+                  </div>
+                ))}
+                {streamPhase === 'scanning' && (
+                  <div className="text-center py-2 text-slate-500 animate-pulse text-[11px]">
+                    ... Cashier picking up next grocery item from conveyor belt ...
+                  </div>
+                )}
+              </div>
+
+              {/* Totals & Tender Summary */}
+              {streamPhase !== 'scanning' ? (
+                <div className="space-y-1 pt-1 animate-fadeIn">
+                  <div className="flex justify-between items-center text-slate-300 text-xs">
+                    <span>RAW SUBTOTAL:</span>
+                    <span>{selectedLane.receipt.raw_subtotal}</span>
+                  </div>
+                  <div className="flex justify-between items-center text-amber-400 text-xs">
+                    <span>PROMOTIONAL SAVINGS:</span>
+                    <span className="font-bold">{selectedLane.receipt.promo_savings}</span>
+                  </div>
+                  <div className="flex justify-between items-center text-slate-300 text-sm font-bold pt-1 border-t border-slate-800/80">
+                    <span>NET SUBTOTAL ({selectedLane.item_count} items):</span>
+                    <span>{selectedLane.receipt.net_subtotal}</span>
+                  </div>
+                  <div className="flex justify-between items-center text-slate-400 text-xs">
+                    <span>ESTIMATED TAX (7%):</span>
+                    <span>{selectedLane.receipt.tax}</span>
+                  </div>
+                  <div className="flex justify-between items-center border-t border-slate-800 pt-2 text-emerald-400 text-base font-bold">
+                    <span>TOTAL TENDERED:</span>
+                    <span>{selectedLane.receipt.total_paid}</span>
+                  </div>
+                </div>
+              ) : (
+                <div className="text-center py-2 text-slate-500 text-xs font-mono">
+                  Promotions and sales tax will be reconciled at basket closeout...
+                </div>
+              )}
+
+              {/* PIN Pad Gateway Verification Footer */}
+              {streamPhase === 'tendered' && (
+                <div className="mt-4 p-3 rounded-xl bg-slate-950/90 border border-emerald-500/30 text-[11px] text-slate-400 space-y-1 animate-fadeIn">
+                  <div className="text-emerald-400 font-bold flex items-center gap-1.5">
+                    🔒 PCI GATEWAY VERIFIED ({selectedLane.receipt.payment_gateway_response.terminal})
+                  </div>
+                  <div>• STATUS: <strong className="text-emerald-300">{selectedLane.receipt.payment_gateway_response.status}</strong> (Auth Code: {selectedLane.receipt.payment_gateway_response.auth_code})</div>
+                  <div>• ENCRYPTION HANDSHAKE: <span className="text-slate-300">{selectedLane.timings.dukpt_tokenization_ms} ms</span> ({selectedLane.receipt.payment_gateway_response.pci_encryption})</div>
+                  <div>• NETWORK SEGMENT: <span className="text-amber-300">{selectedLane.receipt.payment_gateway_response.network_segment}</span></div>
+                </div>
+              )}
             </div>
           )}
 
@@ -360,58 +530,6 @@ export default function RetailTestDashboard({ clusterName, projectId }: RetailTe
               ))}
             </div>
           </div>
-
-          {/* Itemized Grocery Receipt Display for Selected Lane */}
-          {selectedLane && (
-            <div className="glass-panel p-6 rounded-2xl border border-emerald-500/40 bg-emerald-950/10 space-y-3 font-mono text-xs animate-fadeIn">
-              <div className="flex justify-between items-center border-b border-slate-800 pb-3 text-emerald-400 font-bold text-sm">
-                <span className="flex items-center gap-2">
-                  <CheckCircle2 className="w-5 h-5" /> KROGER RECEIPT: {selectedLane.lane_name}
-                </span>
-                <span className="bg-emerald-500/20 px-3 py-1 rounded-lg border border-emerald-500/30">
-                  {selectedLane.receipt.total_paid}
-                </span>
-              </div>
-
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-slate-400 text-[11px] pb-2 border-b border-slate-800/80">
-                <div><strong>TX ID:</strong> {selectedLane.receipt.transaction_id}</div>
-                <div><strong>STORE:</strong> {selectedLane.receipt.store}</div>
-                <div><strong>LANE TYPE:</strong> {selectedLane.lane_type}</div>
-                <div><strong>LATENCY:</strong> <span className="text-white font-bold">{selectedLane.latency_ms} ms</span></div>
-              </div>
-
-              <div className="max-h-60 overflow-y-auto space-y-1 py-2 border-b border-slate-800/80 text-slate-300">
-                {selectedLane.receipt.items.map((item: any, idx: number) => (
-                  <div key={idx} className="flex justify-between items-center py-1 hover:bg-slate-900/50 px-2 rounded">
-                    <span><strong className="text-slate-500">{item.sku}</strong> {item.name}</span>
-                    <span className="font-bold text-white">{item.price}</span>
-                  </div>
-                ))}
-              </div>
-
-              <div className="flex justify-between items-center pt-1 text-slate-300 text-sm font-bold">
-                <span>SUBTOTAL ({selectedLane.receipt.items.length} items):</span>
-                <span>{selectedLane.receipt.subtotal}</span>
-              </div>
-              <div className="flex justify-between items-center text-slate-400 text-xs">
-                <span>ESTIMATED TAX (7%):</span>
-                <span>{selectedLane.receipt.tax}</span>
-              </div>
-              <div className="flex justify-between items-center border-t border-slate-800 pt-2 text-emerald-400 text-base font-bold">
-                <span>TOTAL PAID:</span>
-                <span>{selectedLane.receipt.total_paid}</span>
-              </div>
-
-              <div className="mt-4 p-3 rounded-xl bg-slate-950/90 border border-emerald-500/30 text-[11px] text-slate-400 space-y-1">
-                <div className="text-emerald-400 font-bold flex items-center gap-1.5">
-                  🔒 PCI GATEWAY VERIFICATION ({selectedLane.receipt.payment_gateway_response.terminal})
-                </div>
-                <div>• STATUS: <strong className="text-emerald-300">{selectedLane.receipt.payment_gateway_response.status}</strong> (Auth: {selectedLane.receipt.payment_gateway_response.auth_code})</div>
-                <div>• ENCRYPTION: <span className="text-slate-300">{selectedLane.receipt.payment_gateway_response.pci_encryption}</span></div>
-                <div>• NETWORK SEGMENT: <span className="text-amber-300">{selectedLane.receipt.payment_gateway_response.network_segment}</span></div>
-              </div>
-            </div>
-          )}
         </div>
       </div>
     </div>
