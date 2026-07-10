@@ -47,6 +47,12 @@ export interface TestHarnessReport {
 
 const HARNESS_FILE = path.join('/tmp', 'gdc_test_harness_report.json');
 
+let activeCancelFlag = false;
+
+export function stopTestHarness() {
+  activeCancelFlag = true;
+}
+
 export function getTestHarnessReport(): TestHarnessReport {
   try {
     if (fs.existsSync(HARNESS_FILE)) {
@@ -93,9 +99,15 @@ export async function runFullStackTestHarness(config: TestHarnessConfig) {
     runTeardown = false
   } = config;
 
+  activeCancelFlag = false;
   const jobId = `e2e-${Date.now()}`;
   const startTime = new Date().toISOString();
   const startMs = Date.now();
+  const checkCancel = () => {
+    if (activeCancelFlag) {
+      throw new Error("E2E Test aborted by operator.");
+    }
+  };
 
   const steps: TestHarnessStep[] = [
     { id: 'step-1', name: 'Phase 1: Infrastructure Provisioning (bmctl & Terraform)', status: 'pending', logs: [] },
@@ -122,6 +134,7 @@ export async function runFullStackTestHarness(config: TestHarnessConfig) {
       const statusCheck = await fetchClusterStatus(clusterName, projectId);
       const isExistingCluster = statusCheck && statusCheck.connected;
 
+      checkCancel();
       // Phase 1: Provisioning
       if (!runProvisioning || isExistingCluster) {
         steps[0].status = 'skipped';
@@ -140,6 +153,7 @@ export async function runFullStackTestHarness(config: TestHarnessConfig) {
       }
       saveTestHarnessReport(report);
 
+      checkCancel();
       // Phase 2: VMs & Workloads
       if (!runVms && !runWorkloads) {
         steps[1].status = 'skipped';
@@ -159,6 +173,7 @@ export async function runFullStackTestHarness(config: TestHarnessConfig) {
       }
       saveTestHarnessReport(report);
 
+      checkCancel();
       // Phase 3: Benchmarks
       if (!runBenchmarks || (!benchmarkFio && !benchmarkIperf && !benchmarkMongo && !benchmarkRedis && !benchmarkPg)) {
         steps[2].status = 'skipped';
@@ -196,6 +211,7 @@ export async function runFullStackTestHarness(config: TestHarnessConfig) {
       }
       saveTestHarnessReport(report);
 
+      checkCancel();
       // Phase 4: Sentinel
       if (!runSentinel) {
         steps[3].status = 'skipped';
@@ -212,6 +228,7 @@ export async function runFullStackTestHarness(config: TestHarnessConfig) {
       }
       saveTestHarnessReport(report);
 
+      checkCancel();
       // Phase 5: Teardown
       if (!runTeardown || isExistingCluster) {
         steps[4].status = 'skipped';

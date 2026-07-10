@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { getTestHarnessReport, runFullStackTestHarness } from '@/lib/test-harness';
+import { getTestHarnessReport, runFullStackTestHarness, stopTestHarness } from '@/lib/test-harness';
 import fs from 'fs';
 
 export const dynamic = 'force-dynamic';
@@ -28,4 +28,9 @@ export async function POST(request: Request) {
   } catch (error: any) {
     return NextResponse.json({ error: error.message || 'Test Harness error' }, { status: 500 });
   }
+}
+
+export async function DELETE() {
+  stopTestHarness();
+  return NextResponse.json({ success: true, message: "E2E Test Harness aborted." });
 }

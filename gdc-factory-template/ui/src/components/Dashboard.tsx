@@ -43,6 +43,7 @@ export default function Dashboard({ clusterName, projectId, setActiveTab }: Dash
     smtpFrom: 'gdc-sentinel-alerts@altostrat.com'
   });
   const [showSmtpSettings, setShowSmtpSettings] = useState(false);
+  const [modalTab, setModalTab] = useState<'logs' | 'report'>('logs');
 
   const fetchHarnessStatus = () => {
     fetch('/api/infrastructure/test-harness')
@@ -51,9 +52,17 @@ export default function Dashboard({ clusterName, projectId, setActiveTab }: Dash
       .catch(console.error);
   };
 
+  const handleStopTestHarness = () => {
+    if (!confirm('⚠️ Are you sure you want to abort the currently running End-to-End Verification Suite?')) return;
+    fetch('/api/infrastructure/test-harness', { method: 'DELETE' })
+      .then(() => fetchHarnessStatus())
+      .catch(console.error);
+  };
+
   const launchTestHarness = () => {
     setShowHarnessMenu(false);
     setShowHarnessModal(true);
+    setModalTab('logs');
     fetch('/api/infrastructure/test-harness', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -225,12 +234,20 @@ export default function Dashboard({ clusterName, projectId, setActiveTab }: Dash
               </p>
             </div>
           </div>
-          <button
-            onClick={() => setShowHarnessModal(true)}
-            className="flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-purple-600/20 hover:bg-purple-600/30 text-purple-300 text-xs font-bold border border-purple-500/30 transition shadow-sm"
-          >
-            🔍 View Active Progress Logs
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setShowHarnessModal(true)}
+              className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-purple-650/20 hover:bg-purple-600/30 text-purple-300 text-xs font-bold border border-purple-500/30 transition shadow-sm"
+            >
+              🔍 View Logs
+            </button>
+            <button
+              onClick={handleStopTestHarness}
+              className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-rose-600/20 hover:bg-rose-600/30 text-rose-300 text-xs font-bold border border-rose-500/30 transition shadow-sm"
+            >
+              ⏹ Stop Test
+            </button>
+          </div>
         </div>
       )}
 
@@ -764,8 +781,28 @@ export default function Dashboard({ clusterName, projectId, setActiveTab }: Dash
               </button>
             </div>
 
+            {/* Logs vs. SLA Report Preview Selection Tabs */}
+            {harnessReport && (harnessReport.status === 'success' || harnessReport.status === 'failed') && (
+              <div className="flex items-center gap-2 border-b border-slate-800 pb-3">
+                <button
+                  onClick={() => setModalTab('logs')}
+                  className={`px-3 py-1 rounded-lg text-xs font-bold transition ${modalTab === 'logs' ? 'bg-purple-600 text-white shadow' : 'bg-slate-850 text-slate-400 hover:bg-slate-800'}`}
+                >
+                  📜 Step Logs View
+                </button>
+                <button
+                  onClick={() => setModalTab('report')}
+                  className={`px-3 py-1 rounded-lg text-xs font-bold transition ${modalTab === 'report' ? 'bg-purple-600 text-white shadow' : 'bg-slate-850 text-slate-400 hover:bg-slate-800'}`}
+                >
+                  📋 Read SLA Report JSON
+                </button>
+              </div>
+            )}
+
             <div className="flex-1 overflow-y-auto space-y-4 pr-1 text-xs font-mono">
-              {harnessReport?.summary && (
+              {modalTab === 'logs' ? (
+                <>
+                  {harnessReport?.summary && (
                 <div className={`p-4 rounded-xl border font-bold ${harnessReport.status === 'success' ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-300' : harnessReport.status === 'failed' ? 'bg-rose-500/10 border-rose-500/30 text-rose-300' : 'bg-sky-500/10 border-sky-500/30 text-sky-300 animate-pulse'}`}>
                   {harnessReport.summary}
                 </div>
@@ -792,24 +829,48 @@ export default function Dashboard({ clusterName, projectId, setActiveTab }: Dash
                   </div>
                 ))}
               </div>
+                </>
+              ) : (
+                <div className="bg-slate-950 border border-slate-850 p-4.5 rounded-2xl max-h-[50vh] overflow-y-auto text-[11px] text-purple-300 font-mono select-text leading-relaxed">
+                  <pre className="whitespace-pre-wrap">{JSON.stringify(harnessReport, null, 2)}</pre>
+                </div>
+              )}
             </div>
 
             <div className="pt-3 border-t border-slate-800 flex items-center justify-between text-xs">
               <span className="text-slate-400">Target: <strong className="text-white">{harnessReport?.clusterName}</strong> ({harnessReport?.projectId})</span>
-              {harnessReport?.status === 'success' && (
-                <button
-                  onClick={() => {
-                    const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(harnessReport, null, 2));
-                    const dlAnchor = document.createElement('a');
-                    dlAnchor.setAttribute("href", dataStr);
-                    dlAnchor.setAttribute("download", `gdc-e2e-verification-report-${harnessReport.jobId}.json`);
-                    dlAnchor.click();
-                  }}
-                  className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold shadow-md transition"
-                >
-                  📥 Download Verification SLA Report (.JSON)
-                </button>
-              )}
+              <div className="flex items-center gap-2">
+                {harnessReport?.status === 'running' && (
+                  <button
+                    onClick={handleStopTestHarness}
+                    className="px-3.5 py-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-extrabold shadow-md transition flex items-center gap-1.5"
+                  >
+                    ⏹ Stop Active Run
+                  </button>
+                )}
+                {harnessReport && (harnessReport.status === 'success' || harnessReport.status === 'failed') && (
+                  <>
+                    <button
+                      onClick={() => setModalTab(modalTab === 'logs' ? 'report' : 'logs')}
+                      className="px-3.5 py-2 rounded-xl bg-purple-600/20 hover:bg-purple-600/30 text-purple-300 font-bold border border-purple-500/30 transition"
+                    >
+                      {modalTab === 'logs' ? "📋 Preview SLA Report" : "📜 View Step Logs"}
+                    </button>
+                    <button
+                      onClick={() => {
+                        const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(harnessReport, null, 2));
+                        const dlAnchor = document.createElement('a');
+                        dlAnchor.setAttribute("href", dataStr);
+                        dlAnchor.setAttribute("download", `gdc-e2e-verification-report-${harnessReport.jobId}.json`);
+                        dlAnchor.click();
+                      }}
+                      className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold shadow-md transition"
+                    >
+                      📥 Download JSON
+                    </button>
+                  </>
+                )}
+              </div>
             </div>
           </div>
         </div>
