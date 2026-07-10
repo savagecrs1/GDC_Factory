@@ -124,54 +124,85 @@ export default function FleetOperationsCenter({ currentProject, onSelectProject,
       {/* Interactive Master-Detail Inspector Layout */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         
-        {/* LEFT COLUMN: Project Roster (Master List - 4 Cols) */}
+        {/* LEFT COLUMN: Project & Cluster Tree Roster (Master List - 4 Cols) */}
         <div className="lg:col-span-4 space-y-2">
           <div className="text-xs font-bold text-slate-300 uppercase tracking-wider px-1 flex items-center justify-between">
-            <span>Monitored Project Roster ({projects.length})</span>
-            <span className="text-[10px] text-purple-400">Click to Inspect ↓</span>
+            <span>Monitored Fleet Hierarchy ({projects.length})</span>
+            <span className="text-[10px] text-purple-400">1-Click Drilldown ↓</span>
           </div>
-          <div className="space-y-1.5 max-h-[380px] overflow-y-auto pr-1">
+          <div className="space-y-2 max-h-[420px] overflow-y-auto pr-1">
             {projects.map((projObj: any, idx) => {
               const projId = typeof projObj === 'string' ? projObj : projObj.projectId || projObj.name || String(projObj);
               const projName = typeof projObj === 'string' ? projObj : projObj.name || projObj.projectId || String(projObj);
               const isSelected = projId === selectedProj;
               const telem = getProjectTelemetry(projId);
               return (
-                <div
-                  key={idx}
-                  onClick={() => {
-                    setSelectedProj(projId);
-                    if (onSelectProject) onSelectProject(projId);
-                  }}
-                  className={`p-3 rounded-xl border transition cursor-pointer flex items-center justify-between group ${
-                    isSelected
-                      ? 'bg-gradient-to-r from-purple-600/25 to-indigo-600/20 border-purple-500 shadow-md shadow-purple-500/10'
-                      : 'bg-slate-900/60 border-slate-800 hover:border-slate-700 hover:bg-slate-800/50'
-                  }`}
-                >
-                  <div className="flex items-center gap-2.5 min-w-0">
-                    <span className={`w-2.5 h-2.5 rounded-full flex-shrink-0 ${
-                      telem.isNew ? 'bg-amber-400 animate-bounce' : isSelected ? 'bg-purple-400 animate-pulse' : 'bg-emerald-500'
-                    }`} />
-                    <div className="min-w-0">
-                      <div className={`font-bold text-xs font-mono truncate ${isSelected ? 'text-white font-extrabold' : 'text-slate-200'}`}>
-                        {projId}
+                <div key={idx} className="space-y-1">
+                  <div
+                    onClick={() => {
+                      setSelectedProj(projId);
+                      if (onSelectProject) onSelectProject(projId);
+                    }}
+                    className={`p-3 rounded-xl border transition cursor-pointer flex items-center justify-between group ${
+                      isSelected
+                        ? 'bg-gradient-to-r from-purple-600/25 to-indigo-600/20 border-purple-500 shadow-md shadow-purple-500/10'
+                        : 'bg-slate-900/60 border-slate-800 hover:border-slate-700 hover:bg-slate-800/50'
+                    }`}
+                  >
+                    <div className="flex items-center gap-2.5 min-w-0">
+                      <span className={`w-2.5 h-2.5 rounded-full flex-shrink-0 ${
+                        telem.isNew ? 'bg-amber-400 animate-bounce' : isSelected ? 'bg-purple-400 animate-pulse' : 'bg-emerald-500'
+                      }`} />
+                      <div className="min-w-0">
+                        <div className={`font-bold text-xs font-mono truncate ${isSelected ? 'text-white font-extrabold' : 'text-slate-200'}`}>
+                          {projId}
+                        </div>
+                        <div className="text-[10px] text-slate-400 truncate mt-0.5">{projName}</div>
                       </div>
-                      <div className="text-[10px] text-slate-400 truncate mt-0.5">{projName}</div>
+                    </div>
+                    <div className="flex items-center gap-1.5 flex-shrink-0">
+                      <span className={`text-[9px] px-1.5 py-0.5 rounded font-mono font-bold ${
+                        telem.isNew
+                          ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30'
+                          : isSelected
+                          ? 'bg-purple-500 text-white'
+                          : 'bg-slate-800 text-slate-400'
+                      }`}>
+                        {telem.isNew ? 'DAY-0' : `${telem.clusters} CLUSTERS`}
+                      </span>
+                      <ArrowUpRight className={`w-4 h-4 ${isSelected ? 'text-purple-300' : 'text-slate-500 group-hover:text-slate-300'}`} />
                     </div>
                   </div>
-                  <div className="flex items-center gap-1.5 flex-shrink-0">
-                    <span className={`text-[9px] px-1.5 py-0.5 rounded font-mono font-bold ${
-                      telem.isNew
-                        ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30'
-                        : isSelected
-                        ? 'bg-purple-500 text-white'
-                        : 'bg-slate-800 text-slate-400'
-                    }`}>
-                      {telem.isNew ? 'DAY-0' : `${telem.clusters} CLUSTERS`}
-                    </span>
-                    <ArrowUpRight className={`w-4 h-4 ${isSelected ? 'text-purple-300' : 'text-slate-500 group-hover:text-slate-300'}`} />
-                  </div>
+
+                  {/* 1-Click Drilldown Cluster Roster under Project */}
+                  {!telem.isNew && (
+                    <div className="pl-6 pr-1 space-y-1 border-l-2 border-purple-500/30 ml-3.5 my-1">
+                      {Array.from({ length: telem.clusters }).map((_, cIdx) => {
+                        const cName = `${projId}-cluster-${cIdx + 1}`;
+                        return (
+                          <div
+                            key={cIdx}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setSelectedProj(projId);
+                              if (onSelectProject) onSelectProject(projId);
+                              if (onNavigateTab) onNavigateTab('cluster-view');
+                            }}
+                            className="p-2 rounded-lg bg-slate-950/80 hover:bg-purple-900/30 border border-slate-800/80 hover:border-purple-500/50 cursor-pointer transition flex items-center justify-between text-xs group/cluster shadow-sm"
+                            title="1-Click Jump to Cluster Telemetry Workspace"
+                          >
+                            <div className="flex items-center gap-2 truncate">
+                              <span className="text-purple-400 text-[10px]">└─</span>
+                              <span className="text-xs font-mono font-bold text-slate-300 group-hover/cluster:text-white truncate">{cName}</span>
+                            </div>
+                            <span className="text-[10px] font-bold text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded group-hover/cluster:bg-purple-500 group-hover/cluster:text-white transition">
+                              ⚡ Inspect
+                            </span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
                 </div>
               );
             })}
