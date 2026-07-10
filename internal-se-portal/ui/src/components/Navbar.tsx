@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Shield, Cloud, Server, Cpu, LogOut, Terminal, Layers, Activity, RefreshCw, Network, Bot, GitBranch } from 'lucide-react';
+import { Shield, Cloud, Server, Cpu, LogOut, Terminal, Layers, Activity, RefreshCw, Network, Bot, GitBranch, ShoppingCart } from 'lucide-react';
 import ProjectSelector from '@/components/ProjectSelector';
 
 interface NavbarProps {
@@ -38,24 +38,25 @@ export default function Navbar({
     { id: 'workloads', label: 'K8s Workloads', icon: Layers },
     { id: 'networks', label: 'VLAN & PCI Networks', icon: Network },
     { id: 'configsync', label: 'GitOps Config Sync', icon: GitBranch },
+    { id: 'retail-tests', label: 'Retail Sandbox & Metrics', icon: ShoppingCart },
     { id: 'sentinel', label: 'AI Sentinel Engine', icon: Bot },
   ];
 
   return (
-    <header className="sticky top-0 z-50 glass-panel border-b border-slate-800 px-4 md:px-8 lg:px-12 py-3.5 mb-6 shadow-lg">
-      <div className="w-full max-w-[1920px] mx-auto flex items-center justify-between">
+    <header className="sticky top-0 z-50 glass-panel border-b border-slate-800 px-4 md:px-8 py-4 mb-6 shadow-lg">
+      <div className="w-full flex items-center justify-between">
         {/* Brand */}
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-sky-400 to-indigo-600 flex items-center justify-center shadow-lg shadow-sky-500/20">
-            <Cloud className="w-6 h-6 text-white" />
+        <div className="flex items-center gap-4">
+          <div className="h-16 flex items-center justify-center pr-1">
+            <img src="/kroger-logo.svg" alt="Kroger" className="h-14 md:h-16 w-auto object-contain drop-shadow-md" />
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <h1 className="font-bold text-lg tracking-tight text-white flex items-center gap-1.5">
-                Google Distributed Cloud <span className="text-xs px-2 py-0.5 rounded-full bg-sky-500/20 text-sky-400 font-medium border border-sky-500/30">Hybrid SO</span>
+              <h1 className="font-bold text-lg tracking-tight text-white flex items-center gap-1.5 font-sans">
+                GDC Virtual Factory <span className="text-xs px-2 py-0.5 rounded-full bg-blue-500/20 text-blue-400 font-semibold border border-blue-500/30">Kroger Tech SO</span>
               </h1>
             </div>
-            <p className="text-xs text-slate-400">Virtual Environment Workload & VM Portal</p>
+            <p className="text-xs text-slate-400">Automated Retail Store Workload & VM Operations Portal</p>
           </div>
         </div>
 
@@ -70,7 +71,7 @@ export default function Navbar({
                 onClick={() => setActiveTab(item.id)}
                 className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
                   isActive
-                    ? 'bg-gradient-to-r from-sky-500 to-indigo-500 text-white shadow-md shadow-sky-500/25'
+                    ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-md shadow-blue-500/25'
                     : 'text-slate-400 hover:text-white hover:bg-slate-800/50'
                 }`}
               >

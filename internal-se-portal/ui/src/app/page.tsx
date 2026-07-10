@@ -9,6 +9,7 @@ import WorkloadManager from '@/components/WorkloadManager';
 import NetworkManager from '@/components/NetworkManager';
 import SentinelManager from '@/components/SentinelManager';
 import ConfigSyncManager from '@/components/ConfigSyncManager';
+import RetailTestDashboard from '@/components/RetailTestDashboard';
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState('dashboard');
@@ -17,22 +18,18 @@ export default function Home() {
 
   // Dynamically discover clusters whenever projectId changes
   useEffect(() => {
-    if (!projectId) return;
-    setActiveTab('dashboard');
     fetch(`/api/gcp/clusters?projectId=${encodeURIComponent(projectId)}`)
-      .then((res) => res.json())
-      .then((data) => {
+      .then(res => res.json())
+      .then(data => {
         if (data.clusters && data.clusters.length > 0) {
-          if (!data.clusters.includes(clusterName)) {
-            setClusterName(data.clusters[0]);
-          }
+          setClusterName(data.clusters[0]);
         }
       })
-      .catch((err) => console.error('Error discovering project clusters:', err));
+      .catch(console.error);
   }, [projectId]);
 
   return (
-    <div className="min-h-screen pb-16">
+    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans antialiased selection:bg-sky-500 selection:text-white">
       <Navbar
         activeTab={activeTab}
         setActiveTab={setActiveTab}
@@ -42,7 +39,7 @@ export default function Home() {
         setProjectId={setProjectId}
       />
 
-      <main className="w-full max-w-[1920px] mx-auto px-4 md:px-8 lg:px-12">
+      <main className="w-full max-w-[1920px] mx-auto px-4 md:px-8 lg:px-12 space-y-6">
         {activeTab === 'dashboard' && (
           <Dashboard clusterName={clusterName} projectId={projectId} setActiveTab={setActiveTab} />
         )}
@@ -58,6 +55,7 @@ export default function Home() {
         {activeTab === 'workloads' && <WorkloadManager clusterName={clusterName} projectId={projectId} />}
         {activeTab === 'networks' && <NetworkManager clusterName={clusterName} projectId={projectId} />}
         {activeTab === 'configsync' && <ConfigSyncManager clusterName={clusterName} projectId={projectId} />}
+        {activeTab === 'retail-tests' && <RetailTestDashboard clusterName={clusterName} projectId={projectId} />}
         {activeTab === 'sentinel' && <SentinelManager clusterName={clusterName} projectId={projectId} />}
       </main>
     </div>

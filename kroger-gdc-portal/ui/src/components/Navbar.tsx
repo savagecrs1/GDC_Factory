@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Shield, Cloud, Server, Cpu, LogOut, Terminal, Layers, Activity, RefreshCw, Network, Bot, GitBranch } from 'lucide-react';
+import { Shield, Cloud, Server, Cpu, LogOut, Terminal, Layers, Activity, RefreshCw, Network, Bot, GitBranch, ShoppingCart } from 'lucide-react';
 import ProjectSelector from '@/components/ProjectSelector';
 
 interface NavbarProps {
@@ -38,6 +38,7 @@ export default function Navbar({
     { id: 'workloads', label: 'K8s Workloads', icon: Layers },
     { id: 'networks', label: 'VLAN & PCI Networks', icon: Network },
     { id: 'configsync', label: 'GitOps Config Sync', icon: GitBranch },
+    { id: 'retail-tests', label: 'Retail Sandbox & Metrics', icon: ShoppingCart },
     { id: 'sentinel', label: 'AI Sentinel Engine', icon: Bot },
   ];
 
