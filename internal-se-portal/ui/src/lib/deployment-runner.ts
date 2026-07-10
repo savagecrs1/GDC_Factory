@@ -143,21 +143,17 @@ export async function runDeploymentSequence(
     // Step 2b: Admin Workstation Layer
     job.currentStep = 'Step 2b: Checking Admin Workstation (terraform/admin-workstation)';
     const tfWsDir = path.join(rootDir, 'terraform', 'admin-workstation');
-    if (resourceExistsInGcp('instance', 'gem-admin-ws', projectId)) {
-      appendLog(job, 'info', `✅ Admin Workstation "gem-admin-ws" already exists in ${projectId}. Skipping creation!`, job.currentStep);
-    } else {
-      appendLog(job, 'info', 'Initializing Terraform for local admin workstation layer...', job.currentStep);
-      await executeCommand('terraform', [
-        'init',
-        '-reconfigure',
-        `-backend-config=bucket=gem-${projectId}-tfstate`,
-        '-backend-config=prefix=admin-workstation/state',
-        `-backend-config=impersonate_service_account=${saEmail}`
-      ], tfWsDir, { PROVISIONING_SA_EMAIL: saEmail }, job);
+    appendLog(job, 'info', 'Initializing Terraform for local admin workstation layer...', job.currentStep);
+    await executeCommand('terraform', [
+      'init',
+      '-reconfigure',
+      `-backend-config=bucket=gem-${projectId}-tfstate`,
+      '-backend-config=prefix=admin-workstation/state',
+      `-backend-config=impersonate_service_account=${saEmail}`
+    ], tfWsDir, { PROVISIONING_SA_EMAIL: saEmail }, job);
 
-      appendLog(job, 'info', 'Applying Terraform admin workstation layer...', job.currentStep);
-      await executeCommand('terraform', ['apply', '-auto-approve'], tfWsDir, { PROVISIONING_SA_EMAIL: saEmail }, job);
-    }
+    appendLog(job, 'info', 'Applying Terraform admin workstation layer...', job.currentStep);
+    await executeCommand('terraform', ['apply', '-auto-approve'], tfWsDir, { PROVISIONING_SA_EMAIL: saEmail }, job);
 
     // Step 2c: Edge Router Layer (Optional)
     if (deployEdgeRouter) {
