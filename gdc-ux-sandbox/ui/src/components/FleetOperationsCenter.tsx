@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Globe, Server, Cpu, Activity, RefreshCw, Layers, Terminal, ArrowUpRight, Zap, CheckCircle2, HardDrive, Shield, ExternalLink } from 'lucide-react';
+import { Globe, Server, Cpu, Activity, RefreshCw, Layers, Terminal, ArrowUpRight, Zap, CheckCircle2, HardDrive, Shield, ExternalLink, Network } from 'lucide-react';
 
 interface FleetProps {
   currentProject: string;
