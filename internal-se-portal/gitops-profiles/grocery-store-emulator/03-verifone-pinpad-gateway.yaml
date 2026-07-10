@@ -27,7 +27,29 @@ spec:
     spec:
       containers:
       - name: dukpt-gateway
-        image: nginx:alpine
+        image: python:3.11-alpine
+        command: ["python3", "-c"]
+        args:
+        - |
+          import http.server, json, datetime
+          class H(http.server.BaseHTTPRequestHandler):
+            def do_POST(self):
+              self.send_response(200)
+              self.send_header('Content-type', 'application/json')
+              self.end_headers()
+              receipt = {
+                "status": "APPROVED",
+                "auth_code": "EMV_884291",
+                "terminal": "VERIFONE_M400_PCI_VLAN3430",
+                "merchant": "KROGER_STORE_002",
+                "network_segment": "VLAN_3430_CDE_ISOLATED",
+                "pci_encryption": "DUKPT_POINT_TO_POINT_VALIDATED",
+                "timestamp": str(datetime.datetime.now().isoformat())
+              }
+              self.wfile.write(json.dumps(receipt, indent=2).encode())
+            def do_GET(self): self.do_POST()
+          print("Verifone PIN Pad DUKPT Gateway active on port 80...")
+          http.server.HTTPServer(('0.0.0.0', 80), H).serve_forever()
         env:
         - name: PCI_ENVIRONMENT
           value: "IN_SCOPE_CDE_V4"
@@ -35,8 +57,6 @@ spec:
           value: "DUKPT_P2PE_ENABLED"
         - name: VLAN_TARGET
           value: "3430_PCI_CDE"
-        - name: TERMINAL_MODEL
-          value: "VERIFONE_M400_EMV"
         ports:
         - containerPort: 80
           name: dukpt-token-port
