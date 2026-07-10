@@ -118,7 +118,7 @@ export function analyzeError(failedStep: string, rawLogs: string[], projectId: s
     remediationStep = `Inject local SSH public key (~/.ssh/google_compute_engine.pub or ~/.ssh/id_rsa.pub) into project metadata.`;
     severity = 'high';
     autoFixAvailable = true;
-    autoFixCommand = `gcloud compute project-info add-metadata --project=${projectId} --metadata-from-file=ssh-keys=~/.ssh/google_compute_engine.pub --quiet`;
+    autoFixCommand = `gcloud compute project-info add-metadata --project=${projectId} --metadata-from-file=ssh-keys=$HOME/.ssh/google_compute_engine.pub --quiet`;
   }
   // Rule 6: SA Key Creation Disabled
   else if (errorText.includes('disableServiceAccountKeyCreation')) {
