@@ -13,6 +13,7 @@ export default function FleetOperationsCenter({ currentProject, onSelectProject,
   const [projects, setProjects] = useState<any[]>([]);
   const [selectedProj, setSelectedProj] = useState<string>(currentProject || 'gdc-edge-demo-1');
   const [inspectedCluster, setInspectedCluster] = useState<string | null>(null);
+  const [activeModalView, setActiveModalView] = useState<'fleet' | 'project' | 'cluster'>('fleet');
   const [fleetStats, setFleetStats] = useState<{
     totalClusters: number;
     totalVms: number;
