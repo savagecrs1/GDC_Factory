@@ -3,7 +3,6 @@
 import React, { useState, useEffect } from 'react';
 import { Activity, Cpu, HardDrive, Server, Shield, CheckCircle2, AlertTriangle, RefreshCw, Play, Square, ExternalLink, Terminal, ShieldAlert, Zap, CheckCircle } from 'lucide-react';
 import WebTerminalModal from './WebTerminalModal';
-import FleetOperationsCenter from './FleetOperationsCenter';
 
 interface DashboardProps {
   clusterName: string;
@@ -87,9 +86,6 @@ export default function Dashboard({ clusterName, projectId, setActiveTab }: Dash
 
   return (
     <div className="space-y-6">
-      {/* Fleet Operations Center */}
-      <FleetOperationsCenter currentProject={projectId || 'core-edge-dm1'} onNavigateTab={setActiveTab} />
-
       {/* Top Status Banner */}
       <div className="glass-panel p-5 rounded-2xl flex flex-col md:flex-row items-start md:items-center justify-between gap-4 border-l-4 border-l-sky-500">
         <div className="flex items-center gap-4">
