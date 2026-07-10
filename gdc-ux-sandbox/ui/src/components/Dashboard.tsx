@@ -90,6 +90,114 @@ export default function Dashboard({ clusterName, projectId, setActiveTab }: Dash
       {/* Fleet Operations Center */}
       <FleetOperationsCenter currentProject={projectId || 'gdc-edge-demo-1'} onNavigateTab={setActiveTab} />
 
+      {/* Operational Console Launcher Grid (Modern Progressive Disclosure) */}
+      <div className="space-y-3 pt-2">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <span className="w-2.5 h-2.5 rounded-full bg-purple-500 animate-pulse" />
+            <h3 className="text-sm font-extrabold text-white uppercase tracking-wider">⚡ Launch Operational Consoles & Tools</h3>
+          </div>
+          <span className="text-xs text-slate-400">Click any card below to open its workspace console</span>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div
+            onClick={() => setActiveTab('provision')}
+            className="p-5 rounded-2xl glass-panel border border-slate-800 hover:border-sky-500/50 hover:bg-slate-800/80 cursor-pointer transition group shadow-lg hover:shadow-sky-500/10 flex flex-col justify-between h-36"
+          >
+            <div className="flex items-start justify-between">
+              <div className="w-11 h-11 rounded-xl bg-sky-500/10 border border-sky-500/20 flex items-center justify-center text-sky-400 group-hover:scale-110 transition">
+                <Terminal className="w-5 h-5" />
+              </div>
+              <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-sky-500/10 text-sky-300 border border-sky-500/20">IaC Engine</span>
+            </div>
+            <div>
+              <h4 className="font-bold text-white text-base group-hover:text-sky-300 transition">Cluster Provisioner</h4>
+              <p className="text-xs text-slate-400 mt-1 leading-snug">5-step automated Terraform & Ansible bare-metal deployment wizard.</p>
+            </div>
+          </div>
+
+          <div
+            onClick={() => setActiveTab('vms')}
+            className="p-5 rounded-2xl glass-panel border border-slate-800 hover:border-purple-500/50 hover:bg-slate-800/80 cursor-pointer transition group shadow-lg hover:shadow-purple-500/10 flex flex-col justify-between h-36"
+          >
+            <div className="flex items-start justify-between">
+              <div className="w-11 h-11 rounded-xl bg-purple-500/10 border border-purple-500/20 flex items-center justify-center text-purple-400 group-hover:scale-110 transition">
+                <Cpu className="w-5 h-5" />
+              </div>
+              <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-purple-500/10 text-purple-300 border border-purple-500/20">KubeVirt OCI</span>
+            </div>
+            <div>
+              <h4 className="font-bold text-white text-base group-hover:text-purple-300 transition">GDC VM Runtime</h4>
+              <p className="text-xs text-slate-400 mt-1 leading-snug">Manage Windows & Linux OCI container disks and cloud-init presets.</p>
+            </div>
+          </div>
+
+          <div
+            onClick={() => setActiveTab('workloads')}
+            className="p-5 rounded-2xl glass-panel border border-slate-800 hover:border-indigo-500/50 hover:bg-slate-800/80 cursor-pointer transition group shadow-lg hover:shadow-indigo-500/10 flex flex-col justify-between h-36"
+          >
+            <div className="flex items-start justify-between">
+              <div className="w-11 h-11 rounded-xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-indigo-400 group-hover:scale-110 transition">
+                <Server className="w-5 h-5" />
+              </div>
+              <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-indigo-500/10 text-indigo-300 border border-indigo-500/20">K8s Core</span>
+            </div>
+            <div>
+              <h4 className="font-bold text-white text-base group-hover:text-indigo-300 transition">K8s Workloads</h4>
+              <p className="text-xs text-slate-400 mt-1 leading-snug">Inspect container pods, services, and multi-tenant deployments.</p>
+            </div>
+          </div>
+
+          <div
+            onClick={() => setActiveTab('networks')}
+            className="p-5 rounded-2xl glass-panel border border-slate-800 hover:border-emerald-500/50 hover:bg-slate-800/80 cursor-pointer transition group shadow-lg hover:shadow-emerald-500/10 flex flex-col justify-between h-36"
+          >
+            <div className="flex items-start justify-between">
+              <div className="w-11 h-11 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400 group-hover:scale-110 transition">
+                <Activity className="w-5 h-5" />
+              </div>
+              <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-300 border border-emerald-500/20">Multus CNI</span>
+            </div>
+            <div>
+              <h4 className="font-bold text-white text-base group-hover:text-emerald-300 transition">VLAN & Secondary Networks</h4>
+              <p className="text-xs text-slate-400 mt-1 leading-snug">Configure L2 broadcast domain isolation and secondary overlays.</p>
+            </div>
+          </div>
+
+          <div
+            onClick={() => setActiveTab('configsync')}
+            className="p-5 rounded-2xl glass-panel border border-slate-800 hover:border-pink-500/50 hover:bg-slate-800/80 cursor-pointer transition group shadow-lg hover:shadow-pink-500/10 flex flex-col justify-between h-36"
+          >
+            <div className="flex items-start justify-between">
+              <div className="w-11 h-11 rounded-xl bg-pink-500/10 border border-pink-500/20 flex items-center justify-center text-pink-400 group-hover:scale-110 transition">
+                <Shield className="w-5 h-5" />
+              </div>
+              <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-pink-500/10 text-pink-300 border border-pink-500/20">GitOps</span>
+            </div>
+            <div>
+              <h4 className="font-bold text-white text-base group-hover:text-pink-300 transition">GitOps Config Sync</h4>
+              <p className="text-xs text-slate-400 mt-1 leading-snug">Automate zero-trust policy bundles and continuous repository sync.</p>
+            </div>
+          </div>
+
+          <div
+            onClick={() => setActiveTab('performance')}
+            className="p-5 rounded-2xl glass-panel border border-slate-800 hover:border-amber-500/50 hover:bg-slate-800/80 cursor-pointer transition group shadow-lg hover:shadow-amber-500/10 flex flex-col justify-between h-36"
+          >
+            <div className="flex items-start justify-between">
+              <div className="w-11 h-11 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400 group-hover:scale-110 transition">
+                <Zap className="w-5 h-5" />
+              </div>
+              <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-amber-500/10 text-amber-300 border border-amber-500/20">Telemetry</span>
+            </div>
+            <div>
+              <h4 className="font-bold text-white text-base group-hover:text-amber-300 transition">Performance & Metrics</h4>
+              <p className="text-xs text-slate-400 mt-1 leading-snug">24-lane grocery POS checkout emulation and storage I/O benchmarks.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
       {/* Top Status Banner */}
       <div className="glass-panel p-5 rounded-2xl flex flex-col md:flex-row items-start md:items-center justify-between gap-4 border-l-4 border-l-sky-500">
         <div className="flex items-center gap-4">
