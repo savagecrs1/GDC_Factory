@@ -130,11 +130,19 @@ export function analyzeError(failedStep: string, rawLogs: string[], projectId: s
     autoFixCommand = `gcloud org-policies reset constraints/iam.disableServiceAccountKeyCreation --project=${projectId} --quiet`;
   }
   // Rule 7: bmctl Preflight / VxLAN MTU
-  else if (errorText.includes('preflight') || errorText.includes('MTU')) {
+  else if (errorText.includes('preflight failed') || errorText.includes('preflight check failed') || errorText.includes('MTU') || errorText.includes('network check')) {
     errorTitle = 'Anthos bmctl Preflight Check Failure (Network MTU)';
     rootCause = `Anthos Bare Metal preflight validation detected network MTU or VXLAN overlay connectivity issues across cluster nodes.`;
     remediationStep = `Verify Docker daemon MTU is set to 1410 across workstation and cluster VMs to account for 50-byte GCE VXLAN encapsulation header overhead.`;
     severity = 'medium';
+    autoFixAvailable = false;
+  }
+  // Rule 7b: Bootstrap Cluster / Docker Daemon Crash
+  else if (errorText.includes('connection refused') || errorText.includes('127.0.0.1:33203') || errorText.includes('bootstrap cluster')) {
+    errorTitle = 'Anthos Bootstrap Cluster / Docker Daemon Crash';
+    rootCause = `The temporary kind bootstrap cluster running inside Docker on the admin workstation crashed or became unreachable during installation.`;
+    remediationStep = `Check Docker memory limits and ensure the admin workstation has sufficient CPU/RAM resources allocated.`;
+    severity = 'high';
     autoFixAvailable = false;
   }
   // Fallback heuristic
