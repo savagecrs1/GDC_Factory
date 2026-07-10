@@ -96,6 +96,23 @@ export default function VmManager({ clusterName, projectId }: VmManagerProps) {
     fetchVms();
   };
 
+  const getPresetDiskImage = (img: string) => {
+    switch (img) {
+      case 'ubuntu-22.04-server-cloudimg-amd64': return 'quay.io/containerdisks/ubuntu:22.04';
+      case 'debian-12-generic-amd64': return 'quay.io/containerdisks/debian:12';
+      case 'rhel-8-server-cloudimg': return 'quay.io/containerdisks/centos-stream:8';
+      case 'rocky-linux-9-generic': return 'quay.io/containerdisks/rocky:9';
+      case 'vms-windows11': return 'docker.io/gdc-factory/vms-windows11:latest';
+      case 'vms-windows10': return 'docker.io/gdc-factory/vms-windows10:latest';
+      case 'vms-windows7': return 'docker.io/gdc-factory/vms-windows7:latest';
+      case 'vms-windowsxp': return 'docker.io/gdc-factory/vms-windowsxp:latest';
+      case 'vms-solaris10': return 'docker.io/gdc-factory/vms-solaris10:latest';
+      case 'vms-kdeneon': return 'docker.io/gdc-factory/vms-kdeneon:latest';
+      case 'vms-haiku': return 'docker.io/gdc-factory/vms-haiku:latest';
+      default: return 'quay.io/containerdisks/fedora:38';
+    }
+  };
+
   const generatedYaml = `apiVersion: kubevirt.io/v1
 kind: VirtualMachine
 metadata:
@@ -121,7 +138,7 @@ spec:
                 bus: virtio
       volumes:
         - name: datavolume-disk
-          ${imageType === 'custom-url' ? `dataVolume:\n            name: ${vmName}-dv\n  dataVolumeTemplates:\n    - metadata:\n        name: ${vmName}-dv\n      spec:\n        pvc:\n          accessModes:\n            - ReadWriteOnce\n          resources:\n            - requests:\n                storage: 20Gi\n        source:\n          http:\n            url: "${customImageUrl || 'https://cloud-images.ubuntu.com/jammy/current/jammy-server-cloudimg-amd64.disk-kvm.img'}"` : `containerDisk:\n            image: "${imageType === 'preset' ? (image === 'ubuntu-22.04-server-cloudimg-amd64' ? 'quay.io/containerdisks/ubuntu:22.04' : image === 'debian-12-generic-amd64' ? 'quay.io/containerdisks/debian:12' : image === 'rhel-8-server-cloudimg' ? 'quay.io/containerdisks/centos-stream:8' : 'quay.io/containerdisks/fedora:38') : (customImageUrl || 'quay.io/containerdisks/fedora:latest')}"`}`;
+          ${imageType === 'custom-url' ? `dataVolume:\n            name: ${vmName}-dv\n  dataVolumeTemplates:\n    - metadata:\n        name: ${vmName}-dv\n      spec:\n        pvc:\n          accessModes:\n            - ReadWriteOnce\n          resources:\n            - requests:\n                storage: 20Gi\n        source:\n          http:\n            url: "${customImageUrl || 'https://cloud-images.ubuntu.com/jammy/current/jammy-server-cloudimg-amd64.disk-kvm.img'}"` : `containerDisk:\n            image: "${imageType === 'preset' ? getPresetDiskImage(image) : (customImageUrl || 'quay.io/containerdisks/fedora:latest')}"`}`;
 
   return (
     <div className="space-y-6">
@@ -268,16 +285,29 @@ spec:
 
             {imageType === 'preset' ? (
               <div className="md:col-span-2 lg:col-span-4">
-                <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-2">Select Preset OS Catalog Image</label>
+                <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-2">Select Preset OS Catalog Image (From repository vms/ directory)</label>
                 <select
                   value={image}
                   onChange={(e) => setImage(e.target.value)}
-                  className="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-indigo-500"
+                  className="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-indigo-500 font-mono"
                 >
-                  <option value="ubuntu-22.04-server-cloudimg-amd64">Ubuntu 22.04 LTS (CloudImg)</option>
-                  <option value="debian-12-generic-amd64">Debian 12 Bookworm Generic</option>
-                  <option value="rhel-8-server-cloudimg">RHEL 8 Server Enterprise</option>
-                  <option value="rocky-linux-9-generic">Rocky Linux 9 Cloud</option>
+                  <optgroup label="🖥️ Standard Cloud Linux Templates">
+                    <option value="ubuntu-22.04-server-cloudimg-amd64">Ubuntu 22.04 LTS (CloudImg)</option>
+                    <option value="debian-12-generic-amd64">Debian 12 Bookworm Generic</option>
+                    <option value="rhel-8-server-cloudimg">RHEL 8 Server Enterprise</option>
+                    <option value="rocky-linux-9-generic">Rocky Linux 9 Cloud Server</option>
+                  </optgroup>
+                  <optgroup label="🪟 Microsoft Windows Workstation & POS Templates (vms/)">
+                    <option value="vms-windows11">vms/windows11 - Windows 11 Enterprise Workstation</option>
+                    <option value="vms-windows10">vms/windows10 - Windows 10 Pro Workstation</option>
+                    <option value="vms-windows7">vms/windows7 - Windows 7 Legacy Retail POS</option>
+                    <option value="vms-windowsxp">vms/windowsxp - Windows XP Embedded Legacy</option>
+                  </optgroup>
+                  <optgroup label="🐧 Specialized Unix & Desktop Simulation (vms/)">
+                    <option value="vms-solaris10">vms/solaris10 - Sun Solaris 10 Unix Legacy</option>
+                    <option value="vms-kdeneon">vms/kdeneon - KDE Neon Linux Desktop</option>
+                    <option value="vms-haiku">vms/haiku - Haiku OS Lightweight Desktop</option>
+                  </optgroup>
                 </select>
               </div>
             ) : (
