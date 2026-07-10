@@ -18,6 +18,31 @@ export default function Dashboard({ clusterName, projectId, setActiveTab }: Dash
   const [fixResult, setFixResult] = useState<{ id: string; success: boolean; message: string } | null>(null);
   const [loading, setLoading] = useState(true);
   const [terminalTarget, setTerminalTarget] = useState<{ name: string; type: 'vm' | 'node' } | null>(null);
+  const [harnessReport, setHarnessReport] = useState<any>(null);
+  const [showHarnessModal, setShowHarnessModal] = useState(false);
+
+  const fetchHarnessStatus = () => {
+    fetch('/api/infrastructure/test-harness')
+      .then(res => res.json())
+      .then(data => setHarnessReport(data))
+      .catch(console.error);
+  };
+
+  const launchTestHarness = () => {
+    setShowHarnessModal(true);
+    fetch('/api/infrastructure/test-harness', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ projectId: projectId || 'core-edge-dm1', clusterName: 'gdc-e2e-test-1' })
+    }).then(() => fetchHarnessStatus());
+  };
+
+  useEffect(() => {
+    if (showHarnessModal) {
+      const t = setInterval(fetchHarnessStatus, 1000);
+      return () => clearInterval(t);
+    }
+  }, [showHarnessModal]);
 
   const fetchStatus = () => {
     setLoading(true);
@@ -129,6 +154,13 @@ export default function Dashboard({ clusterName, projectId, setActiveTab }: Dash
               🔍 Why don't I see my cluster?
             </button>
           )}
+          <button
+            onClick={launchTestHarness}
+            className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white text-sm font-extrabold shadow-lg shadow-purple-500/20 transition"
+            title="Automate deploy cluster -> deploy VMs -> benchmarks -> teardown -> report"
+          >
+            🚀 E2E Test Suite
+          </button>
           <button
             onClick={fetchStatus}
             disabled={loading}
@@ -491,6 +523,78 @@ export default function Dashboard({ clusterName, projectId, setActiveTab }: Dash
           targetName={terminalTarget.name}
           projectId={projectId || 'vdc-18818'}
         />
+      )}
+      {/* Automated E2E Test Harness Modal */}
+      {showHarnessModal && (
+        <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4 animate-fadeIn">
+          <div className="bg-slate-900 border-2 border-purple-500/60 rounded-3xl p-6 max-w-3xl w-full space-y-6 shadow-2xl overflow-hidden max-h-[90vh] flex flex-col">
+            <div className="flex items-center justify-between border-b border-slate-800 pb-4">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-purple-500/20 border border-purple-500/40 flex items-center justify-center text-purple-400 font-bold text-xl">
+                  🚀
+                </div>
+                <div>
+                  <h3 className="text-lg font-black text-white">Automated Full-Stack Lifecycle E2E Test Harness</h3>
+                  <p className="text-xs text-slate-400">Deploy Cluster → Deploy VMs → Stress Benchmarks → AI Audit → Clean Teardown</p>
+                </div>
+              </div>
+              <button
+                onClick={() => setShowHarnessModal(false)}
+                className="px-3 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-bold transition"
+              >
+                ✕ Close
+              </button>
+            </div>
+
+            <div className="flex-1 overflow-y-auto space-y-4 pr-1 text-xs font-mono">
+              {harnessReport?.summary && (
+                <div className={`p-4 rounded-xl border font-bold ${harnessReport.status === 'success' ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-300' : harnessReport.status === 'failed' ? 'bg-rose-500/10 border-rose-500/30 text-rose-300' : 'bg-sky-500/10 border-sky-500/30 text-sky-300 animate-pulse'}`}>
+                  {harnessReport.summary}
+                </div>
+              )}
+
+              <div className="space-y-3">
+                {(harnessReport?.steps || []).map((s: any, idx: number) => (
+                  <div key={idx} className="p-4 rounded-2xl bg-slate-950/90 border border-slate-800 space-y-2">
+                    <div className="flex items-center justify-between font-bold">
+                      <span className="text-white flex items-center gap-2">
+                        <span className={`w-2.5 h-2.5 rounded-full ${s.status === 'running' ? 'bg-sky-400 animate-ping' : s.status === 'success' ? 'bg-emerald-400' : s.status === 'failed' ? 'bg-rose-500' : 'bg-slate-600'}`} />
+                        {s.name}
+                      </span>
+                      <span className={`px-2 py-0.5 rounded text-[10px] uppercase font-mono ${s.status === 'running' ? 'bg-sky-500/20 text-sky-300 border border-sky-500/30' : s.status === 'success' ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30' : s.status === 'failed' ? 'bg-rose-500/20 text-rose-300 border border-rose-500/30' : 'bg-slate-800 text-slate-500'}`}>
+                        {s.status === 'running' ? 'EXECUTING...' : s.status} {s.durationMs ? `(${Math.round(s.durationMs / 1000)}s)` : ''}
+                      </span>
+                    </div>
+                    {s.details && <div className="text-[11px] text-slate-300">{s.details}</div>}
+                    {s.logs && s.logs.length > 0 && (
+                      <div className="bg-slate-900/80 p-2 rounded-lg text-[10px] text-slate-400 space-y-0.5 border border-slate-800/80">
+                        {s.logs.map((l: string, lIdx: number) => <div key={lIdx}>• {l}</div>)}
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="pt-3 border-t border-slate-800 flex items-center justify-between text-xs">
+              <span className="text-slate-400">Target: <strong className="text-white">{harnessReport?.clusterName}</strong> ({harnessReport?.projectId})</span>
+              {harnessReport?.status === 'success' && (
+                <button
+                  onClick={() => {
+                    const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(harnessReport, null, 2));
+                    const dlAnchor = document.createElement('a');
+                    dlAnchor.setAttribute("href", dataStr);
+                    dlAnchor.setAttribute("download", `gdc-e2e-verification-report-${harnessReport.jobId}.json`);
+                    dlAnchor.click();
+                  }}
+                  className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold shadow-md transition"
+                >
+                  📥 Download Verification SLA Report (.JSON)
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
