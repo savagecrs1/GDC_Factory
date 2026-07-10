@@ -113,3 +113,27 @@ To ensure 100% compatibility with Kroger's existing Helm charts and manifests wi
    - Click **Deploy Virtual GDC Environment**.
 4. **Configure VLANs**: Once provisioned, navigate to the **Network Manager** tab and click the 1-click preset launcher buttons for **VLAN 3030**, **VLAN 3130**, and **VLAN 3430** to attach the secondary Multus interfaces.
 5. **Validate & Monitor**: View real-time cluster health, logs, and automated root-cause analysis on the **Overview** dashboard.
+
+---
+
+## 🏪 Grocery Store Emulator & QSA Zero-Trust Retail Testing
+
+To validate Kroger retail edge architectures against Qualified Security Assessor (QSA) zero-trust requirements without requiring proprietary vendor binaries, this repository includes an out-of-the-box **Grocery Store Emulator GitOps Profile** (`/gitops-profiles/grocery-store-emulator/`).
+
+### 1. Simulated Retail Workloads & VLANs
+* **🛒 Toshiba ELERA POS Commerce Engine (`store-ops-non-pci`)**:
+  - Attached to **Non-PCI VLAN `3130`** (`172.16.0.0/16`) via Multus CNI annotation (`k8s.v1.cni.cncf.io/networks: gke-system/non-pci-network-3130`).
+  - Simulates modern POS cash register item scanning, SKU pricing lookup, and shopping cart assembly.
+* **💳 Verifone / Ingenico PIN Pad Gateway (`cde-pci-scope`)**:
+  - Attached strictly to the **PCI Cardholder Data Environment (CDE) VLAN `3430`** (`172.18.0.0/16`).
+  - Simulates an in-scope payment tokenization and Derived Unique Key Per Transaction (DUKPT) encryption gateway returning EMV authorization codes.
+* **🤖 Smart Cart AI Vision (`mfc-robotics`)**:
+  - Simulates camera vision inference telemetry for automated shopping carts and micro-fulfillment robotics.
+
+### 2. Zero-Trust QSA Network Isolation
+* Enforces strict **PCI-DSS v4.0 NetworkPolicy segmentation**: store operations applications in `store-ops-non-pci` are blocked from sweeping or packet-sniffing the PCI Cardholder Data Environment, allowing only authorized tokenization proxy requests on port `8443`.
+
+### 3. 1-Click GitOps Setup & Cashier Checkout Simulation
+1. **Auto-Configure RootSync**: In the portal dashboard, navigate to the **GitOps Config Sync** tab and click **`🏪 Standard Grocery POS Profile`**. This automatically points Anthos Config Management to our internal emulator repository directory and applies all 5 manifests across your physical bare-metal nodes.
+2. **Execute Cashier Checkout**: Scroll down to the **`🛒 Store Register & PIN Pad Transaction Simulator`** box and click **`💳 Test Cashier Checkout`**.
+   - The portal executes an interactive test from inside the POS cash register pod on VLAN `3130`, initiates an encrypted payment handshake across the network boundary to the PIN pad gateway on VLAN `3430`, and renders a live, itemized Kroger grocery receipt with an EMV approval code directly on your screen!
