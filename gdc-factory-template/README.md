@@ -68,7 +68,7 @@ If tools are missing, the script outputs the exact Homebrew (`macOS`) or `apt/dn
 ./check-prereqs.sh
 
 # 2. Navigate to UI directory and install dependencies
-cd internal-se-portal/ui   # or root ui/
+cd gdc-factory-template/ui   # or root ui/
 npm install
 
 # 3. Start development server
