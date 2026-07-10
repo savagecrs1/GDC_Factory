@@ -14,6 +14,18 @@ The **Google Distributed Cloud (GDC) Edge Studio & Customer Portal Generator** i
 
 ---
 
+## 🏛️ Portal Ecosystem & Staging Sandboxes
+
+The `GDC_Factory` repository contains three standalone portals, each configured for a specific operational tier:
+
+| Directory | Port | Target Scope | Operational Safety |
+| :--- | :--- | :--- | :--- |
+| **`gdc-factory-template/`** | `3000` | **SE Pre-Sales & Template Studio** | Vendor-neutral baseline for generating customer portals. |
+| **`kroger-gdc-portal/`** | `3001` | **Kroger Enterprise Operations** | Houses POS, DUKPT, and TopoLVM database workloads. |
+| **`gdc-ux-sandbox/`** | `3002` | **UX & Navigation Staging Sandbox** | **100% Offline Simulation Mode**. Safe for UI layout, navigation, and theme prototyping without risking disruption to live cloud provisioning pipelines! |
+
+---
+
 ## 🔄 The 3 Platform Operating Modes
 
 This template is architected to support every phase of the customer adoption lifecycle:

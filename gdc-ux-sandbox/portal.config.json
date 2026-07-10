@@ -1,0 +1,18 @@
+{
+  "customerName": "GDC Edge Operations",
+  "logoUrl": "",
+  "primaryHex": "#38bdf8",
+  "colorMode": "dark",
+  "operatingMode": "live",
+  "industryVertical": "retail",
+  "enabledTabs": [
+    "dashboard",
+    "provision",
+    "vms",
+    "workloads",
+    "networks",
+    "configsync",
+    "performance",
+    "sentinel"
+  ]
+}

@@ -1,0 +1,18 @@
+{
+  "mode": "emulated",
+  "theme": "dark",
+  "portalName": "GDC UX & Navigation Staging Sandbox",
+  "customerLogoUrl": "/globe.svg",
+  "primaryColor": "#a855f7",
+  "secondaryColor": "#ec4899",
+  "modules": {
+    "dashboard": true,
+    "provision": true,
+    "vms": true,
+    "workloads": true,
+    "networks": true,
+    "configsync": true,
+    "performance": true,
+    "sentinel": true
+  }
+}

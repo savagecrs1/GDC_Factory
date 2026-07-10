@@ -8,8 +8,9 @@ This document serves as the central log and engineering roadmap for the **Google
 
 To prevent vendor leakage and enable effortless pre-sales demos for new customers while preserving deep enterprise customizations for existing accounts, the repository was standardized into **two standalone, self-bootstrapping portals** under the `GDC_Factory` root:
 
-* **`gdc-factory-template/`**: The vendor-neutral **GDC Edge Studio & Customer Portal Generator**. Designed for field Solutions Architects (SEs) and cloud architects to customize and bootstrap edge control planes for any enterprise in minutes. Contains zero vendor-specific branding.
-* **`kroger-gdc-portal/`**: Strictly tagged for **Kroger Edge Operations**. Houses enterprise-specific retail workloads, QSA Hybrid PCI Co-location validation, and chained database storage benchmarks.
+* **`gdc-factory-template/`** (Port `3000`): The vendor-neutral **GDC Edge Studio & Customer Portal Generator**. Designed for field Solutions Architects (SEs) and cloud architects to customize and bootstrap edge control planes for any enterprise in minutes. Contains zero vendor-specific branding.
+* **`kroger-gdc-portal/`** (Port `3001`): Strictly tagged for **Kroger Edge Operations**. Houses enterprise-specific retail workloads, QSA Hybrid PCI Co-location validation, and chained database storage benchmarks.
+* **`gdc-ux-sandbox/`** (Port `3002`): Dedicated **UX & Navigation Staging Sandbox** locked in 100% Offline Simulation Mode. Allows safe prototyping of UI layouts, navigation hierarchy, theme modifications, and interactive cards without risking disruption to live bare-metal clusters or active cloud provisioning pipelines!
 
 ---
 

@@ -1,0 +1,162 @@
+# Copyright 2026 Google LLC
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     https://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+---
+- name: Wait for cloud-init to finish on boot
+  command: cloud-init status --wait
+  changed_when: false
+  retries: 30
+  delay: 5
+
+- name: Ensure required packages are installed
+  apt:
+    name:
+      - acl
+    state: present
+    update_cache: yes
+
+- name: Ensure platform user exists
+  user:
+    name: "{{ gem_user }}"
+    state: present
+    shell: /bin/bash
+
+- name: Configure GOOGLE_APPLICATION_CREDENTIALS for the user
+  lineinfile:
+    path: "{{ gem_home }}/.bashrc"
+    line: "export GOOGLE_APPLICATION_CREDENTIALS={{ gem_home }}/bm-gcr.json"
+    create: yes
+    owner: "{{ gem_user }}"
+    group: "{{ gem_user }}"
+
+- name: Download kubectl
+  get_url:
+    url: "https://storage.googleapis.com/kubernetes-release/release/v1.30.0/bin/linux/amd64/kubectl"
+    dest: /usr/local/sbin/kubectl
+    mode: '0755'
+
+- name: Download and install Helm
+  shell: |
+    curl -fsSL -o /tmp/get_helm.sh https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3
+    chmod 700 /tmp/get_helm.sh
+    /tmp/get_helm.sh
+  args:
+    creates: /usr/local/bin/helm
+
+- name: Create baremetal directory
+  file:
+    path: "{{ gem_home }}/baremetal"
+    state: directory
+    owner: "{{ gem_user }}"
+    group: "{{ gem_user }}"
+
+- name: Download bmctl version {{ bmctl_version }}
+  command: "gcloud storage cp gs://anthos-baremetal-release/bmctl/{{ bmctl_version }}/linux-amd64/bmctl /usr/local/sbin/bmctl-{{ bmctl_version }}"
+  args:
+    creates: /usr/local/sbin/bmctl-{{ bmctl_version }}
+
+- name: Make bmctl executable
+  file:
+    path: /usr/local/sbin/bmctl-{{ bmctl_version }}
+    mode: '0755'
+
+- name: Symlink bmctl to correct version
+  file:
+    src: /usr/local/sbin/bmctl-{{ bmctl_version }}
+    dest: /usr/local/sbin/bmctl
+    state: link
+    force: yes
+
+- name: Check if Docker is installed
+  command: which docker
+  register: docker_check
+  failed_when: false
+  changed_when: false
+
+- name: Install Docker
+  shell: |
+    curl -fsSL https://get.docker.com -o /tmp/get-docker.sh
+    sh /tmp/get-docker.sh
+  when: docker_check.rc != 0
+
+- name: Add user to docker group
+  user:
+    name: "{{ gem_user }}"
+    groups: docker
+    append: yes
+
+- name: Configure Docker daemon MTU for VxLAN overlay
+  copy:
+    dest: /etc/docker/daemon.json
+    content: |
+      {
+        "mtu": 1410
+      }
+  register: docker_mtu_config
+
+- name: Restart Docker service
+  systemd:
+    name: docker
+    state: restarted
+  when: docker_mtu_config.changed
+
+
+
+- name: Ensure .ssh directory exists
+  file:
+    path: "{{ gem_home }}/.ssh"
+    state: directory
+    owner: "{{ gem_user }}"
+    group: "{{ gem_user }}"
+    mode: '0700'
+
+- name: Generate SSH keypair for platform user
+  openssh_keypair:
+    path: "{{ gem_home }}/.ssh/id_rsa"
+    type: rsa
+    size: 2048
+    owner: "{{ gem_user }}"
+    group: "{{ gem_user }}"
+
+- name: Fetch platform user public key from workstation
+  fetch:
+    src: "{{ gem_home }}/.ssh/id_rsa.pub"
+    dest: /tmp/ws_id_rsa.pub
+    flat: yes
+
+- name: Generate Anthos Service Account Key dynamically
+  delegate_to: localhost
+  become: no
+  command: >
+    gcloud iam service-accounts keys create /tmp/bm-gcr.json
+    --iam-account=baremetal-gcr@{{ gcp_project_id }}.iam.gserviceaccount.com
+    --project={{ gcp_project_id }}
+    --impersonate-service-account=tf-provisioner@{{ gcp_project_id }}.iam.gserviceaccount.com
+  args:
+    creates: /tmp/bm-gcr.json
+
+- name: Copy Anthos Service Account Key to workstation
+  copy:
+    src: /tmp/bm-gcr.json
+    dest: "{{ gem_home }}/bm-gcr.json"
+    owner: "{{ gem_user }}"
+    group: "{{ gem_user }}"
+    mode: '0600'
+
+- name: Clean up local Anthos Service Account Key
+  delegate_to: localhost
+  become: no
+  file:
+    path: /tmp/bm-gcr.json
+    state: absent

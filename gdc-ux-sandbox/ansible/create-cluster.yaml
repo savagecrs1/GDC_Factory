@@ -1,0 +1,50 @@
+# Copyright 2026 Google LLC
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     https://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+---
+- name: Fetch SSH Key from Workstation
+  hosts: workstation
+  become: yes
+  tasks:
+    - name: Fetch platform user public key from workstation
+      fetch:
+        src: "{{ gem_home }}/.ssh/id_rsa.pub"
+        dest: /tmp/ws_id_rsa.pub
+        flat: yes
+
+- name: Setup SSH Access and Base OS on Cluster Nodes
+  hosts: cluster_nodes
+  become: yes
+  any_errors_fatal: true
+  roles:
+    - cluster_nodes
+
+- name: Setup VxLAN on all GCE instances
+  hosts: gdc_nodes
+  become: yes
+  vars:
+    cluster_name: "{{ tf_cluster_name }}"
+  roles:
+    - vxlan
+
+- name: Deploy Google Distributed Cloud Hybrid Cluster
+  hosts: workstation
+  become: yes
+  vars:
+    cluster_name: "{{ tf_cluster_name }}"
+  roles:
+    - gdc_deploy
+    - topolvm
+    - gatekeeper
+    - secondary_networks
