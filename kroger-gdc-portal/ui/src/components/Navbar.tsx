@@ -40,7 +40,7 @@ export default function Navbar({
     { id: 'provision', label: 'Cluster Provisioner', icon: Terminal },
     { id: 'vms', label: 'GDC VM Runtime', icon: Cpu },
     { id: 'workloads', label: 'K8s Workloads', icon: Layers },
-    { id: 'networks', label: 'VLAN & Secondary Networks', icon: Network },
+    { id: 'networks', label: 'VLAN & PCI Networks', icon: Network },
     { id: 'configsync', label: 'GitOps Config Sync', icon: GitBranch },
     { id: 'performance', label: 'Performance & Metrics', icon: BarChart3 },
     { id: 'sentinel', label: 'AI Sentinel Engine', icon: Bot },
@@ -58,7 +58,7 @@ export default function Navbar({
             {config.logoUrl ? (
               <img src={config.logoUrl} alt={config.customerName} className="h-14 md:h-16 w-auto object-contain drop-shadow-md" />
             ) : (
-              <img src="/globe.svg" alt="GDC" className="h-14 md:h-16 w-auto object-contain drop-shadow-md" />
+              <img src="/kroger-logo.svg" alt="Kroger" className="h-14 md:h-16 w-auto object-contain drop-shadow-md" />
             )}
           </div>
           <div>
@@ -76,43 +76,27 @@ export default function Navbar({
           </div>
         </div>
 
-        {/* Navigation Tabs (Progressive Disclosure) */}
-        {activeTab === 'dashboard' ? (
-          <div className="hidden md:flex items-center gap-2 bg-slate-900/90 px-4 py-2 rounded-xl border border-slate-800 text-xs text-slate-300">
-            <span className="w-2 h-2 rounded-full bg-purple-400 animate-pulse" />
-            <span className="font-semibold text-white">🏠 Overview Dashboard</span>
-            <span className="text-slate-500">•</span>
-            <span>Select an operational console below to open</span>
-          </div>
-        ) : (
-          <nav className="flex items-center gap-1 bg-slate-900/80 p-1 rounded-xl border border-slate-800/80">
-            <button
-              onClick={() => setActiveTab('dashboard')}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-purple-300 text-xs font-bold transition mr-1 border border-purple-500/30 shadow-sm"
-              title="Return to Multi-Cluster Fleet Overview"
-            >
-              ⬅️ Overview
-            </button>
-            {navItems.filter(item => item.id !== 'dashboard').map((item) => {
-              const Icon = item.icon;
-              const isActive = activeTab === item.id;
-              return (
-                <button
-                  key={item.id}
-                  onClick={() => setActiveTab(item.id)}
-                  className={`flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-medium transition-all duration-200 ${
-                    isActive
-                      ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white font-bold shadow-md shadow-purple-500/25'
-                      : 'text-slate-400 hover:text-white hover:bg-slate-800/50'
-                  }`}
-                >
-                  <Icon className={`w-3.5 h-3.5 ${isActive ? 'text-white' : 'text-slate-400'}`} />
-                  {item.label}
-                </button>
-              );
-            })}
-          </nav>
-        )}
+        {/* Navigation Tabs */}
+        <nav className="flex items-center gap-1 bg-slate-900/80 p-1 rounded-xl border border-slate-800/80">
+          {navItems.map((item) => {
+            const Icon = item.icon;
+            const isActive = activeTab === item.id;
+            return (
+              <button
+                key={item.id}
+                onClick={() => setActiveTab(item.id)}
+                className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
+                  isActive
+                    ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-md shadow-blue-500/25'
+                    : 'text-slate-400 hover:text-white hover:bg-slate-800/50'
+                }`}
+              >
+                <Icon className={`w-4 h-4 ${isActive ? 'text-white' : 'text-slate-400'}`} />
+                {item.label}
+              </button>
+            );
+          })}
+        </nav>
 
         {/* Auth, Studio & Environment Switcher */}
         <div className="flex items-center gap-4">
