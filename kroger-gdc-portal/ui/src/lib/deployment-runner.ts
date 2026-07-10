@@ -196,6 +196,12 @@ export async function runDeploymentSequence(
 
     // Step 4: Ansible Workstation Preparation
     job.currentStep = 'Step 4: Configuring Workstation Software (ansible/admin-workstation.yaml)';
+    appendLog(job, 'info', 'Ensuring SSH key metadata propagation to gem-admin-ws via gcloud...', job.currentStep);
+    try {
+      await executeCommand('gcloud', ['compute', 'ssh', 'gem-admin-ws', `--project=${projectId}`, '--zone=us-central1-a', '--command=echo SSH metadata verified'], rootDir, {}, job);
+    } catch (e) {
+      appendLog(job, 'warn', 'SSH pre-flight check non-fatal warning, continuing to Ansible...', job.currentStep);
+    }
     appendLog(job, 'info', 'Running Ansible admin-workstation.yaml (installing Docker, Helm, bmctl)...', job.currentStep);
     const ansibleDir = path.join(rootDir, 'ansible');
     await executeCommand('ansible-playbook', ['admin-workstation.yaml'], ansibleDir, { GCP_PROJECT_ID: projectId, TARGET_CLUSTER_NAME: clusterName }, job);
