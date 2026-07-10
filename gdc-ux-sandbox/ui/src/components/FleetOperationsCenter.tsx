@@ -12,6 +12,7 @@ interface FleetProps {
 export default function FleetOperationsCenter({ currentProject, onSelectProject, onNavigateTab }: FleetProps) {
   const [projects, setProjects] = useState<any[]>([]);
   const [selectedProj, setSelectedProj] = useState<string>(currentProject || 'gdc-edge-demo-1');
+  const [inspectedCluster, setInspectedCluster] = useState<string | null>(null);
   const [fleetStats, setFleetStats] = useState<{
     totalClusters: number;
     totalVms: number;
@@ -186,7 +187,7 @@ export default function FleetOperationsCenter({ currentProject, onSelectProject,
                               e.stopPropagation();
                               setSelectedProj(projId);
                               if (onSelectProject) onSelectProject(projId);
-                              if (onNavigateTab) onNavigateTab('cluster-view');
+                              setInspectedCluster(cName);
                             }}
                             className="p-2 rounded-lg bg-slate-950/80 hover:bg-purple-900/30 border border-slate-800/80 hover:border-purple-500/50 cursor-pointer transition flex items-center justify-between text-xs group/cluster shadow-sm"
                             title="1-Click Jump to Cluster Telemetry Workspace"
@@ -270,6 +271,151 @@ export default function FleetOperationsCenter({ currentProject, onSelectProject,
                   <Terminal className="w-4 h-4" />
                   <span>🚀 Launch Cluster Provisioning Wizard</span>
                 </button>
+              </div>
+            </div>
+          ) : inspectedCluster ? (
+            <div className="space-y-6 my-auto animate-fadeIn">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800 pb-4">
+                <div>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => setInspectedCluster(null)}
+                      className="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-bold transition flex items-center gap-1 border border-slate-700"
+                    >
+                      ⬅️ Back
+                    </button>
+                    <span className="text-[10px] font-bold text-purple-400 uppercase tracking-widest">Active Cluster Telemetry Inspector</span>
+                  </div>
+                  <div className="flex items-center gap-3 mt-1.5">
+                    <h3 className="text-2xl font-black text-white font-mono">{inspectedCluster}</h3>
+                    <span className="bg-emerald-500/20 text-emerald-400 text-[10px] font-extrabold px-2.5 py-0.5 rounded-full border border-emerald-500/30 flex items-center gap-1">
+                      <CheckCircle2 className="w-3.5 h-3.5" /> 100% HEALTHY • 0 ERRORS
+                    </span>
+                  </div>
+                </div>
+                <div className="text-right text-xs text-slate-400 font-mono bg-slate-950 px-3.5 py-2 rounded-xl border border-slate-800 shadow">
+                  <div>Tenant: <strong className="text-white">{selectedProj}</strong></div>
+                  <div>Nodes: <strong className="text-sky-300">3x Ice Lake Bare-Metal</strong></div>
+                </div>
+              </div>
+
+              {/* 1. Performance Metrics (vCPU / RAM Gauges & NVMe IOPS) */}
+              <div className="space-y-2">
+                <div className="text-xs font-extrabold text-slate-300 uppercase tracking-wider flex items-center justify-between">
+                  <span>⚡ Real-Time Compute & Storage Allocation</span>
+                  <span className="text-[10px] text-sky-400 font-mono">4,200 NVMe IOPS Active</span>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="p-4 rounded-xl bg-slate-950/90 border border-slate-800 flex flex-col justify-between shadow-inner">
+                    <div className="flex items-center justify-between text-xs font-bold text-slate-300">
+                      <span className="flex items-center gap-1.5"><Cpu className="w-4 h-4 text-sky-400" /><span>vCPU Allocation</span></span>
+                      <span className="font-mono text-sky-400 font-black">75%</span>
+                    </div>
+                    <div className="my-2.5 flex items-center justify-center">
+                      <div className="relative w-16 h-16 flex items-center justify-center">
+                        <svg className="w-full h-full transform -rotate-90"><circle cx="32" cy="32" r="26" stroke="currentColor" strokeWidth="6" className="text-slate-800 fill-none" /><circle cx="32" cy="32" r="26" stroke="currentColor" strokeWidth="6" strokeDasharray={163} strokeDashoffset={163 - (163 * 75) / 100} className="text-sky-500 fill-none transition-all duration-700" strokeLinecap="round" /></svg>
+                        <span className="absolute font-mono font-bold text-[11px] text-white">24/32</span>
+                      </div>
+                    </div>
+                    <div className="text-[10px] text-center text-slate-400">Intel Bare-Metal Nodes</div>
+                  </div>
+
+                  <div className="p-4 rounded-xl bg-slate-950/90 border border-slate-800 flex flex-col justify-between shadow-inner">
+                    <div className="flex items-center justify-between text-xs font-bold text-slate-300">
+                      <span className="flex items-center gap-1.5"><Activity className="w-4 h-4 text-purple-400" /><span>RAM In-Use</span></span>
+                      <span className="font-mono text-purple-400 font-black">82%</span>
+                    </div>
+                    <div className="my-2.5 flex items-center justify-center">
+                      <div className="relative w-16 h-16 flex items-center justify-center">
+                        <svg className="w-full h-full transform -rotate-90"><circle cx="32" cy="32" r="26" stroke="currentColor" strokeWidth="6" className="text-slate-800 fill-none" /><circle cx="32" cy="32" r="26" stroke="currentColor" strokeWidth="6" strokeDasharray={163} strokeDashoffset={163 - (163 * 82) / 100} className="text-purple-500 fill-none transition-all duration-700" strokeLinecap="round" /></svg>
+                        <span className="absolute font-mono font-bold text-[11px] text-white">105GB</span>
+                      </div>
+                    </div>
+                    <div className="text-[10px] text-center text-slate-400">128GB Total ECC Memory</div>
+                  </div>
+
+                  <div className="p-4 rounded-xl bg-slate-950/90 border border-slate-800 flex flex-col justify-between shadow-inner">
+                    <div className="flex items-center justify-between text-xs font-bold text-slate-300">
+                      <span className="flex items-center gap-1.5"><HardDrive className="w-4 h-4 text-pink-400" /><span>TopoLVM NVMe</span></span>
+                      <span className="font-mono text-pink-400 font-black">64%</span>
+                    </div>
+                    <div className="my-2.5 flex items-center justify-center">
+                      <div className="relative w-16 h-16 flex items-center justify-center">
+                        <svg className="w-full h-full transform -rotate-90"><circle cx="32" cy="32" r="26" stroke="currentColor" strokeWidth="6" className="text-slate-800 fill-none" /><circle cx="32" cy="32" r="26" stroke="currentColor" strokeWidth="6" strokeDasharray={163} strokeDashoffset={163 - (163 * 64) / 100} className="text-pink-500 fill-none transition-all duration-700" strokeLinecap="round" /></svg>
+                        <span className="absolute font-mono font-bold text-[11px] text-white">1.4TB</span>
+                      </div>
+                    </div>
+                    <div className="text-[10px] text-center text-slate-400">2.0TB Local RWO Volume</div>
+                  </div>
+                </div>
+              </div>
+
+              {/* 2. Deployed Workloads Roster */}
+              <div className="space-y-2">
+                <div className="text-xs font-extrabold text-slate-300 uppercase tracking-wider flex items-center justify-between">
+                  <span>🪟 Deployed Workloads & Virtual Machines</span>
+                  <span className="text-[10px] text-emerald-400 font-mono">4 Active Runtimes</span>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                  <div className="p-3 rounded-xl bg-slate-950 border border-slate-800/80 flex items-center justify-between">
+                    <div className="flex items-center gap-2.5">
+                      <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                      <div><div className="font-bold text-white">elera-pos-engine-v4</div><div className="text-[10px] text-slate-400">K8s Container Pod • Port 8080</div></div>
+                    </div>
+                    <span className="text-[10px] font-mono font-bold bg-sky-500/20 text-sky-300 px-2 py-0.5 rounded border border-sky-500/30">RUNNING</span>
+                  </div>
+
+                  <div className="p-3 rounded-xl bg-slate-950 border border-slate-800/80 flex items-center justify-between">
+                    <div className="flex items-center gap-2.5">
+                      <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                      <div><div className="font-bold text-white">redis-session-cache-ha</div><div className="text-[10px] text-slate-400">K8s Container Pod • Port 6379</div></div>
+                    </div>
+                    <span className="text-[10px] font-mono font-bold bg-sky-500/20 text-sky-300 px-2 py-0.5 rounded border border-sky-500/30">RUNNING</span>
+                  </div>
+
+                  <div className="p-3 rounded-xl bg-slate-950 border border-slate-800/80 flex items-center justify-between">
+                    <div className="flex items-center gap-2.5">
+                      <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                      <div><div className="font-bold text-white">win-pos-controller-01</div><div className="text-[10px] text-slate-400">KubeVirt OCI VM • WinServer 2022</div></div>
+                    </div>
+                    <span className="text-[10px] font-mono font-bold bg-purple-500/20 text-purple-300 px-2 py-0.5 rounded border border-purple-500/30">OCI VM</span>
+                  </div>
+
+                  <div className="p-3 rounded-xl bg-slate-950 border border-slate-800/80 flex items-center justify-between">
+                    <div className="flex items-center gap-2.5">
+                      <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                      <div><div className="font-bold text-white">rhel9-db-node</div><div className="text-[10px] text-slate-400">KubeVirt OCI VM • RHEL 9 SQL Core</div></div>
+                    </div>
+                    <span className="text-[10px] font-mono font-bold bg-purple-500/20 text-purple-300 px-2 py-0.5 rounded border border-purple-500/30">OCI VM</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* 3. Current Operations & Errors Box */}
+              <div className="p-4 rounded-xl bg-gradient-to-r from-slate-950 via-slate-900 to-slate-950 border border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-9 h-9 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400 flex-shrink-0 font-black">
+                    ✓
+                  </div>
+                  <div className="text-xs">
+                    <div className="font-extrabold text-white">Current Operations: 0 Errors Detected</div>
+                    <div className="text-[11px] text-slate-400 mt-0.5">Automated TopoLVM volume snapshot backup completed 2m ago. All node components SLA 100%.</div>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2 flex-shrink-0">
+                  <button
+                    onClick={() => onNavigateTab && onNavigateTab('vms')}
+                    className="px-3.5 py-2 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-extrabold text-xs transition shadow-md shadow-purple-500/20"
+                  >
+                    Open VM Console →
+                  </button>
+                  <button
+                    onClick={() => onNavigateTab && onNavigateTab('workloads')}
+                    className="px-3.5 py-2 rounded-xl bg-sky-500 hover:bg-sky-400 text-slate-950 font-extrabold text-xs transition shadow-md shadow-sky-500/20"
+                  >
+                    Open K8s Console →
+                  </button>
+                </div>
               </div>
             </div>
           ) : (
