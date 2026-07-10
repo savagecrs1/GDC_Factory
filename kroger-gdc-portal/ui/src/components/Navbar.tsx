@@ -1,8 +1,10 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Shield, Cloud, Server, Cpu, LogOut, Terminal, Layers, Activity, RefreshCw, Network, Bot, GitBranch, BarChart3 } from 'lucide-react';
+import { Shield, Cloud, Server, Cpu, LogOut, Terminal, Layers, Activity, RefreshCw, Network, Bot, GitBranch, BarChart3, Palette } from 'lucide-react';
 import ProjectSelector from '@/components/ProjectSelector';
+import { usePortalConfig } from '@/components/ConfigProvider';
+import ThemeStudioModal from '@/components/ThemeStudioModal';
 
 interface NavbarProps {
   activeTab: string;
@@ -23,6 +25,8 @@ export default function Navbar({
 }: NavbarProps) {
   const [auth, setAuth] = useState<any>(null);
   const [isEditingEnv, setIsEditingEnv] = useState(false);
+  const [isStudioOpen, setIsStudioOpen] = useState(false);
+  const { config } = usePortalConfig();
 
   useEffect(() => {
     fetch('/api/auth')
@@ -31,7 +35,7 @@ export default function Navbar({
       .catch(console.error);
   }, []);
 
-  const navItems = [
+  const allNavItems = [
     { id: 'dashboard', label: 'Overview Dashboard', icon: Activity },
     { id: 'provision', label: 'Cluster Provisioner', icon: Terminal },
     { id: 'vms', label: 'GDC VM Runtime', icon: Cpu },
@@ -42,21 +46,33 @@ export default function Navbar({
     { id: 'sentinel', label: 'AI Sentinel Engine', icon: Bot },
   ];
 
+  const navItems = allNavItems.filter(item => (config.enabledTabs || []).includes(item.id));
+
   return (
     <header className="sticky top-0 z-50 glass-panel border-b border-slate-800 px-4 md:px-8 py-4 mb-6 shadow-lg">
+      <ThemeStudioModal isOpen={isStudioOpen} onClose={() => setIsStudioOpen(false)} />
       <div className="w-full flex items-center justify-between">
         {/* Brand */}
         <div className="flex items-center gap-4">
           <div className="h-16 flex items-center justify-center pr-1">
-            <img src="/kroger-logo.svg" alt="Kroger" className="h-14 md:h-16 w-auto object-contain drop-shadow-md" />
+            {config.logoUrl ? (
+              <img src={config.logoUrl} alt={config.customerName} className="h-14 md:h-16 w-auto object-contain drop-shadow-md" />
+            ) : (
+              <img src="/kroger-logo.svg" alt="Kroger" className="h-14 md:h-16 w-auto object-contain drop-shadow-md" />
+            )}
           </div>
           <div>
             <div className="flex items-center gap-2">
               <h1 className="font-bold text-lg tracking-tight text-white flex items-center gap-1.5 font-sans">
-                GDC Virtual Factory <span className="text-xs px-2 py-0.5 rounded-full bg-blue-500/20 text-blue-400 font-semibold border border-blue-500/30">Kroger Tech SO</span>
+                {config.customerName || "GDC Virtual Factory"} <span className="text-xs px-2 py-0.5 rounded-full bg-blue-500/20 text-blue-400 font-semibold border border-blue-500/30">Edge SO</span>
               </h1>
             </div>
-            <p className="text-xs text-slate-400">Automated Retail Store Workload & VM Operations Portal</p>
+            <p className="text-xs text-slate-400">
+              {config.operatingMode === 'emulate' && "🎭 Emulate Mode (Offline Sandbox) • "}
+              {config.operatingMode === 'argolis' && "☁️ Argolis Cloud Sandbox Mode • "}
+              {config.operatingMode === 'live' && "🏢 Live Production Mode • "}
+              Automated Workload & VM Operations
+            </p>
           </div>
         </div>
 
@@ -82,7 +98,7 @@ export default function Navbar({
           })}
         </nav>
 
-        {/* Auth & Environment Switcher */}
+        {/* Auth, Studio & Environment Switcher */}
         <div className="flex items-center gap-4">
           <div className="hidden lg:flex items-center gap-3 border-r border-slate-800 pr-4">
             <div className="w-48">
@@ -120,6 +136,17 @@ export default function Navbar({
               </div>
             )}
           </div>
+
+          {/* Studio Trigger */}
+          <button
+            type="button"
+            onClick={() => setIsStudioOpen(true)}
+            className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-gradient-to-r from-sky-500/20 to-emerald-500/20 hover:from-sky-500/30 hover:to-emerald-500/30 border border-sky-500/30 text-white text-xs font-bold transition shadow-sm"
+            title="Open GDC Edge Studio & Customer Portal Generator"
+          >
+            <Palette className="w-4 h-4 text-sky-400" />
+            <span className="hidden sm:inline">Theme Studio</span>
+          </button>
 
           {/* User Badge */}
           {auth?.user && (

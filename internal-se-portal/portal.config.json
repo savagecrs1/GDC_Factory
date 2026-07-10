@@ -1,0 +1,18 @@
+{
+  "customerName": "Kroger Retail Edge",
+  "logoUrl": "",
+  "primaryHex": "#10b981",
+  "colorMode": "dark",
+  "operatingMode": "live",
+  "industryVertical": "retail",
+  "enabledTabs": [
+    "dashboard",
+    "provision",
+    "vms",
+    "workloads",
+    "networks",
+    "configsync",
+    "performance",
+    "sentinel"
+  ]
+}
