@@ -22,18 +22,49 @@ This project uses an enterprise **Two-Tier (Foundation / Cluster) Architecture**
 
 ---
 
-## Quickstart: Web Portal UI (Recommended)
+## 🚀 Getting Started: Setting Up & Testing the Kroger UI
 
-To launch the interactive Kroger GDC Virtual Factory Web Portal:
-
+### 1. Authenticate with Google Cloud
+Ensure your local environment is authenticated with both User and Application Default Credentials (ADC):
 ```bash
-# Option A: Using launch script
-./launch-kroger.sh
+gcloud auth login
+gcloud auth application-default login
+```
 
-# Option B: Manual startup
-cd ui-kroger && npm install && npm run dev -- -p 3001
+### 2. Run Pre-flight Environment Verification
+Verify your host dependencies and GCP access:
+```bash
+./verify-setup.sh
+```
+
+### 3. Launch the Kroger Web Portal
+```bash
+./launch-kroger.sh
 ```
 Open **http://localhost:3001** in your web browser.
+
+---
+
+### 🧪 How to Test the Kroger UI Features
+
+1. **Select Target GCP Project**:
+   - In the top header bar, select your **GCP Project ID** (e.g. `kroger-store-test1` or `core-edge-dm1`).
+
+2. **Run 1-Click E2E Test Suite (Recommended First Test)**:
+   - Click the **🚀 E2E Test Harness** button in the top right navigation bar.
+   - Click **Start End-to-End Suite**.
+   - Watch the stepper execute all 5 phases:
+     * **Phase 1**: Infrastructure Provisioning
+     * **Phase 2**: VM & Workload Ingestion
+     * **Phase 3**: Stress & Database Benchmarks
+     * **Phase 4**: AI Sentinel Watchdog Audit
+     * **Phase 5**: **Automated Teardown** (automatically decommissions all GCP resources when complete).
+
+3. **Test Manual Teardown & Cluster Management**:
+   - On the main **Cluster Environment Health** banner, click the red **Tear Down Cluster** button (`Trash2` icon) to test manual cluster decommissioning.
+
+4. **Test Real-Time Operations Console**:
+   - Click the **Operations Console** pill (`Active: X`) in the top navigation bar to open the live background log streaming panel.
 
 ---
 
