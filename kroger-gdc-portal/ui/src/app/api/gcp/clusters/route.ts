@@ -19,14 +19,31 @@ export async function GET(request: Request) {
     });
 
     const memberships = JSON.parse(stdout || '[]');
-    const clusters = memberships.map((m: any) => {
+    let rawClusters = memberships.map((m: any) => {
       const parts = m.name?.split('/') || [];
       return parts[parts.length - 1];
     }).filter(Boolean);
 
+    // Verify active GCE compute instances in project
+    const { stdout: vmStdout } = await execAsync(
+      `gcloud compute instances list --project="${projectId}" --format="value(name)" --quiet 2>/dev/null || true`,
+      { env: { ...process.env, PATH: envPath } }
+    );
+    const activeVms = vmStdout.split('\n').map(v => v.trim()).filter(Boolean);
+
+    // If no active VM nodes exist in the project, automatically purge orphaned control plane fleet memberships
+    if (activeVms.length === 0 && rawClusters.length > 0) {
+      rawClusters.forEach((cName: string) => {
+        execAsync(`gcloud container fleet memberships delete "${cName}" --project="${projectId}" --quiet 2>/dev/null || true`, {
+          env: { ...process.env, PATH: envPath }
+        }).catch(() => {});
+      });
+      rawClusters = [];
+    }
+
     return NextResponse.json({
       success: true,
-      clusters: clusters, // return actual empty list if 0 membership
+      clusters: rawClusters,
       source: 'live'
     });
   } catch (error: any) {
