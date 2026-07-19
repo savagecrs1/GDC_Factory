@@ -1,0 +1,405 @@
+{
+	"info": {
+		"_postman_id": "bb9ab449-245c-4486-b518-79a1dc2101c1",
+		"name": "cis-keyFactor-client-examples",
+		"description": "Name: cis-keyfactor-client-examples\n\nDESCRIPTION: Postman examples on utilizing the KeyFactor API for client-based requests.\n\nExample requests are broken out in two sections:\n\n1.  csr_enrollment - API calls that are useful for Certificate Signing Requests (CSR)\n2.  reporting - API calls used for reporting expiration, including certificates for monitoring, etc.\n    \n\nPredefined Information\n\nAuthorization - You must change the authorization information in the Postman configuration to use an Active Directory account that use proper access to the KeyFactor environment (i.e. your personal EUID. Ensure that your are including the domain name prefix of \"KROGER\\\\\" to the username.",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "csr_enrollment",
+			"item": [
+				{
+					"name": "1_ParseCSR",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									""
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Should return OK\", function() {\r",
+									"    pm.response.to.have.status(200)\r",
+									"})\r",
+									"\r",
+									"var jsonData = pm.response.json();\r",
+									"var commonName = jsonData[2].split('=');\r",
+									"pm.collectionVariables.set(\"cn\",commonName[1]);"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "x-keyfactor-requested-with",
+								"value": "APIClient",
+								"type": "text"
+							},
+							{
+								"key": "x-keyfactor-api-version",
+								"value": "1",
+								"type": "text",
+								"disabled": true
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"csr\": \"{{csr}}\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://{{base_url}}/KeyfactorAPI/Enrollment/CSR/Parse",
+							"protocol": "https",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"KeyfactorAPI",
+								"Enrollment",
+								"CSR",
+								"Parse"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "2_EnrollCSR",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Should return OK\", function() {\r",
+									"    pm.response.to.have.status(200)\r",
+									"})\r",
+									"\r",
+									"var jsonData = pm.response.json();\r",
+									"pm.collectionVariables.set(\"certificate\", jsonData[\"CertificateInformation\"].Certificates[0]);\r",
+									"pm.collectionVariables.set(\"KeyfactorID\", jsonData[\"CertificateInformation\"].KeyfactorID);"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "X-Keyfactor-Requested-With",
+								"value": "APIClient",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n  \"CSR\": \"{{csr}}\", //Certificate Signing Request from Postman varible\r\n  \"CertificateAuthority\": \"N060CISPKI12.kroger.com\\\\Kroger CA P2\",\r\n  \"IncludeChain\": false,\r\n  \"Timestamp\": \"{{$isoTimestamp}}\",\r\n  \"Template\": \"KrogerWebServer(2048bit)1yr\",\r\n  // NOTE: You can add SAN Values if you CSR does not include them\r\n  // \r\n  // \"SANs\": {\r\n    // SAN DNS EXAMPLE\r\n    //      \"DNS\": [\r\n    // \"hostname1.kroger.com\",\r\n    // \"hostname2.kroger.com\",\r\n    //      ]\r\n  //  },\r\n  \"Metadata\": {\r\n      \"Group\": \"{{group_name}}\",\r\n      \"Environment\": \"Production\"\r\n  }\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://{{base_url}}/KeyfactorAPI/Enrollment/CSR",
+							"protocol": "https",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"KeyfactorAPI",
+								"Enrollment",
+								"CSR"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "3_Download",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "X-Keyfactor-Requested-With",
+								"value": "APIClient",
+								"type": "text"
+							},
+							{
+								"key": "X-CertificateFormat",
+								"value": "DER",
+								"type": "text"
+							},
+							{
+								"key": "",
+								"value": "",
+								"type": "text",
+								"disabled": true
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n\"CertID\":30971,\r\n\"IncludeChain\":false\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://{{base_url}}/KeyfactorAPI/Certificates/Download?collectionId={{collectionID}}",
+							"protocol": "https",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"",
+								"KeyfactorAPI",
+								"Certificates",
+								"Download"
+							],
+							"query": [
+								{
+									"key": "collectionId",
+									"value": "{{collectionID}}",
+									"description": "The Collection ID assigned to your group's collection."
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "reporting",
+			"item": [
+				{
+					"name": "Expiring Report Example",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "x-keyfactor-requested-with",
+								"value": "APIClient",
+								"type": "text"
+							},
+							{
+								"key": "",
+								"value": "",
+								"type": "text",
+								"disabled": true
+							}
+						],
+						"url": {
+							"raw": "https://{{base_url}}/KeyfactorAPI/Certificates?pq.queryString=(ExpirationDate -ge \"2022-01-15 11:36:20\" AND ExpirationDate -le \"2022-03-01 11:36:20\")&includeMetadata=true&collectionId={{collectionID}}",
+							"protocol": "https",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"KeyfactorAPI",
+								"Certificates"
+							],
+							"query": [
+								{
+									"key": "pq.queryString",
+									"value": "(ExpirationDate -ge \"2022-01-15 11:36:20\" AND ExpirationDate -le \"2022-03-01 11:36:20\")",
+									"description": "QueryString with begin and end timestamps"
+								},
+								{
+									"key": "includeMetadata",
+									"value": "true",
+									"description": "Include metadata (i.e. Group and Environment)"
+								},
+								{
+									"key": "collectionId",
+									"value": "{{collectionID}}",
+									"description": "Your group's collection ID"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Ignore Certificate",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "x-keyfactor-requested-with",
+								"value": "APIClient",
+								"type": "text"
+							},
+							{
+								"key": "",
+								"value": "",
+								"type": "text",
+								"disabled": true
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n  \"Id\": 30098,\r\n  \"Metadata\": {\r\n      \"Group\": \"Ignore\"\r\n  }\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://{{base_url}}/KeyfactorAPI/Certificates/Metadata?collectionid=0",
+							"protocol": "https",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"KeyfactorAPI",
+								"Certificates",
+								"Metadata"
+							],
+							"query": [
+								{
+									"key": "collectionid",
+									"value": "0"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "ImportCertificate",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "x-keyfactor-requested-with",
+								"value": "APIClient",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"Certificate\": \"{{certificate}}\",\r\n    \"Metadata\": { \r\n        \"Group\": \"Unknown\",\r\n        \"Environment\": \"Production\"\r\n     }\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://{{base_url}}/KeyfactorAPI/Certificates/Import",
+							"protocol": "https",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"KeyfactorAPI",
+								"Certificates",
+								"Import"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		}
+	],
+	"auth": {
+		"type": "basic",
+		"basic": [
+			{
+				"key": "password",
+				"value": "password",
+				"type": "string"
+			},
+			{
+				"key": "username",
+				"value": "KROGER\\EUID",
+				"type": "string"
+			}
+		]
+	},
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "keyfactor.kroger.com"
+		},
+		{
+			"key": "csr",
+			"value": "-----BEGIN NEW CERTIFICATE REQUEST-----\nMIIENDCCAxwCAQAwgboxCzAJBgNVBAYTAlVTMQswCQYDVQQIDAJPSDETMBEGA1UE\nBwwKQ2luY2lubmF0aTEXMBUGA1UECgwOVGhlIEtyb2dlciBDby4xJTAjBgNVBAsM\nHEtyb2dlciBUZWNobm9sb2d5ICYgRGlnaXRpYWwxITAfBgNVBAMMGE9GMDYwOFFN\nWjc5MzEua3JvZ2VyLmNvbTEmMCQGCSqGSIb3DQEJARYXZXJpYy5zcHJlaGVyQGty\nb2dlci5jb20wggEiMA0GCSqGSIb3DQEBAQUAA4IBDwAwggEKAoIBAQDEFpmd+1eF\nVlbF++auszsHla9LxYs2EheA6NnjWNYMfxJMHd45DmhafVH/sKpEP6usD/yDm8yo\nxpox/gxHIXbrQJr9u/hQNOGLwOSaTDYtrVQOYR/mZoNzgMCfRGzLQSC6J+aaIGWs\nRAgQVnlVdkj+dAXRrRAdrvviFq47tl30iMGR4EcllANwNaigLfv6DnTcCv1oE4AP\njPADNwU5qUk07QUdxMNG8yaaJUltY4OistqAcc5Idd3z38Fdt89683cb0QQmFBj/\nQJfzpewM8sFj0WrPE3qtEy7hrZkl0ZAsWaz20kTFaiifqb4qR+WmGVkR+c+b0nIG\nxU4MkuOJmd0VAgMBAAGgggEyMBwGCisGAQQBgjcNAgMxDhYMMTAuMC4xOTA0Mi4y\nMEUGCSsGAQQBgjcVFDE4MDYCAQkMGE9GMDYwOFFNWjc5MzEua3JvZ2VyLmNvbQwO\nS1JPR0VSXEVTNzQxMjYMB2NlcnRyZXEwYwYJKoZIhvcNAQkOMVYwVDAjBgNVHREE\nHDAaghhPRjA2MDhRTVo3OTMxLmtyb2dlci5jb20wHQYDVR0OBBYEFERk4xCbKHPX\nNnYM2akdAk0g8GleMA4GA1UdDwEB/wQEAwIHgDBmBgorBgEEAYI3DQICMVgwVgIB\nAh5OAE0AaQBjAHIAbwBzAG8AZgB0ACAAUwB0AHIAbwBuAGcAIABDAHIAeQBwAHQA\nbwBnAHIAYQBwAGgAaQBjACAAUAByAG8AdgBpAGQAZQByAwEAMA0GCSqGSIb3DQEB\nBQUAA4IBAQACqVBG6hYbSs2c58etgRWoAKsJkHsNgAl6dJ3o6rcyngmb6Us7WuLN\nz76QR7oGtagj6CxZ6ok8Sjcicx3ecTPAJa4EdDv89IeRBiWNcwPitTrH0l49RArA\nv1jb26RdhKz9/j0INfgE4hyyQJWQcdMTIEkoq/o3Vua9bXAdrYonbYk+vnVHtZcJ\neIfBuzK2EQU0DQ7EGxYNFqy9i9rcMe6de88JGhi9FZbSR5QMdtNOum/vee9QAhRE\ng2K5G8GI/beo8tMEYPjzaAz6ZmicezkIl90hY4OWy9+CiqbiJJOK5yx+WObc3wuN\nApuk6a6M+KyoX8iJjyshO9zuvvo6SCNK\n-----END NEW CERTIFICATE REQUEST-----\n"
+		},
+		{
+			"key": "certificate",
+			"value": "-----BEGIN CERTIFICATE-----\nMIIG3DCCBcSgAwIBAgITIAAFhjRevC8OLshyiAAAAAWGNDANBgkqhkiG9w0BAQsF\nADBEMRMwEQYKCZImiZPyLGQBGRYDY29tMRYwFAYKCZImiZPyLGQBGRYGa3JvZ2Vy\nMRUwEwYDVQQDEwxLcm9nZXIgQ0EgUDIwHhcNMjEwODA2MTUzNTEyWhcNMjIwODMx\nMTUzNTEyWjCBqDELMAkGA1UEBhMCVVMxCzAJBgNVBAgTAk9IMRMwEQYDVQQHEwpD\naW5jaW5uYXRpMRcwFQYDVQQKEw5UaGUgS3JvZ2VyIENvLjEbMBkGA1UECxMSRENQ\nIERpZ2l0YWwgU2hhemFtMRswGQYDVQQDExJhbXAtZGV2Lmtyb2dlci5jb20xJDAi\nBgkqhkiG9w0BCQEWFURpZ2l0YWxTUkVAa3JvZ2VyLmNvbTCCASIwDQYJKoZIhvcN\nAQEBBQADggEPADCCAQoCggEBAMAeBeEzuztIQOOUaXJEd9qMnt6phQF/t/eiyMsM\nUIAm4h7068aLY+6LlSecyh4wu0EQL9dCgIXBMx2gZHHFN/tPSBvVRsPGYvMy6Eu9\nveZlb+SFzztNJxIyXYbXn3YYbKwnrdLcsmYtuD6qFv9lQfQhGvZ66Eoi/4/qGUeu\niMWBTwG4PMfkqBT34/7B6r2XMeevXoulwAG5VNvj3Y198IooZ54ouVv1W+bwRFLv\nYXdxUrvHYDlJuiNoHo/LnjCqejTDlwBW6M2CvlNw9uqpoAQoCWiYK0X+SBWLb8BH\nyc5id7q3UY/PWKJkmumz3gPEHFOI3Db0HtCi0T99Y/LVPqUCAwEAAaOCA2AwggNc\nMAsGA1UdDwQEAwIFoDBNBgNVHREERjBEghJhbXAtZGV2Lmtyb2dlci5jb22CFmFt\ncC1jZGMtZGV2Lmtyb2dlci5jb22CFmFtcC1oZGMtZGV2Lmtyb2dlci5jb20wHQYD\nVR0OBBYEFNDOs+qSlgy8ceM5BIYSnuHh3BgxMB8GA1UdIwQYMBaAFHRYsj/BTmTJ\no0XLBDgERkyfBemXMIIBBQYDVR0fBIH9MIH6MIH3oIH0oIHxhoG+bGRhcDovLy9D\nTj1Lcm9nZXIlMjBDQSUyMFAyLENOPU4wNjBDSVNQS0kxMixDTj1DRFAsQ049UHVi\nbGljJTIwS2V5JTIwU2VydmljZXMsQ049U2VydmljZXMsQ049Q29uZmlndXJhdGlv\nbixEQz1tc3Jvb3QsREM9a3JvZ2VyP2NlcnRpZmljYXRlUmV2b2NhdGlvbkxpc3Q/\nYmFzZT9vYmplY3RDbGFzcz1jUkxEaXN0cmlidXRpb25Qb2ludIYuaHR0cDovL3Br\naS5rcm9nZXIuY29tL2NybC9Lcm9nZXIlMjBDQSUyMFAyLmNybDCCAUIGCCsGAQUF\nBwEBBIIBNDCCATAwgbEGCCsGAQUFBzAChoGkbGRhcDovLy9DTj1Lcm9nZXIlMjBD\nQSUyMFAyLENOPUFJQSxDTj1QdWJsaWMlMjBLZXklMjBTZXJ2aWNlcyxDTj1TZXJ2\naWNlcyxDTj1Db25maWd1cmF0aW9uLERDPW1zcm9vdCxEQz1rcm9nZXI/Y0FDZXJ0\naWZpY2F0ZT9iYXNlP29iamVjdENsYXNzPWNlcnRpZmljYXRpb25BdXRob3JpdHkw\nUgYIKwYBBQUHMAKGRmh0dHA6Ly9wa2kua3JvZ2VyLmNvbS9jcmwvTjA2MENJU1BL\nSTEyLmtyb2dlci5jb21fS3JvZ2VyJTIwQ0ElMjBQMi5jcnQwJgYIKwYBBQUHMAGG\nGmh0dHA6Ly9wa2kua3JvZ2VyLmNvbS9vY3NwMD0GCSsGAQQBgjcVBwQwMC4GJisG\nAQQBgjcVCIeGvQmC6PVwh52BEanbMYK9sDqBLIXY/TmBpepoAgFkAgEpMBMGA1Ud\nJQQMMAoGCCsGAQUFBwMBMBsGCSsGAQQBgjcVCgQOMAwwCgYIKwYBBQUHAwEwDQYJ\nKoZIhvcNAQELBQADggEBAAqx0qXX1uJOhezGkJIePao8s77Quea9+nk3ecVtYxEh\nA9+WT/sKGqO6j52Y0/FXC5H9/mwGYCEEv8sfyc2WBbmVYbyuuLXo3xlEnSMlkj7e\nsRwwwN8iY+s87tsoWzhrMNEAjAY4ZdwFkaJ+dWouAZffw9IR/tQASdqUH8Ki2HAP\nV1ZpKT/LOEtp2/i5lABIuUQ6keJCngDUxzDZSeYC0rTngPIdgQIlImbzkkrafgLo\nvcXsHfvB8tSjJLObugJ6U9Rg8JNSb0O+j82JY7ih94xHx5JQz6vTRxJXL6ktuMBP\nMsFpOapThz1/wXDla918hBtd75vSGQsOrbwtMDieZRg=\n-----END CERTIFICATE-----\n",
+			"type": "string"
+		},
+		{
+			"key": "group_name",
+			"value": "APP-GROUPNAME",
+			"type": "string"
+		},
+		{
+			"key": "KeyfactorID",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "collectionID",
+			"value": "62",
+			"type": "string"
+		},
+		{
+			"key": "cn",
+			"value": "",
+			"type": "string"
+		}
+	]
+}

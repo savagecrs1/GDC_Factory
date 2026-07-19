@@ -20,11 +20,12 @@ resource "google_compute_network" "gdc_vpc" {
 }
 
 resource "google_compute_subnetwork" "gdc_subnet" {
-  name          = var.gce_subnetwork
-  project       = var.project_id
-  region        = var.region
-  network       = google_compute_network.gdc_vpc.self_link
-  ip_cidr_range = var.gce_subnetwork_cidr
+  name                     = var.gce_subnetwork
+  project                  = var.project_id
+  region                   = var.region
+  network                  = google_compute_network.gdc_vpc.self_link
+  ip_cidr_range            = var.gce_subnetwork_cidr
+  private_ip_google_access = true
 }
 
 resource "google_compute_firewall" "gdc_allow_internal" {

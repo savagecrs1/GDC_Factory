@@ -42,10 +42,10 @@ COPY ansible/ /app/ansible/
 RUN chmod +x /app/project-setup.sh /app/ansible/inventory.sh
 
 # Copy Kroger UI portal
-COPY ui-kroger/ /app/ui-kroger/
+COPY ui/ /app/ui/
 
 # Install Node dependencies and build Kroger production UI
-WORKDIR /app/ui-kroger
+WORKDIR /app/ui
 RUN npm install && npm run build
 
 # Expose Kroger portal port

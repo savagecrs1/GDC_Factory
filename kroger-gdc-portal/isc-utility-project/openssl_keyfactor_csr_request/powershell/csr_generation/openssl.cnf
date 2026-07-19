@@ -1,0 +1,29 @@
+# OpenSSL Configuration for KeyFactor CSR Generation
+# Edit values below to match your environment (CN, OU, E, SAN)
+# Matches certreq.inf subject: CN, OU, O, L, S, C, E
+# https://confluence.kroger.com/confluence/information-security/tools/keyfactor/certificate-signing-request-csr-generation-overview
+
+[ req ]
+default_bits           = 2048
+prompt                 = no
+days                   = 365
+distinguished_name     = req_distinguished_name
+req_extensions         = v3_req
+
+[ req_distinguished_name ]
+countryName            = US
+stateOrProvinceName    = OH
+localityName           = Cincinnati
+organizationName       = The Kroger Co.
+organizationalUnitName = INF-InStoreCloud
+commonName             = iscpcc.gcp-internal.kroger.com
+emailAddress           = SATInStoreCloud@Kroger.com
+
+[ v3_req ]
+basicConstraints       = CA:false
+extendedKeyUsage       = serverAuth
+subjectAltName         = @sans
+
+[ sans ]
+DNS.0 = iscpcc.gcp-internal.kroger.com
+# Add more SANs if needed (e.g. DNS.1 = hostname2.kroger.com)

@@ -1,0 +1,35 @@
+# OPENSSL Configuration File used to generate a certificate used for Server Authenciation (i.e. web service)
+# IMPORTANT NOTE: The procedure is meant as a guide when no formal documentation is provided. 
+#   If your application is supported by an outside vendor, consult the vendor's documentation
+#   for proper implementation and rollback plans.
+
+[ req ]
+default_bits           = 2048
+prompt                 = no
+days                   = 365
+distinguished_name     = req_distinguished_name
+req_extensions         = v3_req
+
+
+[ req_distinguished_name ]
+countryName            = US
+stateOrProvinceName    = OH
+localityName           = Cincinnati
+organizationName       = The Kroger Co.
+# Reference the ServiceNow/Infra Group that supports the service
+organizationalUnitName = INFA-GROUPNAME
+# Include the FQDN of the service certificate is hosting
+commonName             = hostname1.kroger.com
+# (optional) Include the distribution email that support the service
+#emailAddress           = SupportDistributionEmail@kroger.com
+
+[ v3_req ]
+basicConstraints       = CA:false
+extendedKeyUsage       = serverAuth
+subjectAltName         = @sans
+
+[ sans ]
+#Include the FQDN of the service certificate is hosting
+DNS.0 = hostname1.kroger.com
+#(optional) Include any other hostnames/DNS Alias used by this certificate.
+#DNS.1 = hostname2.kroger.com

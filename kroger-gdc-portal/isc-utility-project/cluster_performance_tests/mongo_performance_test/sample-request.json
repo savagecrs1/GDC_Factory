@@ -1,0 +1,6 @@
+{
+  "durationSeconds": 60,
+  "threads": 50,
+  "requestRate": 200,
+  "outputFile": "/data/perf-results.json"
+}

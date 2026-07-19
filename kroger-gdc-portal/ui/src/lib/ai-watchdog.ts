@@ -1,5 +1,6 @@
 import fs from 'fs';
 import path from 'path';
+import os from 'os';
 import { execSync } from 'child_process';
 import { addAuditLog } from './k8s-client';
 
@@ -115,10 +116,10 @@ export function analyzeError(failedStep: string, rawLogs: string[], projectId: s
   else if (errorText.includes('Permission denied (publickey)') || errorText.includes('UNREACHABLE')) {
     errorTitle = 'SSH Authentication Failure (Public Key Rejected)';
     rootCause = `Ansible failed to SSH into target host. Project '${projectId}' metadata lacks user SSH public keys or OS Login is blocking fallback auth.`;
-    remediationStep = `Inject local SSH public key (~/.ssh/google_compute_engine.pub or ~/.ssh/id_rsa.pub) into project metadata.`;
+    remediationStep = `Inject local SSH public key (${os.homedir()}/.ssh/google_compute_engine.pub or ~/.ssh/id_rsa.pub) into project metadata.`;
     severity = 'high';
     autoFixAvailable = true;
-    autoFixCommand = `gcloud compute project-info add-metadata --project=${projectId} --metadata-from-file=ssh-keys=$HOME/.ssh/google_compute_engine.pub --quiet`;
+    autoFixCommand = `gcloud compute project-info add-metadata --project=${projectId} --metadata-from-file=ssh-keys=${os.homedir()}/.ssh/google_compute_engine.pub --quiet`;
   }
   // Rule 6: SA Key Creation Disabled
   else if (errorText.includes('disableServiceAccountKeyCreation')) {
@@ -130,19 +131,11 @@ export function analyzeError(failedStep: string, rawLogs: string[], projectId: s
     autoFixCommand = `gcloud org-policies reset constraints/iam.disableServiceAccountKeyCreation --project=${projectId} --quiet`;
   }
   // Rule 7: bmctl Preflight / VxLAN MTU
-  else if (errorText.includes('preflight failed') || errorText.includes('preflight check failed') || errorText.includes('MTU') || errorText.includes('network check')) {
+  else if (errorText.includes('preflight') || errorText.includes('MTU')) {
     errorTitle = 'Anthos bmctl Preflight Check Failure (Network MTU)';
     rootCause = `Anthos Bare Metal preflight validation detected network MTU or VXLAN overlay connectivity issues across cluster nodes.`;
     remediationStep = `Verify Docker daemon MTU is set to 1410 across workstation and cluster VMs to account for 50-byte GCE VXLAN encapsulation header overhead.`;
     severity = 'medium';
-    autoFixAvailable = false;
-  }
-  // Rule 7b: Bootstrap Cluster / Docker Daemon Crash
-  else if (errorText.includes('connection refused') || errorText.includes('127.0.0.1:33203') || errorText.includes('bootstrap cluster')) {
-    errorTitle = 'Anthos Bootstrap Cluster / Docker Daemon Crash';
-    rootCause = `The temporary kind bootstrap cluster running inside Docker on the admin workstation crashed or became unreachable during installation.`;
-    remediationStep = `Check Docker memory limits and ensure the admin workstation has sufficient CPU/RAM resources allocated.`;
-    severity = 'high';
     autoFixAvailable = false;
   }
   // Fallback heuristic
@@ -204,7 +197,7 @@ export function diagnoseClusterVisibility(clusterName: string, projectId: string
     failedStep: "GKE Connect Gateway API Authorization",
     rawErrorSnippet: `Live K8s API unreachable for ${clusterName} in ${projectId}: HTTP-Code: 403 / 404.\nMissing ClusterRoleBinding for user access via GKE Connect Gateway.`,
     autoFixAvailable: true,
-    autoFixCommand: `gcloud compute ssh gem-admin-ws --project=${projectId} --zone=us-central1-a --command="sudo kubectl --kubeconfig=/home/gem/bmctl-workspace/${clusterName}/${clusterName}-kubeconfig create clusterrolebinding user-admin-binding-altostrat --clusterrole=cluster-admin --user=admin@chrissavage.altostrat.com 2>&1 || true" --quiet`,
+    autoFixCommand: `gcloud compute ssh gem-admin-ws --project=${projectId} --zone=us-central1-a --command="USER_EMAIL=\$(gcloud config get-value account 2>/dev/null); sudo kubectl --kubeconfig=/home/gem/bmctl-workspace/${clusterName}/${clusterName}-kubeconfig create clusterrolebinding user-admin-binding-gdc --clusterrole=cluster-admin --user=\$USER_EMAIL 2>&1 || true" --quiet`,
     status: "open",
   };
 

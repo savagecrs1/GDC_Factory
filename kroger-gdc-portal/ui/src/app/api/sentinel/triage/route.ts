@@ -1,5 +1,18 @@
-import { NextResponse } from 'next/server';
-import { executeAutoRemediate, updateTriageStatus, clearTriageReports, diagnoseClusterVisibility } from '@/lib/ai-watchdog';
+import { executeAutoRemediate, updateTriageStatus, clearTriageReports, diagnoseClusterVisibility, getTriageReports } from '@/lib/ai-watchdog';
+
+export async function GET(request: Request) {
+  try {
+    const { searchParams } = new URL(request.url);
+    const projectId = searchParams.get('projectId');
+    const reports = getTriageReports();
+    const filtered = projectId 
+      ? reports.filter(r => r.id.includes(projectId) || r.failedStep.includes(projectId) || r.rootCause.includes(projectId))
+      : reports;
+    return NextResponse.json({ success: true, reports: filtered });
+  } catch (error: any) {
+    return NextResponse.json({ error: error.message || 'Failed to fetch triage reports' }, { status: 500 });
+  }
+}
 
 export async function POST(request: Request) {
   try {

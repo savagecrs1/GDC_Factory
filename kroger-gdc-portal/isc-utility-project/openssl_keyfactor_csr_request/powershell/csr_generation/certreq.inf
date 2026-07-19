@@ -1,0 +1,23 @@
+[newrequest]
+; IMPORTANT NOTE: All Values of the Subject Line Must be Reviewed before generating CSR.
+;  For more information, go to https://confluence.kroger.com/confluence/information-security/tools/keyfactor/certificate-signing-request-csr-generation-overview
+; ----------------------------
+; Subject Value Overview
+; CN: The Fully Qualified Domain Name (FQDN) used to access the resource.
+; OU: Infra/ServiceNow Group Name.
+; E: Distribution email that provides support to the application's certificate.
+subject = "CN=iscpcc.gcp-internal.kroger.com,OU=INF-InStoreCloud,O=The Kroger Co.,L=Cincinnati,S=OH,C=US,E=SATInStoreCloud@Kroger.com"
+; Friend Name: Provides a friendly name to keep certificate a unique value.
+;FriendlyName = 2025-iscpcc.gcp-internal.kroger.com
+KeyLength = 2048
+MachineKeySet = false
+; Exportable: Determines if the private key can be exported to different workstation.
+Exportable = TRUE
+[extensions]
+2.5.29.17 = "{text}"
+; SAN DNS Values
+; You must include the CN value as a DNS Value
+_continue_ = "dns=iscpcc.gcp-internal.kroger.com&"
+; Additional SAN DNS Values
+; If you have multiple DNS values to use the following template example instead below.
+; _continue_ = "dns=iscpcc.gcp-internal.kroger.com&dns=servername1.kroger.com&dns=servername2.kroger.com"

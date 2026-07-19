@@ -1,0 +1,37 @@
+==== STARTING CLUSTER REHYDRATION ====
+prom-monitoring-fuel not found
+cluster-ci009h                  bm-system-192.168.120.12-machine-29677405-8hr6x                   0/1   Error                        0               15m
+cluster-ci009h                  bm-system-192.168.120.12-machine-29677405-hkhzr                   0/1   Error                        0               16m
+cluster-ci009h                  bm-system-192.168.120.12-machine-29677405-kgp2l                   0/1   Error                        0               16m
+cluster-ci009h                  bm-system-192.168.120.13-machine-29677404-mtqfw                   0/1   Error                        0               17m
+cluster-ci009h                  bm-system-192.168.120.13-machine-29677404-q5vqk                   0/1   Error                        0               16m
+cluster-ci009h                  bm-system-192.168.120.13-machine-29677404-xsfdd                   0/1   Error                        0               17m
+cluster-ci009h                  bm-system-192.168.120.14-machine-29677396-c54qg                   0/1   Error                        0               25m
+cluster-ci009h                  bm-system-192.168.120.14-machine-29677396-dwc4f                   0/1   Error                        0               24m
+cluster-ci009h                  bm-system-192.168.120.14-machine-29677396-xtxfj                   0/1   Error                        0               25m
+config-management-system        ns-reconciler-ngpos-isa-ngpos-isa-rs-12-6b97987786-vx9sh          0/4   Error                        0               23m
+config-management-system        ns-reconciler-ngpos-mx-ngpos-mx-rs-11-6b9c7696fd-9h69j            0/4   Error                        0               23m
+config-management-system        root-reconciler-kroger-issuer-helm-rs-6f48d9b5c9-msxhh            0/3   Error                        0               41s
+kong-system-fuel                kong-fuel-kong-95bc7c8bf-qxc6r                                    0/2   CrashLoopBackOff             14 (45s ago)    13m
+ngpos-fuel-pci-l0               pos-service-fuel-eps-ingestion-58bf5b49bb-mjqlh                   1/2   CrashLoopBackOff             6 (2m57s ago)   13m
+ngpos-isa                       pos-service-business-day-api-57f9589d9-fh6jz                      1/2   CrashLoopBackOff             9 (26s ago)     20m
+ngpos-payments-pci              payments-acceptance-workflow-74fcc8d9ff-bf29n                     1/2   CrashLoopBackOff             7 (2m23s ago)   22m
+ngpos-platform                  pos-elera-event-api-796779fc77-bsptj                              1/2   CrashLoopBackOff             6 (2m33s ago)   19m
+ngpos-platform                  pos-elera-event-service-685b955869-2sk7c                          1/2   CrashLoopBackOff             6 (113s ago)    19m
+ngpos-platform                  pos-key-generation-service-55c6947dc9-2wrzh                       1/2   CrashLoopBackOff             6 (61s ago)     19m
+ngpos-platform                  pos-ping-pong-77b8d696bc-tcjbw                                    1/2   CrashLoopBackOff             7 (2m49s ago)   19m
+ngpos-platform                  pos-ping-pong-77b8d696bc-wf8m5                                    1/2   CrashLoopBackOff             7 (4m8s ago)    19m
+ping-auth                       pingtoolkit-77fb58988b-fbwrk                                      0/1   CreateContainerConfigError   0               100m
+ping-auth                       pingtoolkit-78646446b7-8plql                                      0/1   CreateContainerConfigError   0               100m
+prom-monitoring                 ngpos-mongodb-platform-prometheus-mongodb-exporter-7f7ff9466298   0/1   CreateContainerConfigError   0               16m
+vm-system                       virt-controller-69bb8c9bc4-2hmpz                                  0/1   Error                        1               2d12h
+vm-system                       virt-controller-69bb8c9bc4-48mlf                                  0/1   Error                        0               39h
+vm-system                       virt-controller-69bb8c9bc4-5rfft                                  0/1   Error                        1               5d13h
+vm-system                       virt-controller-69bb8c9bc4-hfqx2                                  0/1   Error                        2               5d13h
+vm-system                       virt-controller-69bb8c9bc4-rr7kz                                  0/1   Error                        0               2d12h
+vm-system                       virt-operator-6557546bc6-4p9cl                                    0/2   Error                        2               2d12h
+vm-system                       virt-operator-6557546bc6-bq6mj                                    0/2   Error                        3               5d13h
+vm-system                       virt-operator-6557546bc6-dvw55                                    0/2   Error                        2               5d13h
+vm-system                       virt-operator-6557546bc6-jjckq                                    0/2   Error                        0               2d12h
+vm-system                       virt-operator-6557546bc6-lh78x                                    0/2   Error                        0               39h
+==== REHYDRATION COMPLETE ====

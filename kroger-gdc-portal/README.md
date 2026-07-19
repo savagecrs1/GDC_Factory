@@ -1,159 +1,286 @@
-# 🛒 Kroger GDC Connected Hybrid PCI Edge Portal
+# Google Distributed Cloud (Software-Only) on GCP
 
-The **Google Distributed Cloud (GDC) Connected Hybrid PCI Edge Portal** is an advanced Infrastructure-as-Code (IaC) automation platform tailored specifically for Kroger's cloud engineering and store operations teams. It enables effortless provisioning, validation, and management of 3-node bare-metal edge clusters on Google Cloud Platform (GCP) for cloud-based development and store simulation.
+This project provisions a Google Distributed Cloud Software-Only (GDCSO) Hybrid cluster on Google Compute Engine (GCE) instances. It mimics a GDC Connected Servers environment using virtual resources in GCP.
 
----
+## Architecture
 
-## 🌟 Core Capabilities Relevant to Kroger
+This project uses an enterprise **Two-Tier (Foundation / Cluster) Architecture** to ensure you can scale to hundreds of ephemeral clusters without destroying your shared management infrastructure.
 
-* **🛡️ QSA-Validated Hybrid PCI Co-location**: Successfully consolidates in-scope PCI payment applications (NGPOS, Fuel Systems) and out-of-scope store operations workloads onto a single 3-node physical or virtual bare-metal footprint. Retires restrictive kernel sandboxing (gVisor) in favor of high-performance `runc` containers mapped to dedicated Multus VLAN interfaces.
-* **⚡ Compact Cloud Test Footprints**: Natively supports optimized virtual compute footprints (such as **`n2-standard-8`** — 8 vCPUs, 32 GB RAM per node) with Intel Ice Lake nested virtualization. This allows engineering teams to rapidly spin up and tear down test clusters without exhausting regional GCP vCPU quotas.
-* **🔄 Thread-Safe & Idempotent Automation**: Built on a resilient Terraform and Ansible execution engine that dynamically inspects real-time GCP cloud state. Multiple team members can test concurrently without IP collisions or state corruption.
-* **🧠 AI-Powered Telemetry & Watchdog**: Features integrated real-time cluster health monitoring, live browser-based SSH/xterm terminal modals, automated ConfigSync GitOps management, and an AI Watchdog for instant Root Cause Analysis (RCA) of failing pods or network attachments.
-* **📧 Automated Watchdog Email & Audio Alerting**: When running long-duration continuous regression loops (e.g., 5x or 10x lifecycle iterations), the Watchdog automatically fires Google Cloud Logging alert events on any regression error or upon successful loop completion—dispatching real-time email alerts directly to engineers' corporate inboxes and triggering native desktop audio notifications.
+1. **The Foundation (`terraform/bootstrap`):** This layer provisions the permanent, shared infrastructure: the core VPC network, Cloud NAT, Service Accounts, and a dedicated, decoupled Admin Workstation (`gem-admin-ws`). This workstation is used to safely orchestrate Anthos installations.
+2. **Ephemeral Clusters (`terraform/`):** This layer is used as a template to rapidly stamp out ephemeral 3-node GDCSO cluster footprints (`node1`, `node2`, `node3`). It uses data sources to automatically attach these new nodes to the shared foundation.
+3. **The Edge Router (`terraform/edge-router`):** This layer provides an optional, dedicated ingress VM (`e2-small`) that participates in all emulated secondary networks (VXLANs). It allows you to route traffic from your local workstation directly into isolated cluster VLANs (like MetalLB VIPs) using tools like Traefik or a SOCKS5 proxy, bypassing the Kubernetes control plane.
 
----
+## Prerequisites
+- Google Cloud SDK (`gcloud`) installed and authenticated.
+- **Google Cloud Auth**: Run both `gcloud auth login` AND `gcloud auth application-default login` (required for Terraform GCS backend impersonation).
+- Google Cloud SDK `gke-gcloud-auth-plugin` component installed (required for local connection gateway auth: `gcloud components install gke-gcloud-auth-plugin`).
+- HashiCorp Terraform CLI (`terraform`) installed.
+- Ansible (`ansible`, `ansible-playbook`) installed.
+- Node.js & npm installed (for web portals).
 
----
-
-## 🔐 Universal Access & Security Prereqs
-
-This platform is 100% self-bootstrapping and portable to any Google Cloud organization. It requires no hardcoded environments, external IPs, or VPNs:
-* **IAM Permissions**: Your Google Cloud user account needs **Owner** (or **Editor** + **Project IAM Admin**) on the target GCP Project to allow Terraform to enable APIs, create VPCs, and assign service accounts.
-* **Recommended: Zero External IPs (IAP Tunneling)**: In accordance with enterprise zero-trust security standards, cluster nodes and admin workstations do not receive public external IPs by default. Our automation script dynamically enables **Identity-Aware Proxy (IAP)** and creates standard TCP forwarding rules (`allow-ssh-from-iap` from Google's `35.235.240.0/20` range), allowing secure SSH terminal tunneling from anywhere without public internet exposure.
-
-### ⚠️ Alternative: Direct External IPs (Optional Lab Mode)
-If Kroger's organization security policy allows public external IPv4 addresses in non-production sandbox projects, developers can skip IAP tunneling entirely by selecting **External IP Mode** during cluster deployment.
-* **How it works**: The `gem-admin-ws` workstation and cluster nodes are provisioned with ephemeral public IPs, allowing direct SSH and Kubernetes API communication over standard internet routing.
-* **🚨 Security & Compliance Caveats**:
-  * **Public Attack Surface**: Direct SSH daemons and K8s API endpoints become reachable over the internet. You **must** configure strict GCP VPC firewall rules restricting inbound TCP ports 22 and 6443 strictly to authorized Kroger corporate egress CIDRs or corporate VPN IPs.
-  * **PCI-DSS Scope**: In-scope PCI payment workloads (NGPOS, Fuel Systems) running on external-facing nodes require rigorous host-level firewalling, intrusion detection systems (IDS), and QSA re-validation. We strongly recommend **IAP Tunneling (Internal Mode)** for all PCI compliance validation testing.
+> 💡 **Quick Pre-flight Check**: Run `./verify-setup.sh` in the project root to automatically check all host dependencies and authentication before starting.
 
 ---
 
-## 🚀 Ways to Deploy & Access the Portal
+## Quickstart: Web Portal UI (Recommended)
 
-### Option A: 1-Click Launch in Google Cloud Shell (No Install Required)
-You can test and deploy Hybrid PCI clusters directly from your web browser using Google Cloud Shell—zero local installation required.
+To launch the interactive Kroger GDC Virtual Factory Web Portal:
 
-[![Open in Cloud Shell](https://gstatic.com/cloudssh/images/open-btn.svg)](https://shell.cloud.google.com/cloudshell/editor?cloudshell_git_repo=https://github.com/savagecrs1/gdc-vm-configs.git&cloudshell_git_branch=main&cloudshell_tutorial=kroger-gdc-portal/README.md)
+```bash
+# Option A: Using launch script
+./launch-kroger.sh
 
-1. Click the **Open in Cloud Shell** button above.
-2. Once Cloud Shell opens, start the portal dev server:
+# Option B: Manual startup
+cd ui-kroger && npm install && npm run dev -- -p 3001
+```
+Open **http://localhost:3001** in your web browser.
+
+---
+
+## CLI Deployment Workflow
+
+### 1. Setup Provisioning Service Account & State
+
+The infrastructure is created by Terraform using service account impersonation. A setup script creates this dedicated service account (`tf-provisioner`), grants impersonation permissions, and creates the remote GCS state bucket:
+
+1. Set your target GCP Project ID:
    ```bash
-   cd gdc-vm-configs/kroger-gdc-portal/ui
-   npm install && npm run dev -- -p 3001
+   export PROJECT_ID="your-gcp-project-id"
    ```
-3. Click the **Web Preview** icon in Google Cloud Shell and select **Preview on port 3001**.
+2. Run the setup script:
+   ```bash
+   ./project-setup.sh "${PROJECT_ID}"
+   ```
+   *This script creates the remote GCS bucket `gem-${PROJECT_ID}-tfstate` and configures Terraform backends.*
+
+### 2. Deploy the Shared Foundation
+
+Deploy the permanent networking, VPC NAT, and the dedicated Admin Workstation (`gem-admin-ws`). **You only need to run this step once per GCP project.**
+
+1. Navigate to the foundation directory:
+   ```bash
+   cd terraform/foundation
+   ```
+2. Initialize with backend configuration and apply:
+   ```bash
+   export PROVISIONING_SA_EMAIL="tf-provisioner@${PROJECT_ID}.iam.gserviceaccount.com"
+
+   terraform init \
+     -backend-config="bucket=gem-${PROJECT_ID}-tfstate" \
+     -backend-config="prefix=foundation/state" \
+     -backend-config="impersonate_service_account=${PROVISIONING_SA_EMAIL}"
+
+   terraform apply
+   ```
+
+## 3. Deploy the Edge Router (Optional)
+
+If you plan on accessing secondary networks (Island Mode) from your local workstation, deploy the Edge Router. This creates a dedicated VM that sits on the VXLAN fabric and proxies incoming traffic.
+
+1. Navigate to the edge-router directory:
+   ```bash
+   cd ../edge-router
+   ```
+2. Initialize and apply:
+   ```bash
+   export PROVISIONING_SA_EMAIL="tf-provisioner@${PROJECT_ID}.iam.gserviceaccount.com"
+
+   terraform init \
+     -backend-config="bucket=gem-${PROJECT_ID}-tfstate" \
+     -backend-config="prefix=edge-router/state" \
+     -backend-config="impersonate_service_account=${PROVISIONING_SA_EMAIL}"
+
+   terraform apply
+   ```
+
+### 4. Provision a Cluster Footprint
+
+Deploy a 3-node virtual hardware footprint for your new cluster. Because this uses a separate state file, you can destroy these VMs later without deleting your shared admin workstation.
+
+Before running Terraform, set an environment variable with your desired cluster name. You must use this variable when initializing Terraform so that each cluster gets its own dedicated state file in the Google Cloud Storage bucket.
+
+1. Navigate to the cluster directory:
+   ```bash
+   cd ../cluster
+   ```
+2. Export your cluster name:
+   ```bash
+   export CLUSTER_NAME="my-gdc-on-gcp-cluster"
+   ```
+3. Initialize Terraform with a parameterized state prefix (using -reconfigure ensures you don't conflict with previous deployments):
+   ```bash
+   export PROVISIONING_SA_EMAIL="tf-provisioner@${PROJECT_ID}.iam.gserviceaccount.com"
+
+   terraform init -reconfigure \
+     -backend-config="bucket=gem-${PROJECT_ID}-tfstate" \
+     -backend-config="prefix=clusters/${CLUSTER_NAME}/state" \
+     -backend-config="impersonate_service_account=${PROVISIONING_SA_EMAIL}"
+   ```
+4. Apply the infrastructure:
+   ```bash
+   terraform apply -var="cluster_name=${CLUSTER_NAME}"
+   ```
+
+## 5. Configuration & Deployment (Ansible)
+
+The configuration is split into two distinct playbooks to support the Two-Tier architecture: one to configure the permanent foundation, and another to orchestrate ephemeral clusters.
+
+### Foundation Phase
+This playbook installs the required binaries (`kubectl`, `bmctl`, Docker), sets up the user environment, and configures the Edge Router. **You only need to run this step once per GCP project.**
+
+1. Navigate to the Ansible directory:
+   ```bash
+   cd ../ansible
+   ```
+2. Run the foundation playbook:
+   ```bash
+   ansible-playbook setup-foundation.yaml
+   ```
+
+### Cluster Phase
+This playbook dynamically reads your Terraform state, configures the internal VxLAN network across your new cluster VMs, and asynchronously kicks off the Anthos `bmctl` deployment from the shared workstation.
+
+1. Run the cluster playbook:
+   ```bash
+   ansible-playbook create-cluster.yaml
+   ```
 
 ---
 
-### Option B: Containerized on Local Laptop (Docker Compose)
-For cloud architects running on local laptops or dedicated workstations, use our self-contained Docker Compose bundle. It automatically mounts your existing Google Cloud SDK (`gcloud`) credentials and SSH keys.
+## Monitoring and Accessing the Cluster
 
-#### 1-Command Startup
+Because the Anthos deployment takes 15-20 minutes, the Ansible playbook launches it as a background process on the `gem-admin-ws` workstation to protect it from SSH timeouts.
+
+To monitor the installation progress in real-time, SSH into your dedicated admin workstation:
+
 ```bash
-git clone https://github.com/savagecrs1/gdc-vm-configs.git
-cd gdc-vm-configs/kroger-gdc-portal
-docker-compose up -d --build
+# Connect to the admin workstation
+gcloud compute ssh gem-admin-ws --tunnel-through-iap
+
+# Switch to the dedicated Anthos service user
+sudo su - gdc
+
+# Tail the active deployment logs
+tail -f ~/bmctl-workspace/${CLUSTER_NAME}/log/create-cluster-*/create-cluster.log
 ```
-Once built and started, open your web browser to:
-👉 **http://localhost:3001**
 
----
+Once the installation finishes, you can use the generated `kubeconfig` file on that same workstation to interact with your new cluster:
 
-### Option C: Running on Remote Cloud Dev VMs (SSH Tunneling)
-If you run the portal container or Node server on a remote headless cloud VM (such as Google Compute Engine or Cloud Workstations) instead of your local laptop, forward port 3001 over SSH:
 ```bash
-# Run on your local laptop terminal to proxy port 3001 from the remote VM:
-gcloud compute ssh <YOUR_CLOUD_VM_NAME> --project=<YOUR_DEV_PROJECT> --zone=<ZONE> -- -L 3001:localhost:3001
+kubectl get nodes --kubeconfig /home/gdc/bmctl-workspace/${CLUSTER_NAME}/${CLUSTER_NAME}-kubeconfig
 ```
-Once connected, open **http://localhost:3001** on your local laptop browser!
+
+### Local Access via GKE Connect Gateway
+
+You can also access the cluster from your local machine using standard GCP IAM identities via the GKE Connect Gateway. This requires impersonating the `gem-cluster-admin` service account.
+
+1. Configure `gcloud` to impersonate the cluster admin service account:
+   ```bash
+   gcloud config set auth/impersonate_service_account gem-cluster-admin@gdc-on-gcp2.iam.gserviceaccount.com
+   ```
+2. Get the cluster credentials:
+   ```bash
+   gcloud container fleet memberships get-credentials ${CLUSTER_NAME}
+   ```
+3. You can now use `kubectl` locally:
+   ```bash
+   kubectl get nodes
+   ```
+4. To stop impersonating the service account:
+   ```bash
+   gcloud config unset auth/impersonate_service_account
+   ```
 
 ---
 
-## 🌐 Hybrid PCI Network Architecture & VLAN Presets
+## 6. Deleting a Cluster
 
-This portal natively supports the three-tier network architecture validated with Kroger's QSA (Coalfire). The UI includes 1-click preset buttons that automatically configure the secondary Multus interfaces and layer-2/3 bridges across the nodes:
+To safely delete an individual cluster, you must first unregister it from Google Cloud before destroying its VMs. This ensures a clean state for your GCP project and prevents orphan resources.
 
-| Network Tier | Network Name | VLAN ID | Node CIDR | Pod CIDR | VIP / LB Pool | Purpose |
-| :--- | :--- | :--- | :--- | :--- | :--- | :--- |
-| **k8s Default** | `default` | `3030` | `192.168.120.12/30` | `10.0.2.0/23` | N/A | Primary GKE Control Plane & Platform Management. |
-| **Non-PCI Secondary** | `non-pci-network-3130` | `3130` | `192.168.88.12/30` | `172.16.0.0/16` | `192.168.88.65/26` | Island-Mode Store Operations & Out-of-Scope Apps. |
-| **PCI Secondary** | `pci-network-3430` | `3430` | `192.168.80.12/30` | `172.18.0.0/16` | `192.168.80.65/26` | Island-Mode CDE, NGPOS, and Fuel Payment Workloads. |
+1. **Step 1: Unregister with Ansible**
+   Navigate to the `ansible` directory and run the cleanup playbook:
+   ```bash
+   cd ansible
+   ansible-playbook cleanup.yaml -e "cluster_name=${CLUSTER_NAME}"
+   ```
+   *This command runs `bmctl reset` from the Admin Workstation to unregister the cluster from GKE Hub and clean up its nodes.*
 
----
+2. **Step 2: Destroy with Terraform**
+   Navigate to the `terraform` directory and destroy the specific cluster's VMs:
+   ```bash
+   cd ../terraform
 
-## 💾 Software-Defined Storage (SDS) & CSI Architecture
+   # Re-initialize to the correct state for this specific cluster
+   terraform init -reconfigure \
+     -backend-config="bucket=gdc-on-gcp-${PROJECT_ID}-tfstate" \
+     -backend-config="prefix=clusters/${CLUSTER_NAME}/state" \
+     -backend-config="impersonate_service_account=${PROVISIONING_SA_EMAIL}"
 
-In bare-metal edge store deployments, stateful applications (such as POS databases and transaction queues) require reliable block storage across the 3 physical hosts.
+   # Destroy the resources
+   terraform destroy -var="cluster_name=${CLUSTER_NAME}"
+   ```
 
-### 1. Underlying Storage Slicing (TopoLVM)
-During initial node provisioning, our automated Ansible engine attaches a secondary NVMe/SSD data disk (`google-data`) to each of the 3 cluster nodes and partitions it:
-* **Partition 1 (`100GB`)**: Reserved for system host operations and container image cache.
-* **Partition 2 (Remaining capacity)**: Formatted into a Local Logical Volume Manager (LVM) volume group named **`topolvm-vg`**. Our Helm automation deploys **TopoLVM** as the native local Container Storage Interface (CSI) driver.
-* **ReadWriteOnce (RWO)**: Pods dynamically slice high-performance block persistent volume claims (PVCs) directly from the host's local disk with bare-metal disk I/O speeds.
-
-### 2. Robin Cloud Native Storage (Robin CNS) Compatibility (Option A)
-To ensure 100% compatibility with Kroger's existing Helm charts and manifests without introducing heavy SDS daemon overhead during development:
-* We provide a lightweight **StorageClass Alias** (`robin` and `robin-cns`) that maps transparently to `topolvm.io`.
-* Kroger developers can deploy charts requesting `storageClassName: robin` out-of-the-box on compact test VMs without modifying their production manifests.
-* **ReadWriteMany (RWX) Extension**: When shared file storage across multiple nodes is required, a lightweight NFS external provisioner can be deployed on top of the RWO block storage pool to serve shared volumes across the internal VLAN pod network.
-
----
-
-## 🛠️ Step-by-Step Provisioning Guide
-
-1. **Open the Portal**: Navigate to `http://localhost:3001`.
-2. **Set Project Scope**: In the top navigation bar, enter your target **GCP Project ID** (e.g., `kroger-store-1042`).
-3. **Deploy New Cluster**: Click the **Deploy New Cluster** tab.
-   - Enter your **GCP Billing Account ID** (if this is the first deployment in the project).
-   - Enter your desired cluster name (e.g., `kroger-store-001`).
-   - Choose your compute footprint (**`n2-standard-8`** recommended for cloud simulation).
-   - Click **Deploy Virtual GDC Environment**.
-4. **Configure VLANs**: Once provisioned, navigate to the **Network Manager** tab and click the 1-click preset launcher buttons for **VLAN 3030**, **VLAN 3130**, and **VLAN 3430** to attach the secondary Multus interfaces.
-5. **Validate & Monitor**: View real-time cluster health, logs, and automated root-cause analysis on the **Overview** dashboard.
+*(Note: To delete the optional Edge Router, you must first navigate to `terraform/edge-router`, edit `main.tf` to set `deletion_protection = false`, apply the change, and then run `terraform destroy`).*
 
 ---
 
-## 🏪 Grocery Store Emulator & QSA Zero-Trust Retail Testing
+## 7. Validation & Compliance (TDD)
 
-To validate Kroger retail edge architectures against Qualified Security Assessor (QSA) zero-trust requirements without requiring proprietary vendor binaries, this repository includes an out-of-the-box **Grocery Store Emulator GitOps Profile** (`/gitops-profiles/grocery-store-emulator/`).
+This project includes a comprehensive E2E validation suite using **[Kyverno Chainsaw](https://kyverno.github.io/chainsaw/)** to ensure your ABM cluster accurately emulates the workload restrictions of GDC Connected Servers.
 
-### 1. Simulated Retail Workloads & VLANs
-* **🛒 Toshiba ELERA POS Commerce Engine (`store-ops-non-pci`)**:
-  - Attached to **Non-PCI VLAN `3130`** (`172.16.0.0/16`) via Multus CNI annotation (`k8s.v1.cni.cncf.io/networks: gke-system/non-pci-network-3130`).
-  - Simulates modern POS cash register item scanning, SKU pricing lookup, and shopping cart assembly.
-* **💳 Verifone / Ingenico PIN Pad Gateway (`cde-pci-scope`)**:
-  - Attached strictly to the **PCI Cardholder Data Environment (CDE) VLAN `3430`** (`172.18.0.0/16`).
-  - Simulates an in-scope payment tokenization and Derived Unique Key Per Transaction (DUKPT) encryption gateway returning EMV authorization codes.
-* **🤖 Smart Cart AI Vision (`mfc-robotics`)**:
-  - Simulates camera vision inference telemetry for automated shopping carts and micro-fulfillment robotics.
+### Running the Tests
+Ensure you have the Chainsaw CLI installed and your `kubectl` context is pointed to the target cluster (either directly or via the GKE Connect Gateway).
 
-### 2. Zero-Trust QSA Network Isolation
-* Enforces strict **PCI-DSS v4.0 NetworkPolicy segmentation**: store operations applications in `store-ops-non-pci` are blocked from sweeping or packet-sniffing the PCI Cardholder Data Environment, allowing only authorized tokenization proxy requests on port `8443`.
+1. From the project root, run the test suite:
+   ```bash
+   chainsaw test tests/e2e --config tests/e2e/chainsaw-configuration.yaml
+   ```
 
-### 3. 1-Click GitOps Setup & Multi-Lane Concurrency Streaming
-1. **Auto-Configure RootSync**: In the portal dashboard, navigate to the **GitOps Config Sync** tab and click **`🏪 Standard Grocery POS Profile`**. This automatically points Anthos Config Management to our internal emulator repository directory and applies all 5 manifests across your physical bare-metal nodes.
-2. **Execute Event-Driven Store Checkout Stream**: Navigate to the **`📈 Performance & Metrics`** tab and select **`🚀 POS Commerce Catalog & DB Bench`**.
-   - Scale active checkout concurrency from **1 to 24 concurrent store registers** (simulating Front End attended registers and Self-Checkout SCO bays).
-   - Watch real-time 4-phase event progression: item-by-item UPC barcode scanning, promotional discount reconciliation (Kroger Plus card rules), point-to-point DUKPT encryption handshakes over VLAN `3430`, and electronic receipt closeout.
-   - Click on any individual register box in the live grid to inspect its live streaming grocery receipt!
+### Manual Cleanup
+All resources created by the test suite are labeled with `testsuite: "true"`. If a test run is interrupted, you can manually purge all test resources:
+
+```bash
+kubectl delete pods,namespaces -l testsuite=true --all-namespaces
+```
 
 ---
 
-## 🍃 Kroger isc-utility MongoDB TopoLVM Storage Benchmark
+---
 
-To validate bare-metal storage health and B-tree indexing under heavy synthetic load, the portal integrates the official **Kroger `isc-utility-project` MongoDB performance suite** (`/gitops-profiles/mongo-performance-test/`).
+## 💻 GDC Web Portals & Sentinel Self-Healing
 
-### 1. 5-Tier Chained Microservice Architecture
-Instead of simple disk hammering, this suite pushes requests through a chained dependency path built in dependency-free Go (Golang 1.22):
-* **`entry-service`**: Multi-threaded load orchestrator spawning up to 2,000 concurrent threads.
-* **`cache-service`**: Custom Redis RESP protocol client evaluating in-memory hit/miss caching ratios.
-* **`cpu-service`**: Computes 200,000 prime number loops to evaluate CFS scheduling and compute saturation.
-* **`memory-service`**: Allocates 100MB+ heap blocks and holds for 100ms to test GC pressure and memory bus bandwidth.
-* **`database-service`**: Executes MongoDB index insertions and sequential document commits against local TopoLVM RWO persistent volume claims (`PVCs`).
+This project includes dual React-based portal control panels (`ui` on port 3002 and `ui-kroger` on port 3001) that emulate GDC edge portal experiences.
 
-### 2. 1-Click Execution & Waterfall Attribution
-1. **Deploy Workload Suite**: In **GitOps Config Sync**, click **`🍃 MongoDB TopoLVM Bench`** to reconcile all 15 services and database pods onto your bare-metal nodes.
-2. **Analyze Telemetry**: In **Performance & Metrics**, select **`🍃 Kroger isc-utility MongoDB TopoLVM Bench`**. View exact P50/P95/P99 tail latencies, system throughput (TPS/RPS), disk Read/Write MB/s, and our 4-stage waterfall latency attribution chart with automated AI engineering bottleneck diagnosis!
+### Features
+1. **Cluster Provisioner Stepper**: Visual stepper tracking GCP setup, network foundation layers, GCE nodes, `bmctl` deployment, and retail app pre-deploys.
+2. **Sentinel AI Watchdog**: Automatically triages deployment failures (e.g. Org policy blocks, unlinked billing, credentials errors), parses logs, and offers an **"Auto-Fix with Sentinel"** automated remediation helper.
+3. **Resumable Builds**: Failed deployments can be auto-remediated and resumed directly from the failed stage instead of rebuilds from scratch.
+4. **Operations Console**: Real-time navbar status indicator tracking active background provisioning, teardowns, and jobs with one-click log streaming.
+5. **Container-Level Smooth Terminal Scroll**: Isolates log streaming scroll to the inner console window without jumping the outer browser viewport.
+6. **GDC Interactive Web Console**: Securely access any virtual machine container terminal on the edge cluster using IAP-tunneled `kubectl exec` shells directly from your browser.
+7. **Kroger Secondary Networks (IPAM)**: Customize store VLAN configs (VLAN Name, ID, Subnet, Gateway, VIP Range, Pod CIDR) directly inside the Kroger provisioning wizard.
+8. **Dynamic Header Navigation**: Access sub-pages and wizards with instant return capabilities using a unified "Return to Fleet Hub" header button.
+
+---
+
+## 🛡️ Upcoming Capabilities & Architecture Roadmap
+
+### 1. 🌐 GDC Connectivity & Network Diagnostics Suite
+Allows store engineers to test and troubleshoot GDC network communications before and after cluster provisioning via a **"Test GDC Connectivity"** button:
+* **Google Cloud APIs**: Tests `googleapis.com:443`, `accounts.google.com:443`, `oauth2.googleapis.com:443`.
+* **GKE Connect & QBone Tunnel**: Validates `gkeconnect.googleapis.com:443` & `gkehub.googleapis.com:443` with ALPN `h2` HTTP/2 protocol negotiation to detect Deep Packet Inspection (DPI) proxy interference.
+* **VLAN Tagging & Switch Infrastructure**: Probes secondary VLAN subinterfaces (e.g., `eth0.123`) with 802.1Q ARP/DHCP tests to detect switch ports incorrectly set to Access Mode instead of Trunk Mode.
+* **NAT Egress & MTU Fragmentation**: Verifies Cloud NAT egress IP (`curl ifconfig.me`) and tests 1400-byte ICMP packet fragmentation to prevent QBone tunnel drops.
+* **Inter-Node Subnet Ports**: Verifies internal VPC subnet ports (`6443` API, `10250` Kubelet, `7946` VXLAN/Serf).
+* **Pinpointed Troubleshooting UI**: Displays exact failure location (DNS, Firewall, Switch Port, NAT, MTU) with specific fix instructions.
+
+### 2. 🛡️ gVisor (`runsc`) Sandbox Simulation (`b/523229462`)
+Simulates physical GDC container sandboxing using gVisor:
+* **What It Is**: gVisor is a Go-based application kernel that intercepts container system calls, isolating untrusted store workloads from the host Linux kernel.
+* **How It Works**: Registers `runsc` as an additional CRI runtime handler in `/etc/containerd/config.toml` alongside standard `runc`. Automatically configures `--platform=systrap` or `--platform=kvm` based on host virtualization capabilities per internal specification `b/523229462`.
+* **Dynamic Workload Toggle**: Allows toggling `"Sandbox with gVisor"` ON/OFF per workload (adding `runtimeClassName: gvisor` to Pod specs). **Requires 0 cluster recreations**—workloads switch dynamically via standard rolling pod updates.
+
+### 3. 💾 `ReadWriteMany` (RWX) Shared Storage Simulation
+* **Robin.io vs. GDC Storage**: While typical Robin.io installations restrict volumes to `ReadWriteOnce` (RWO) block mode, GDC supports POSIX-compliant `ReadWriteMany` (RWX) shared file storage.
+* **Feature Roadmap**: Adds a `shared-rwx` StorageClass allowing multiple POS checkout microservices across different nodes to concurrently read and write to the same persistent volume.
+

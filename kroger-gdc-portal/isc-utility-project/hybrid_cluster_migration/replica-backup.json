@@ -1,0 +1,997 @@
+[
+    {
+      "namespace": "kong-system",
+      "kind": "Deployment",
+      "name": "health-check",
+      "action": "scale",
+      "replicas": 1
+    },
+    {
+      "namespace": "dns-config",
+      "kind": "Deployment",
+      "name": "dnsconfig-injector-webhook-dp ",
+      "action": "scale",
+      "replicas": 2
+    },
+    {
+      "namespace": "kong-system",
+      "kind": "Deployment",
+      "name": "kong-kong",
+      "action": "scale",
+      "replicas": 1
+    },
+    {
+      "namespace": "kong-system-fuel",
+      "kind": "Deployment",
+      "name": "health-check",
+      "action": "scale",
+      "replicas": 1
+    },
+    {
+      "namespace": "kong-system-fuel",
+      "kind": "Deployment",
+      "name": "kong-fuel-kong",
+      "action": "scale",
+      "replicas": 1
+    },
+    {
+      "namespace": "kong-system-pci",
+      "kind": "Deployment",
+      "name": "health-check",
+      "action": "scale",
+      "replicas": 1
+    },
+    {
+      "namespace": "kong-system-pci",
+      "kind": "Deployment",
+      "name": "kong-pci-kong",
+      "action": "scale",
+      "replicas": 1
+    },
+    {
+      "namespace": "kong-system-default",
+      "kind": "Deployment",
+      "name": "kong-helm-rs-kong",
+      "action": "scale",
+      "replicas": 1
+    },
+    {
+      "namespace": "mx-offers",
+      "kind": "Deployment",
+      "name": "discounts-interface",
+      "action": "scale",
+      "replicas": 1
+    },
+    {
+      "namespace": "mx-offers",
+      "kind": "Deployment",
+      "name": "hazelcast-management-center",
+      "action": "scale",
+      "replicas": 1
+    },
+    {
+      "namespace": "mx-offers",
+      "kind": "StatefulSet",
+      "name": "hazelcast",
+      "action": "scale",
+      "replicas": 2
+    },
+    {
+      "namespace": "mx-offers",
+      "kind": "Job",
+      "name": "hazelcast-bootstrap-29676285",
+      "action": "patch_job",
+      "parallelism": 0
+    },
+    {
+      "namespace": "mx-offers",
+      "kind": "Job",
+      "name": "hazelcast-bootstrap-29676300",
+      "action": "patch_job",
+      "parallelism": 0
+    },
+    {
+      "namespace": "mx-offers",
+      "kind": "Job",
+      "name": "hazelcast-bootstrap-29676315",
+      "action": "patch_job",
+      "parallelism": 0
+    },
+    {
+      "namespace": "mx-offers",
+      "kind": "CronJob",
+      "name": "hazelcast-bootstrap",
+      "action": "patch_cronjob",
+      "suspend": false
+    },
+    {
+      "namespace": "ngpos-apex",
+      "kind": "Deployment",
+      "name": "v1-mx-fuel-rewards-api",
+      "action": "scale",
+      "replicas": 2
+    },
+    {
+      "namespace": "ngpos-apex",
+      "kind": "Deployment",
+      "name": "v1-mx-item-poe-api",
+      "action": "scale",
+      "replicas": 2
+    },
+    {
+      "namespace": "ngpos-apex",
+      "kind": "Deployment",
+      "name": "v1-ngpos-api",
+      "action": "scale",
+      "replicas": 2
+    },
+    {
+      "namespace": "ngpos-fuel",
+      "kind": "Deployment",
+      "name": "fuel-services-connection",
+      "action": "scale",
+      "replicas": 2
+    },
+    {
+      "namespace": "ngpos-fuel",
+      "kind": "Deployment",
+      "name": "pos-fuel-sse-events",
+      "action": "scale",
+      "replicas": 2
+    },
+    {
+      "namespace": "ngpos-fuel",
+      "kind": "Deployment",
+      "name": "pos-service-customer-loyalty",
+      "action": "scale",
+      "replicas": 2
+    },
+    {
+      "namespace": "ngpos-fuel",
+      "kind": "Deployment",
+      "name": "pos-service-fuel-configuration",
+      "action": "scale",
+      "replicas": 2
+    },
+    {
+      "namespace": "ngpos-fuel",
+      "kind": "Deployment",
+      "name": "pos-service-fuel-emergency-api",
+      "action": "scale",
+      "replicas": 2
+    },
+    {
+      "namespace": "ngpos-fuel",
+      "kind": "Deployment",
+      "name": "pos-service-fuel-eodaccountreporting",
+      "action": "scale",
+      "replicas": 2
+    },
+    {
+      "namespace": "ngpos-fuel",
+      "kind": "Deployment",
+      "name": "pos-service-fuel-fdc-operation",
+      "action": "scale",
+      "replicas": 2
+    },
+    {
+      "namespace": "ngpos-fuel",
+      "kind": "Deployment",
+      "name": "pos-service-fuel-fdc-transaction",
+      "action": "scale",
+      "replicas": 2
+    },
+    {
+      "namespace": "ngpos-fuel",
+      "kind": "Deployment",
+      "name": "pos-service-fuel-forecourt",
+      "action": "scale",
+      "replicas": 2
+    },
+    {
+      "namespace": "ngpos-fuel",
+      "kind": "Deployment",
+      "name": "pos-service-fuel-fuelingpointinformation",
+      "action": "scale",
+      "replicas": 2
+    },
+    {
+      "namespace": "ngpos-fuel",
+      "kind": "Deployment",
+      "name": "pos-service-fuel-fuelingpointtransaction",
+      "action": "scale",
+      "replicas": 2
+    },
+    {
+      "namespace": "ngpos-fuel",
+      "kind": "Deployment",
+      "name": "pos-service-fuel-noneps-ingestion",
+      "action": "scale",
+      "replicas": 2
+    },
+    {
+      "namespace": "ngpos-fuel",
+      "kind": "Deployment",
+      "name": "pos-service-fuel-pricechange-api",
+      "action": "scale",
+      "replicas": 2
+    },
+    {
+      "namespace": "ngpos-fuel",
+      "kind": "Deployment",
+      "name": "pos-service-fuel-pump-authorize",
+      "action": "scale",
+      "replicas": 2
+    },
+    {
+      "namespace": "ngpos-fuel",
+      "kind": "Deployment",
+      "name": "pos-service-fuel-tankmonitorreading",
+      "action": "scale",
+      "replicas": 2
+    },
+    {
+      "namespace": "ngpos-fuel",
+      "kind": "Deployment",
+      "name": "pos-service-fuel-transaction-workflow",
+      "action": "scale",
+      "replicas": 2
+    },
+    {
+      "namespace": "ngpos-fuel",
+      "kind": "Deployment",
+      "name": "pos-utils-fuel-dover-fusion-additech",
+      "action": "scale",
+      "replicas": 1
+    },
+    {
+      "namespace": "ngpos-fuel",
+      "kind": "Deployment",
+      "name": "pos-utils-fuel-dover-fusion-conexxus",
+      "action": "scale",
+      "replicas": 1
+    },
+    {
+      "namespace": "ngpos-fuel",
+      "kind": "Deployment",
+      "name": "pos-utils-fuel-dover-fusion-fc",
+      "action": "scale",
+      "replicas": 1
+    },
+    {
+      "namespace": "ngpos-fuel",
+      "kind": "Deployment",
+      "name": "pos-utils-fuel-dover-fusion-web",
+      "action": "scale",
+      "replicas": 1
+    },
+    {
+      "namespace": "ngpos-fuel",
+      "kind": "Deployment",
+      "name": "pos-utils-fuel-operations-workflow",
+      "action": "scale",
+      "replicas": 2
+    },
+    {
+      "namespace": "ngpos-fuel",
+      "kind": "StatefulSet",
+      "name": "pos-utils-fuel-dover-fusion-db",
+      "action": "scale",
+      "replicas": 1
+    },
+    {
+      "namespace": "ngpos-fuel-pci-l0",
+      "kind": "Deployment",
+      "name": "pos-service-fuel-eps-ingestion",
+      "action": "scale",
+      "replicas": 2
+    },
+    {
+      "namespace": "ngpos-fuel-pci-l0",
+      "kind": "Deployment",
+      "name": "pos-service-fuel-eps-sseevent-streaming",
+      "action": "scale",
+      "replicas": 2
+    },
+    {
+      "namespace": "ngpos-fuel-pci-l0",
+      "kind": "Deployment",
+      "name": "pos-service-fuel-pci-encryption",
+      "action": "scale",
+      "replicas": 2
+    },
+    {
+      "namespace": "ngpos-fuel-pci-l0",
+      "kind": "Deployment",
+      "name": "pos-utils-fuel-dover-cardcontroller",
+      "action": "scale",
+      "replicas": 1
+    },
+    {
+      "namespace": "ngpos-fuel-pci-l0",
+      "kind": "Deployment",
+      "name": "pos-utils-fuel-dover-catalogdrivensale",
+      "action": "scale",
+      "replicas": 1
+    },
+    {
+      "namespace": "ngpos-fuel-pci-l0",
+      "kind": "Deployment",
+      "name": "pos-utils-fuel-dover-configurationmanager",
+      "action": "scale",
+      "replicas": 1
+    },
+    {
+      "namespace": "ngpos-fuel-pci-l0",
+      "kind": "Deployment",
+      "name": "pos-utils-fuel-dover-customerexperiencecontroller",
+      "action": "scale",
+      "replicas": 1
+    },
+    {
+      "namespace": "ngpos-fuel-pci-l0",
+      "kind": "Deployment",
+      "name": "pos-utils-fuel-dover-fdccontrollerapi",
+      "action": "scale",
+      "replicas": 1
+    },
+    {
+      "namespace": "ngpos-fuel-pci-l0",
+      "kind": "Deployment",
+      "name": "pos-utils-fuel-dover-ixpaycontroller",
+      "action": "scale",
+      "replicas": 1
+    },
+    {
+      "namespace": "ngpos-fuel-pci-l0",
+      "kind": "Deployment",
+      "name": "pos-utils-fuel-dover-loyaltyhostcontroller",
+      "action": "scale",
+      "replicas": 1
+    },
+    {
+      "namespace": "ngpos-fuel-pci-l0",
+      "kind": "Deployment",
+      "name": "pos-utils-fuel-dover-posepsapicontroller",
+      "action": "scale",
+      "replicas": 1
+    },
+    {
+      "namespace": "ngpos-fuel-pci-l0",
+      "kind": "Deployment",
+      "name": "pos-utils-fuel-dover-transactioncontroller",
+      "action": "scale",
+      "replicas": 1
+    },
+    {
+      "namespace": "ngpos-fuel-pci-l0",
+      "kind": "Deployment",
+      "name": "pos-utils-fuel-dover-transactionstorageservicecontroller",
+      "action": "scale",
+      "replicas": 1
+    },
+    {
+      "namespace": "ngpos-fuel-pci-l1",
+      "kind": "Deployment",
+      "name": "pos-service-fuel-eps-loyalty-gateway",
+      "action": "scale",
+      "replicas": 2
+    },
+    {
+      "namespace": "ngpos-isa",
+      "kind": "Deployment",
+      "name": "pos-service-business-day-api",
+      "action": "scale",
+      "replicas": 2
+    },
+    {
+      "namespace": "ngpos-isa",
+      "kind": "Deployment",
+      "name": "pos-service-business-day-workflow",
+      "action": "scale",
+      "replicas": 2
+    },
+    {
+      "namespace": "ngpos-mx",
+      "kind": "Deployment",
+      "name": "kps-op-ngpp-1ppc-basket-service",
+      "action": "scale",
+      "replicas": 2
+    },
+    {
+      "namespace": "ngpos-mx",
+      "kind": "Deployment",
+      "name": "mx-edge-product-api",
+      "action": "scale",
+      "replicas": 2
+    },
+    {
+      "namespace": "ngpos-mx",
+      "kind": "Deployment",
+      "name": "mx-edge-product-search-api",
+      "action": "scale",
+      "replicas": 3
+    },
+    {
+      "namespace": "ngpos-mx",
+      "kind": "Deployment",
+      "name": "mx-not-on-file-api",
+      "action": "scale",
+      "replicas": 2
+    },
+    {
+      "namespace": "ngpos-mx",
+      "kind": "Deployment",
+      "name": "mxc-consumer",
+      "action": "scale",
+      "replicas": 3
+    },
+    {
+      "namespace": "ngpos-payments",
+      "kind": "Deployment",
+      "name": "payments-check-cashing",
+      "action": "scale",
+      "replicas": 1
+    },
+    {
+      "namespace": "ngpos-payments",
+      "kind": "Deployment",
+      "name": "pos-service-tender-restrictions",
+      "action": "scale",
+      "replicas": 2
+    },
+    {
+      "namespace": "ngpos-payments-pci",
+      "kind": "Deployment",
+      "name": "payments-acceptance-workflow",
+      "action": "scale",
+      "replicas": 2
+    },
+    {
+      "namespace": "ngpos-payments-pci",
+      "kind": "StatefulSet",
+      "name": "ngpos-pinpad-simulator",
+      "action": "scale",
+      "replicas": 8
+    },
+    {
+      "namespace": "ngpos-platform",
+      "kind": "Deployment",
+      "name": "elera-platform-admin-ui",
+      "action": "scale",
+      "replicas": 3
+    },
+    {
+      "namespace": "ngpos-platform",
+      "kind": "Deployment",
+      "name": "elera-platform-elera-platform",
+      "action": "scale",
+      "replicas": 2
+    },
+    {
+      "namespace": "ngpos-platform",
+      "kind": "Deployment",
+      "name": "elera-platform-nginx",
+      "action": "scale",
+      "replicas": 2
+    },
+    {
+      "namespace": "ngpos-platform",
+      "kind": "Deployment",
+      "name": "pos-elera-cloud-config",
+      "action": "scale",
+      "replicas": 2
+    },
+    {
+      "namespace": "ngpos-platform",
+      "kind": "Deployment",
+      "name": "pos-elera-dmo-service",
+      "action": "scale",
+      "replicas": 3
+    },
+    {
+      "namespace": "ngpos-platform",
+      "kind": "Deployment",
+      "name": "pos-elera-event-api",
+      "action": "scale",
+      "replicas": 2
+    },
+    {
+      "namespace": "ngpos-platform",
+      "kind": "Deployment",
+      "name": "pos-elera-event-service",
+      "action": "scale",
+      "replicas": 2
+    },
+    {
+      "namespace": "ngpos-platform",
+      "kind": "Deployment",
+      "name": "pos-elera-loader-catalog",
+      "action": "scale",
+      "replicas": 2
+    },
+    {
+      "namespace": "ngpos-platform",
+      "kind": "Deployment",
+      "name": "pos-elera-orchestration-api",
+      "action": "scale",
+      "replicas": 3
+    },
+    {
+      "namespace": "ngpos-platform",
+      "kind": "Deployment",
+      "name": "pos-elera-receipt-api",
+      "action": "scale",
+      "replicas": 2
+    },
+    {
+      "namespace": "ngpos-platform",
+      "kind": "Deployment",
+      "name": "pos-elera-sales-compliance",
+      "action": "scale",
+      "replicas": 2
+    },
+    {
+      "namespace": "ngpos-platform",
+      "kind": "Deployment",
+      "name": "pos-external-validation-service",
+      "action": "scale",
+      "replicas": 2
+    },
+    {
+      "namespace": "ngpos-platform",
+      "kind": "Deployment",
+      "name": "pos-identity-barcode-service",
+      "action": "scale",
+      "replicas": 3
+    },
+    {
+      "namespace": "ngpos-platform",
+      "kind": "Deployment",
+      "name": "pos-key-generation-service",
+      "action": "scale",
+      "replicas": 2
+    },
+    {
+      "namespace": "ngpos-platform",
+      "kind": "Deployment",
+      "name": "pos-ping-pong",
+      "action": "scale",
+      "replicas": 3
+    },
+    {
+      "namespace": "ngpos-platform",
+      "kind": "Deployment",
+      "name": "pos-receipts",
+      "action": "scale",
+      "replicas": 3
+    },
+    {
+      "namespace": "ngpos-platform",
+      "kind": "Deployment",
+      "name": "pos-service-sco-scheduler",
+      "action": "scale",
+      "replicas": 2
+    },
+    {
+      "namespace": "ngpos-platform",
+      "kind": "Deployment",
+      "name": "pos-service-sco-security",
+      "action": "scale",
+      "replicas": 1
+    },
+    {
+      "namespace": "ngpos-platform",
+      "kind": "Deployment",
+      "name": "vendo-web",
+      "action": "scale",
+      "replicas": 2
+    },
+    {
+      "namespace": "ngpos-platform",
+      "kind": "StatefulSet",
+      "name": "pos-elera-dmo-service-postgres",
+      "action": "scale",
+      "replicas": 1
+    },
+    {
+      "namespace": "ngpos-platform",
+      "kind": "Job",
+      "name": "cron-key-generation-rotate-key-iv-29671440",
+      "action": "patch_job",
+      "parallelism": 0
+    },
+    {
+      "namespace": "ngpos-platform",
+      "kind": "Job",
+      "name": "cron-key-generation-rotate-key-iv-29672880",
+      "action": "patch_job",
+      "parallelism": 0
+    },
+    {
+      "namespace": "ngpos-platform",
+      "kind": "Job",
+      "name": "cron-key-generation-rotate-key-iv-29674320",
+      "action": "patch_job",
+      "parallelism": 0
+    },
+    {
+      "namespace": "ngpos-platform",
+      "kind": "Job",
+      "name": "cron-key-generation-rotate-key-iv-29675760",
+      "action": "patch_job",
+      "parallelism": 0
+    },
+    {
+      "namespace": "ngpos-platform",
+      "kind": "Job",
+      "name": "pos-elera-orchestration-api-cron-restart-29675640",
+      "action": "patch_job",
+      "parallelism": 0
+    },
+    {
+      "namespace": "ngpos-platform",
+      "kind": "CronJob",
+      "name": "cron-key-generation-rotate-key-iv",
+      "action": "patch_cronjob",
+      "suspend": false
+    },
+    {
+      "namespace": "ngpos-platform",
+      "kind": "CronJob",
+      "name": "pos-elera-orchestration-api-cron-restart",
+      "action": "patch_cronjob",
+      "suspend": false
+    },
+    {
+      "namespace": "ngpos-shared",
+      "kind": "Deployment",
+      "name": "elasticsearch-alerts",
+      "action": "scale",
+      "replicas": 1
+    },
+    {
+      "namespace": "ngpos-shared",
+      "kind": "Deployment",
+      "name": "elk-readiness",
+      "action": "scale",
+      "replicas": 1
+    },
+    {
+      "namespace": "ngpos-shared",
+      "kind": "Deployment",
+      "name": "express",
+      "action": "scale",
+      "replicas": 0
+    },
+    {
+      "namespace": "ngpos-shared",
+      "kind": "Deployment",
+      "name": "ngpos-core-config-controller",
+      "action": "scale",
+      "replicas": 1
+    },
+    {
+      "namespace": "ngpos-shared",
+      "kind": "Deployment",
+      "name": "ngpos-core-mongo-portal-next",
+      "action": "scale",
+      "replicas": 1
+    },
+    {
+      "namespace": "ngpos-shared",
+      "kind": "Deployment",
+      "name": "ngpos-elk-kb",
+      "action": "scale",
+      "replicas": 1
+    },
+    {
+      "namespace": "ngpos-shared",
+      "kind": "Deployment",
+      "name": "ngpos-elk-saved-objects-import",
+      "action": "scale",
+      "replicas": 1
+    },
+    {
+      "namespace": "ngpos-shared",
+      "kind": "Deployment",
+      "name": "ngpos-unified-virtualizer",
+      "action": "scale",
+      "replicas": 1
+    },
+    {
+      "namespace": "ngpos-shared",
+      "kind": "Deployment",
+      "name": "pgweb",
+      "action": "scale",
+      "replicas": 1
+    },
+    {
+      "namespace": "ngpos-shared",
+      "kind": "Deployment",
+      "name": "store-config-api",
+      "action": "scale",
+      "replicas": 2
+    },
+    {
+      "namespace": "ngpos-shared",
+      "kind": "StatefulSet",
+      "name": "cache-redis-master",
+      "action": "scale",
+      "replicas": 1
+    },
+    {
+      "namespace": "ngpos-shared",
+      "kind": "StatefulSet",
+      "name": "cache-redis-replicas",
+      "action": "scale",
+      "replicas": 1
+    },
+    {
+      "namespace": "ngpos-shared",
+      "kind": "StatefulSet",
+      "name": "ngpos-core-mongo-portal",
+      "action": "scale",
+      "replicas": 1
+    },
+    {
+      "namespace": "ngpos-shared",
+      "kind": "StatefulSet",
+      "name": "ngpos-elk-es-nodes",
+      "action": "scale",
+      "replicas": 3
+    },
+    {
+      "namespace": "ngpos-shared",
+      "kind": "StatefulSet",
+      "name": "ngpos-mongodb",
+      "action": "scale",
+      "replicas": 3
+    },
+    {
+      "namespace": "ngpos-shared",
+      "kind": "StatefulSet",
+      "name": "ngpos-mongodb-arb",
+      "action": "scale",
+      "replicas": 0
+    },
+    {
+      "namespace": "ngpos-shared",
+      "kind": "StatefulSet",
+      "name": "ngpos-mongodb-platform",
+      "action": "scale",
+      "replicas": 3
+    },
+    {
+      "namespace": "ngpos-shared",
+      "kind": "StatefulSet",
+      "name": "ngpos-mongodb-platform-arb",
+      "action": "scale",
+      "replicas": 0
+    },
+    {
+      "namespace": "ngpos-shared",
+      "kind": "StatefulSet",
+      "name": "ngpos-rabbitmq-server",
+      "action": "scale",
+      "replicas": 3
+    },
+    {
+      "namespace": "ngpos-shared",
+      "kind": "Job",
+      "name": "ngpos-validator-29676320",
+      "action": "patch_job",
+      "parallelism": 0
+    },
+    {
+      "namespace": "ngpos-shared",
+      "kind": "CronJob",
+      "name": "ngpos-validator",
+      "action": "patch_cronjob",
+      "suspend": false
+    },
+    {
+      "namespace": "ngpos-shared-pci",
+      "kind": "Deployment",
+      "name": "elk-readiness",
+      "action": "scale",
+      "replicas": 1
+    },
+    {
+      "namespace": "ngpos-shared-pci",
+      "kind": "Deployment",
+      "name": "express",
+      "action": "scale",
+      "replicas": 0
+    },
+    {
+      "namespace": "ngpos-shared-pci",
+      "kind": "Deployment",
+      "name": "ngpos-core-config-controller",
+      "action": "scale",
+      "replicas": 1
+    },
+    {
+      "namespace": "ngpos-shared-pci",
+      "kind": "Deployment",
+      "name": "ngpos-core-mongo-portal-next",
+      "action": "scale",
+      "replicas": 1
+    },
+    {
+      "namespace": "ngpos-shared-pci",
+      "kind": "Deployment",
+      "name": "ngpos-unified-virtualizer",
+      "action": "scale",
+      "replicas": 1
+    },
+    {
+      "namespace": "ngpos-shared-pci",
+      "kind": "Deployment",
+      "name": "store-config-api",
+      "action": "scale",
+      "replicas": 2
+    },
+    {
+      "namespace": "ngpos-shared-pci",
+      "kind": "StatefulSet",
+      "name": "cache-redis-master",
+      "action": "scale",
+      "replicas": 1
+    },
+    {
+      "namespace": "ngpos-shared-pci",
+      "kind": "StatefulSet",
+      "name": "cache-redis-replicas",
+      "action": "scale",
+      "replicas": 1
+    },
+    {
+      "namespace": "ngpos-shared-pci",
+      "kind": "StatefulSet",
+      "name": "ngpos-core-mongo-portal",
+      "action": "scale",
+      "replicas": 1
+    },
+    {
+      "namespace": "ngpos-shared-pci",
+      "kind": "StatefulSet",
+      "name": "ngpos-mongodb",
+      "action": "scale",
+      "replicas": 3
+    },
+    {
+      "namespace": "ngpos-shared-pci",
+      "kind": "StatefulSet",
+      "name": "ngpos-mongodb-arb",
+      "action": "scale",
+      "replicas": 0
+    },
+    {
+      "namespace": "ngpos-shared-pci",
+      "kind": "StatefulSet",
+      "name": "ngpos-rabbitmq-server",
+      "action": "scale",
+      "replicas": 3
+    },
+    {
+      "namespace": "ngpos-tax",
+      "kind": "Deployment",
+      "name": "deta-c-lite-sync-chart",
+      "action": "scale",
+      "replicas": 1
+    },
+    {
+      "namespace": "ngpos-tax",
+      "kind": "Deployment",
+      "name": "deta-c-lite-sync-chart-1",
+      "action": "scale",
+      "replicas": 1
+    },
+    {
+      "namespace": "ngpos-tax",
+      "kind": "Deployment",
+      "name": "deta-c-tax-calc-lite-chart",
+      "action": "scale",
+      "replicas": 1
+    },
+    {
+      "namespace": "ngpos-tax",
+      "kind": "Deployment",
+      "name": "deta-c-tax-calc-lite-chart-1",
+      "action": "scale",
+      "replicas": 1
+    },
+    {
+      "namespace": "ngpos-tax",
+      "kind": "Deployment",
+      "name": "tax-calculation-service",
+      "action": "scale",
+      "replicas": 1
+    },
+    {
+      "namespace": "ngpos-tax",
+      "kind": "Deployment",
+      "name": "tax-consumer-service",
+      "action": "scale",
+      "replicas": 1
+    },
+    {
+      "namespace": "ngpos-tax",
+      "kind": "Job",
+      "name": "deta-c-tax-calc-lite-chart-cron-restart-29676320",
+      "action": "patch_job",
+      "parallelism": 0
+    },
+    {
+      "namespace": "ngpos-tax",
+      "kind": "CronJob",
+      "name": "deta-c-tax-calc-lite-chart-cron-restart",
+      "action": "patch_cronjob",
+      "suspend": false
+    },
+    {
+      "namespace": "prom-monitoring",
+      "kind": "Deployment",
+      "name": "ngpos-mongodb-platform-prometheus-mongodb-exporter",
+      "action": "scale",
+      "replicas": 1
+    },
+    {
+      "namespace": "prom-monitoring",
+      "kind": "Deployment",
+      "name": "ngpos-mongodb-prometheus-mongodb-exporter",
+      "action": "scale",
+      "replicas": 1
+    },
+    {
+      "namespace": "prom-monitoring",
+      "kind": "Deployment",
+      "name": "prometheus-rabbitmq-exporter",
+      "action": "scale",
+      "replicas": 1
+    },
+    {
+      "namespace": "prom-monitoring",
+      "kind": "Deployment",
+      "name": "prometheus-stack-kube-prom-operator",
+      "action": "scale",
+      "replicas": 1
+    },
+    {
+      "namespace": "prom-monitoring",
+      "kind": "Deployment",
+      "name": "prometheus-stack-kube-state-metrics",
+      "action": "scale",
+      "replicas": 1
+    },
+    {
+      "namespace": "prom-monitoring",
+      "kind": "Deployment",
+      "name": "redis-exporter",
+      "action": "scale",
+      "replicas": 1
+    },
+    {
+      "namespace": "prom-monitoring",
+      "kind": "StatefulSet",
+      "name": "prometheus-prometheus-stack-kube-prom-prometheus",
+      "action": "scale",
+      "replicas": 1
+    },
+    {
+      "namespace": "prom-monitoring",
+      "kind": "Job",
+      "name": "prometheus-stack-kube-prom-admission-create",
+      "action": "patch_job",
+      "parallelism": 1
+    },
+    {
+      "namespace": "prom-monitoring",
+      "kind": "Job",
+      "name": "prometheus-stack-kube-prom-admission-patch",
+      "action": "patch_job",
+      "parallelism": 1
+    }
+  ]
+  

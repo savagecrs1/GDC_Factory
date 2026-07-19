@@ -17,48 +17,48 @@ export interface PresetWorkload {
 export const PRESET_WORKLOADS: PresetWorkload[] = [
   {
     id: 'nginx-edge',
-    name: 'kroger-pos-engine',
+    name: 'edge-web',
     image: 'nginx:alpine',
-    port: 8080,
+    port: 80,
     replicas: 3,
-    description: 'Store point-of-sale checkout processing gateway with HA multi-lane routing.',
-    badge: 'Store POS',
+    description: 'Lightweight (~5MB) HTTP web server for testing basic traffic routing & HA.',
+    badge: 'Web Server',
   },
   {
-    id: 'aisle-vision',
-    name: 'aisle-spill-vision',
+    id: 'whoami-service',
+    name: 'whoami-service',
     image: 'traefik/whoami',
     port: 80,
-    replicas: 2,
-    description: 'Real-time aisle camera feed AI spill & out-of-stock anomaly detection proxy.',
-    badge: 'Computer Vision',
+    replicas: 3,
+    description: 'Echoes Pod hostname, IP, and HTTP headers. Great for verifying round-robin LB.',
+    badge: 'Load Balancing',
   },
   {
-    id: 'smart-cart',
-    name: 'smart-cart-gateway',
+    id: 'hello-demo',
+    name: 'hello-edge',
     image: 'nginxdemos/hello',
     port: 80,
-    replicas: 5,
-    description: 'Wi-Fi mesh telemetry aggregator for automated in-cart item scanning.',
-    badge: 'IoT Smart Cart',
+    replicas: 2,
+    description: 'Renders a visual HTML webpage displaying server hostname, IP, and uptime.',
+    badge: 'Visual Demo',
   },
   {
-    id: 'curbside-queue',
-    name: 'clicklist-curbside',
+    id: 'gcp-boutique',
+    name: 'gcp-boutique',
     image: 'gcr.io/google-samples/microservices-demo/frontend:v0.8.0',
     port: 8080,
     replicas: 2,
-    description: 'ClickList pickup order fulfillment and customer arrival notification dispatcher.',
-    badge: 'ClickList Pickup',
+    description: 'Official Google Cloud e-commerce storefront web UI microservice.',
+    badge: 'GCP Demo',
   },
   {
-    id: 'cooler-iot',
-    name: 'cooler-temp-monitor',
+    id: 'redis-cache',
+    name: 'edge-redis',
     image: 'redis:7.0-alpine',
     port: 6379,
     replicas: 1,
-    description: 'Refrigeration and freezer temperature sensor telemetry telemetry store.',
-    badge: 'IoT Cooler',
+    description: 'In-memory data store for high-performance edge caching testing.',
+    badge: 'Database',
   },
 ];
 
@@ -76,12 +76,13 @@ export default function WorkloadManager({ clusterName, projectId }: WorkloadMana
   const [terminalTarget, setTerminalTarget] = useState<{ name: string; namespace?: string } | null>(null);
 
   // Form state
-  const [appName, setAppName] = useState('kroger-pos-engine');
+  const [appName, setAppName] = useState('edge-web');
   const [image, setImage] = useState('nginx:alpine');
   const [replicas, setReplicas] = useState(3);
   const [port, setPort] = useState(80);
   const [namespace, setNamespace] = useState('default');
   const [network, setNetwork] = useState('default');
+  const [useGvisor, setUseGvisor] = useState(false);
   const [availableNetworks, setAvailableNetworks] = useState<any[]>([]);
   const [deploying, setDeploying] = useState(false);
 
@@ -337,6 +338,28 @@ spec:
                 ))}
               </select>
             </div>
+          </div>
+
+          <div className="pt-2">
+            <label className="flex items-center gap-3 p-3 rounded-xl bg-slate-900 border border-slate-800 cursor-pointer hover:border-slate-700 transition">
+              <input
+                type="checkbox"
+                checked={useGvisor}
+                onChange={(e) => setUseGvisor(e.target.checked)}
+                className="w-4 h-4 rounded bg-slate-950 border-slate-700 text-sky-500 focus:ring-0"
+              />
+              <div className="text-xs">
+                <div className="font-bold text-white flex items-center gap-2">
+                  <span>🛡️ Enable gVisor (`runsc`) Container Security Sandbox</span>
+                  <span className="text-[10px] bg-purple-950 text-purple-400 border border-purple-800 px-2 py-0.5 rounded-full font-mono">
+                    b/523229462
+                  </span>
+                </div>
+                <div className="text-slate-400 mt-0.5 text-[11px]">
+                  Executes workload inside lightweight Sentry kernel with `--platform=systrap` isolation (0 cluster restarts required).
+                </div>
+              </div>
+            </label>
           </div>
 
           {showYamlPreview && (

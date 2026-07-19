@@ -1,0 +1,206 @@
+#!/bin/bash
+
+set -euo pipefail
+
+WATCH_INTERVAL=5
+RETRY_INTERVAL=10
+
+declare -A NETWORK_NAMESPACES
+declare -a BG_PIDS=()
+
+# -----------------------------
+# ARG PARSER
+# -----------------------------
+parse_args() {
+  [[ $# -eq 0 ]] && echo "Use --network net=ns1,ns2" && exit 1
+
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --network)
+        shift
+        entry="$1"
+        net="${entry%%=*}"
+        ns="${entry#*=}"
+        NETWORK_NAMESPACES["$net"]="${ns//,/ }"
+        ;;
+    esac
+    shift
+  done
+}
+
+# -----------------------------
+# SCALE EVERYTHING
+# -----------------------------
+scale_everything() {
+  local ns=$1
+
+  kubectl scale deploy --all --replicas=0 -n "$ns" >/dev/null 2>&1 || true
+  kubectl scale sts --all --replicas=0 -n "$ns" >/dev/null 2>&1 || true
+
+  # DaemonSets (disable)
+  for ds in $(kubectl get ds -n "$ns" \
+    -o jsonpath='{.items[*].metadata.name}' 2>/dev/null || true); do
+
+    kubectl patch ds "$ds" -n "$ns" \
+      -p '{"spec":{"template":{"spec":{"nodeSelector":{"cleanup":"true"}}}}}' \
+      --type=merge >/dev/null 2>&1 || true
+  done
+
+  # Jobs
+  for job in $(kubectl get job -n "$ns" \
+    -o jsonpath='{.items[*].metadata.name}' 2>/dev/null || true); do
+
+    kubectl patch job "$job" -n "$ns" \
+      -p '{"spec":{"parallelism":0}}' \
+      --type=merge >/dev/null 2>&1 || true
+  done
+
+  # CronJobs
+  for cj in $(kubectl get cronjob -n "$ns" \
+    -o jsonpath='{.items[*].metadata.name}' 2>/dev/null || true); do
+
+    kubectl patch cronjob "$cj" -n "$ns" \
+      -p '{"spec":{"suspend":true}}' \
+      --type=merge >/dev/null 2>&1 || true
+  done
+}
+
+# -----------------------------
+# ✅ CLEAN EXIT FUNCTION
+# -----------------------------
+cleanup_and_exit() {
+  echo "🛑 All networks deleted. Cleaning up background processes..."
+
+  for pid in "${BG_PIDS[@]}"; do
+    kill "$pid" 2>/dev/null || true
+  done
+
+  echo "✅ Exit complete"
+  exit 0
+}
+
+# -----------------------------
+# ✅ WATCHDOG
+# -----------------------------
+watch_and_kill_reconcilers() {
+  (
+    while true; do
+      kubectl scale deploy --all \
+        -n config-management-system \
+        --replicas=0 >/dev/null 2>&1 || true
+
+      kubectl delete pods -n config-management-system \
+        --all --force --grace-period=0 --wait=false >/dev/null 2>&1 || true
+
+      sleep $WATCH_INTERVAL
+    done
+  ) &
+  BG_PIDS+=($!)
+}
+
+# -----------------------------
+# ✅ NETWORK LOOP
+# -----------------------------
+reconciler_loop() {
+  local net=$1
+
+  (
+    echo "[Net:$net] Monitoring..."
+
+    while true; do
+
+      # If network gone → exit loop
+      if ! kubectl get network "$net" &>/dev/null; then
+        echo "[Net:$net] Network deleted ✅"
+        break
+      fi
+
+      all_clean=true
+
+      for ns in ${NETWORK_NAMESPACES[$net]}; do
+
+        pods=$(kubectl get pods -n "$ns" --no-headers 2>/dev/null || true)
+        pod_count=$(echo "$pods" | awk 'NF{c++} END{print c+0}')
+
+        if (( pod_count == 0 )); then
+          echo "[Net:$net] $ns → CLEAN ✅"
+        else
+          echo "[Net:$net] $ns → $pod_count pod(s) remaining"
+        fi
+
+        # Always enforce scaling
+        scale_everything "$ns"
+
+        if (( pod_count > 0 )); then
+          all_clean=false
+
+          for p in $(echo "$pods" | awk '{print $1}'); do
+            [[ -z "$p" ]] && continue
+
+            # Patch finalizer only if exists
+            finalizers=$(kubectl get pod "$p" -n "$ns" \
+              -o jsonpath='{.metadata.finalizers}' 2>/dev/null || echo "")
+
+            if [[ -n "$finalizers" ]]; then
+              kubectl patch pod "$p" -n "$ns" \
+                -p '{"metadata":{"finalizers":[]}}' \
+                --type=merge >/dev/null 2>&1 || true
+            fi
+
+            kubectl delete pod "$p" -n "$ns" \
+              --force --grace-period=0 --wait=false >/dev/null 2>&1 || true
+          done
+        fi
+      done
+
+      # ✅ If all clean → delete network
+      if [[ "$all_clean" == "true" ]]; then
+        echo "[Net:$net] ✅ Deleting network..."
+        kubectl delete network "$net" >/dev/null 2>&1 || true
+        break
+      fi
+
+      sleep $RETRY_INTERVAL
+    done
+  ) &
+
+  BG_PIDS+=($!)
+}
+
+# -----------------------------
+# ✅ GLOBAL MONITOR
+# -----------------------------
+monitor_networks_and_exit() {
+  while true; do
+
+    all_deleted=true
+    for net in "${!NETWORK_NAMESPACES[@]}"; do
+      if kubectl get network "$net" &>/dev/null; then
+        all_deleted=false
+        break
+      fi
+    done
+
+    if [[ "$all_deleted" == "true" ]]; then
+      cleanup_and_exit
+    fi
+
+    sleep 3
+  done
+}
+
+# -----------------------------
+# MAIN
+# -----------------------------
+parse_args "$@"
+
+echo "🚀 Starting cleanup..."
+
+watch_and_kill_reconcilers
+
+for net in "${!NETWORK_NAMESPACES[@]}"; do
+  reconciler_loop "$net"
+done
+
+# ✅ Monitor and exit
+monitor_networks_and_exit

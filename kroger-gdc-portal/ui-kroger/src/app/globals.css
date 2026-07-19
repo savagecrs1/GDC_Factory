@@ -1,0 +1,109 @@
+@import "tailwindcss";
+
+:root {
+  --background: #f4f6f9;
+  --foreground: #0f172a;
+  --card: rgba(255, 255, 255, 0.90);
+  --card-border: rgba(203, 213, 225, 0.8);
+  --primary: #00509d;
+  --primary-glow: rgba(0, 80, 157, 0.20);
+  --accent: #ff6600;
+  --accent-glow: rgba(255, 102, 0, 0.25);
+  --success: #10b981;
+  --warning: #f59e0b;
+  --error: #ef4444;
+}
+
+body {
+  background-color: var(--background);
+  color: var(--foreground);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  min-height: 100vh;
+  overflow-x: hidden;
+  background-image: 
+    radial-gradient(at 0% 0%, rgba(0, 80, 157, 0.08) 0px, transparent 50%),
+    radial-gradient(at 100% 0%, rgba(255, 102, 0, 0.06) 0px, transparent 50%),
+    radial-gradient(at 50% 100%, rgba(241, 245, 249, 0.9) 0px, transparent 60%);
+  background-attachment: fixed;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(226, 232, 240, 0.6);
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(148, 163, 184, 0.7);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 80, 157, 0.7);
+}
+
+/* Glassmorphism utilities */
+.glass-panel {
+  background: var(--card);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--card-border);
+  box-shadow: 0 4px 20px 0 rgba(0, 0, 0, 0.05);
+}
+
+.glass-panel-interactive {
+  background: var(--card);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--card-border);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.glass-panel-interactive:hover {
+  border-color: rgba(0, 80, 157, 0.6);
+  box-shadow: 0 4px 25px var(--primary-glow);
+  transform: translateY(-2px);
+}
+
+/* Terminal & Log Console Light Mode Styling */
+.terminal-window {
+  background: #ffffff !important;
+  border: 1px solid #cbd5e1 !important;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05) !important;
+  color: #0f172a !important;
+}
+.terminal-window [class*="text-slate-"] { color: #334155 !important; }
+.terminal-window [class*="text-sky-"] { color: #00509d !important; }
+.terminal-window [class*="text-emerald-"] { color: #059669 !important; }
+.terminal-window [class*="text-rose-"] { color: #e11d48 !important; }
+.terminal-window [class*="text-amber-"] { color: #d97706 !important; }
+
+/* Pulse glow animations */
+@keyframes pulse-glow {
+  0%, 100% { opacity: 0.8; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.03); }
+}
+
+.animate-pulse-glow {
+  animation: pulse-glow 3s infinite ease-in-out;
+}
+
+/* Universal Kroger Light Mode Theme & Contrast Overrides */
+[class*="text-white"] { color: #0f172a !important; }
+[class*="text-slate-20"] { color: #1e293b !important; }
+[class*="text-slate-30"] { color: #334155 !important; }
+[class*="text-slate-40"] { color: #475569 !important; }
+[class*="text-slate-50"] { color: #475569 !important; }
+[class*="bg-slate-9"] { background-color: #ffffff !important; border-color: #cbd5e1 !important; color: #0f172a !important; }
+[class*="bg-slate-8"] { background-color: #f1f5f9 !important; border-color: #cbd5e1 !important; color: #0f172a !important; }
+[class*="bg-slate-7"] { background-color: #e2e8f0 !important; border-color: #cbd5e1 !important; color: #0f172a !important; }
+[class*="bg-black"] { background-color: #ffffff !important; border-color: #cbd5e1 !important; color: #0f172a !important; }
+[class*="border-slate-"] { border-color: #cbd5e1 !important; }
+[class*="hover:bg-slate-"]:hover { background-color: #e2e8f0 !important; color: #00509d !important; }
+input, select, textarea { background-color: #ffffff !important; color: #0f172a !important; border-color: #94a3b8 !important; }
+input::placeholder, textarea::placeholder { color: #64748b !important; }
+header.glass-panel { background: rgba(255, 255, 255, 0.98) !important; border-bottom: 2px solid #00509d !important; }

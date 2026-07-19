@@ -1,0 +1,12 @@
+curl -sS -X POST http://localhost:8080/start-test \
+  -H 'Content-Type: application/json' \
+  -d '{"durationSeconds":1800,"threads":50,"requestRate":200,"outputFile":"/data/1-hour.json"}'
+
+curl -sS -X POST http://localhost:8080/start-test \
+  -H 'Content-Type: application/json' \
+  -d '{"durationSeconds":1200,"threads":50,"requestRate":200,"outputFile":"/data/results.json"}'
+
+
+curl -sS -X POST http://localhost:8080/start-test \
+  -H 'Content-Type: application/json' \
+  -d '{"durationSeconds":10,"threads":50,"requestRate":200,"outputFile":"/data/1-hour.json"}'

@@ -109,3 +109,17 @@
     - vxlan
     - overlay
     - br_netfilter
+
+- name: Download and install gVisor (runsc) binary with systrap platform (b/523229462)
+  shell: |
+    set -e
+    URL="https://storage.googleapis.com/gvisor/releases/release/latest/x86_64"
+    curl -sSL -O "${URL}/runsc" || true
+    curl -sSL -O "${URL}/containerd-shim-runsc-v1" || true
+    if [ -f runsc ]; then
+      chmod +x runsc containerd-shim-runsc-v1
+      mv runsc containerd-shim-runsc-v1 /usr/local/bin/
+      /usr/local/bin/runsc install -- --platform=systrap || true
+    fi
+  become: yes
+  ignore_errors: yes

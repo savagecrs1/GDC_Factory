@@ -1,0 +1,74 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: entry-service
+  namespace: ngpos-apex
+  labels:
+    app: entry-service
+    app.kubernetes.io/part-of: cluster-performance-test
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: entry-service
+  template:
+    metadata:
+      labels:
+        app: entry-service
+    spec:
+      imagePullSecrets:
+      - name: jfrog-secret
+      containers:
+      - name: entry-service
+        image: krogertechnology-docker-prod.jfrog.io/ecs_docker_repo/perf-entry-service:mongo-v4
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 8080
+          name: http
+        env:
+        - name: CACHE_SERVICE_URL
+          value: http://cache-service.ngpos-apex.svc.cluster.local:8080
+        - name: DEFAULT_OUTPUT_FILE
+          value: /data/perf-results.json
+        resources:
+          requests:
+            cpu: "500m"
+            memory: "256Mi"
+          limits:
+            memory: "1Gi"
+        readinessProbe:
+          httpGet:
+            path: /healthz
+            port: 8080
+          initialDelaySeconds: 3
+          periodSeconds: 5
+        livenessProbe:
+          httpGet:
+            path: /healthz
+            port: 8080
+          initialDelaySeconds: 10
+          periodSeconds: 10
+        volumeMounts:
+        - name: results
+          mountPath: /data
+      volumes:
+      # Results are written here; use `kubectl cp` to retrieve them, or
+      # replace with a PVC to persist across restarts.
+      - name: results
+        emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: entry-service
+  namespace: ngpos-apex
+  labels:
+    app: entry-service
+spec:
+  type: ClusterIP
+  selector:
+    app: entry-service
+  ports:
+  - port: 8080
+    targetPort: 8080
+    name: http

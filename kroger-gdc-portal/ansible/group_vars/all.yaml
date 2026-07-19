@@ -25,9 +25,7 @@ gcp_cluster_admin_sa: "gem-cluster-admin@{{ gcp_project_id }}.iam.gserviceaccoun
 gcp_edge_container_sa: "service-{{ gcp_project_number }}@gcp-sa-edgecontainer.iam.gserviceaccount.com"
 
 # List of Google Cloud user emails (e.g. admin@example.com) to grant cluster-admin access via GKE Connect Gateway
-gcp_admin_users:
-  - "admin@chrissavage.altostrat.com"
-  - "chrissavage@google.com"
+gcp_admin_users: []
 
 # The default GDC bare-metal release version to install on the Admin Workstation
 bmctl_version: "1.33.300-gke.60"

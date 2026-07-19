@@ -1,36 +1,28 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Google Distributed Cloud (Software-Only) Web Portal
 
-## Getting Started
+This is the standard React / Next.js web portal for managing Google Distributed Cloud Software-Only (GDCSO) hybrid environments.
 
-First, run the development server:
+---
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+## 🚀 Key Portal Features
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+1. **Fleet Hub**: Multi-project cluster discovery, GKE Connect Fleet status monitoring, and simulated environment detection.
+2. **Operations Console**: Top navigation bar indicator tracking active provisioning and teardown jobs with live log streaming.
+3. **Cluster Provisioner**: Step-by-step Anthos Bare Metal cluster orchestration.
+4. **Sentinel AI Engine**: Automated diagnostic triage and self-healing.
+5. **GDC Web Console**: Web-based IAP-tunneled shell into node VMs and KubeVirt containers.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+---
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## 🛡️ Upcoming Capabilities & Roadmap Features
 
-## Learn More
+### 1. 🌐 GDC Connectivity & Network Diagnostics Suite
+Allows engineers to test GDC network communications via a **"Test GDC Connectivity"** button:
+* Probes `googleapis.com:443` and `gkeconnect.googleapis.com:443` (HTTP/2 ALPN gRPC check).
+* Pinpoints VLAN 802.1Q switch trunking errors, Cloud NAT egress issues, MTU fragmentation, and inter-node firewall port blocks.
 
-To learn more about Next.js, take a look at the following resources:
+### 2. 🛡️ gVisor (`runsc`) Sandbox Simulation (`b/523229462`)
+Simulates physical GDC container sandboxing using gVisor (`runsc` runtime with `--platform=systrap` configuration). Per-workload toggle without cluster recreation.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+### 3. 💾 `ReadWriteMany` (RWX) Shared Storage Simulation
+Support for multi-pod concurrent read/write shared volumes (`shared-rwx` StorageClass).

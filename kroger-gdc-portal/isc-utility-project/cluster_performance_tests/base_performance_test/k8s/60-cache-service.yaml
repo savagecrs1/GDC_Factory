@@ -1,0 +1,69 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cache-service
+  namespace: ngpos-platform
+  labels:
+    app: cache-service
+    app.kubernetes.io/part-of: cluster-performance-test
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: cache-service
+  template:
+    metadata:
+      labels:
+        app: cache-service
+    spec:
+      imagePullSecrets:
+      - name: jfrog-secret
+      containers:
+      - name: cache-service
+        image: krogertechnology-docker-prod.jfrog.io/ecs_docker_repo/perf-cache-service:v2
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 8080
+          name: http
+        env:
+        - name: REDIS_ADDR
+          value: redis:6379
+        - name: CPU_SERVICE_URL
+          value: http://cpu-service:8080
+        - name: CACHE_KEYSPACE
+          value: "1000"
+        resources:
+          requests:
+            cpu: "750m"
+            memory: "768Mi"
+          limits:
+            cpu: "2"
+            memory: "2Gi"
+        readinessProbe:
+          httpGet:
+            path: /healthz
+            port: 8080
+          initialDelaySeconds: 3
+          periodSeconds: 5
+        livenessProbe:
+          httpGet:
+            path: /healthz
+            port: 8080
+          initialDelaySeconds: 10
+          periodSeconds: 10
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: cache-service
+  namespace: ngpos-platform
+  labels:
+    app: cache-service
+spec:
+  type: ClusterIP
+  selector:
+    app: cache-service
+  ports:
+  - port: 8080
+    targetPort: 8080
+    name: http

@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Activity, Cpu, HardDrive, Server, Shield, CheckCircle2, AlertTriangle, RefreshCw, Play, Square, ExternalLink, Terminal, ShieldAlert, Zap, CheckCircle } from 'lucide-react';
+import { Activity, Cpu, HardDrive, Server, Shield, CheckCircle2, AlertTriangle, RefreshCw, Play, Square, ExternalLink, Terminal, ShieldAlert, Zap, CheckCircle, Trash2 } from 'lucide-react';
 import WebTerminalModal from './WebTerminalModal';
 
 interface DashboardProps {
@@ -34,7 +34,8 @@ export default function Dashboard({ clusterName, projectId, setActiveTab }: Dash
     benchmarkRedis: true,
     benchmarkPg: false,
     runSentinel: true,
-    runTeardown: false,
+    runTeardown: true,
+    dryRun: false,
     smtpHost: '',
     smtpPort: '587',
     smtpUser: '',
@@ -209,6 +210,23 @@ export default function Dashboard({ clusterName, projectId, setActiveTab }: Dash
             className="flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-sky-500 to-indigo-600 hover:from-sky-400 hover:to-indigo-500 text-white text-sm font-semibold shadow-lg shadow-sky-500/20 transition"
           >
             Deploy New Cluster
+          </button>
+          <button
+            onClick={() => {
+              if (confirm(`⚠️ Are you sure you want to destroy and tear down cluster "${clusterName}" in project "${projectId || 'core-edge-dm1'}"? This cannot be undone.`)) {
+                fetch('/api/infrastructure/provision', {
+                  method: 'DELETE',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ projectId: projectId || 'core-edge-dm1', clusterName, machineType: 'n2-standard-8', ipMode: 'internal' }),
+                });
+                setActiveTab('provision');
+              }
+            }}
+            className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 text-sm font-semibold transition border border-rose-500/30 shadow-lg shadow-rose-500/10"
+            title="Initiate full teardown and destruction of this cluster"
+          >
+            <Trash2 className="w-4 h-4 text-rose-400" />
+            Tear Down Cluster
           </button>
         </div>
       </div>
@@ -666,6 +684,10 @@ export default function Dashboard({ clusterName, projectId, setActiveTab }: Dash
                   <label className="flex items-center gap-2.5 cursor-pointer">
                     <input type="checkbox" checked={harnessConfig.runTeardown} onChange={e => setHarnessConfig({...harnessConfig, runTeardown: e.target.checked})} className="rounded bg-slate-800 border-slate-600 text-purple-500 focus:ring-0" />
                     <span><strong>Phase 5:</strong> Clean Teardown & Decommission Cloud Resources</span>
+                  </label>
+                  <label className="flex items-center gap-2.5 cursor-pointer border-t border-slate-800/80 pt-2.5 mt-1.5">
+                    <input type="checkbox" checked={harnessConfig.dryRun} onChange={e => setHarnessConfig({...harnessConfig, dryRun: e.target.checked})} className="rounded bg-slate-800 border-slate-600 text-purple-500 focus:ring-0" />
+                    <span className="text-purple-300 font-bold">🧪 Dry-Run Mode (Simulate Provision/Destroy)</span>
                   </label>
                 </div>
               </div>

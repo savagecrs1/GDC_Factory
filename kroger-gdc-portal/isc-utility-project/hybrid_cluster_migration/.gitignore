@@ -1,0 +1,3 @@
+# GDCE recovery orchestrator — per-run temp baselines (verify/drain; PID suffix)
+.gdce_recovery_baselines.*/
+./rehydration-report.txt

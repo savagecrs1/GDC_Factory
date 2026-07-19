@@ -1,0 +1,85 @@
+apiVersion: v1
+kind: Secret
+metadata:
+  name: postgres-credentials
+  namespace: ngpos-platform
+  labels:
+    app: postgres
+type: Opaque
+stringData:
+  POSTGRES_USER: perf
+  POSTGRES_PASSWORD: perf
+  POSTGRES_DB: perf
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: postgres
+  namespace: ngpos-platform
+  labels:
+    app: postgres
+    app.kubernetes.io/part-of: cluster-performance-test
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: postgres
+  template:
+    metadata:
+      labels:
+        app: postgres
+    spec:
+      imagePullSecrets:
+      - name: jfrog-secret
+      containers:
+      - name: postgres
+        image: postgres:16-alpine
+        envFrom:
+        - secretRef:
+            name: postgres-credentials
+        env:
+        - name: PGDATA
+          value: /var/lib/postgresql/data/pgdata
+        ports:
+        - containerPort: 5432
+          name: postgres
+        resources:
+          requests:
+            cpu: "1500m"
+            memory: "2Gi"
+          limits:
+            cpu: "4"
+            memory: "4Gi"
+        readinessProbe:
+          exec:
+            command: [ "sh", "-c", "pg_isready -U $POSTGRES_USER -d $POSTGRES_DB" ]
+          initialDelaySeconds: 5
+          periodSeconds: 5
+        livenessProbe:
+          exec:
+            command: [ "sh", "-c", "pg_isready -U $POSTGRES_USER -d $POSTGRES_DB" ]
+          initialDelaySeconds: 15
+          periodSeconds: 10
+        volumeMounts:
+        - name: data
+          mountPath: /var/lib/postgresql/data
+      volumes:
+      # emptyDir keeps the test stack ephemeral; swap for a PVC to persist data.
+      - name: data
+        emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres
+  namespace: ngpos-platform
+  labels:
+    app: postgres
+spec:
+  type: ClusterIP
+  selector:
+    app: postgres
+  ports:
+  - port: 5432
+    targetPort: 5432
+    name: postgres

@@ -24,6 +24,16 @@ if [[ -z "${PROJECT_ID}" ]]; then
   exit 1
 fi
 
+echo "🔍 Checking local prerequisites..."
+if ! command -v gke-gcloud-auth-plugin >/dev/null 2>&1; then
+  echo "⚠️ WARNING: 'gke-gcloud-auth-plugin' is not installed locally on this host."
+  echo "   This plugin is required to connect to GDC clusters locally via GKE Connect Gateway."
+  echo "   To install, run: gcloud components install gke-gcloud-auth-plugin"
+  echo ""
+else
+  echo "✅ Local check passed: 'gke-gcloud-auth-plugin' is installed."
+fi
+
 echo "🔍 Verifying GCP project '${PROJECT_ID}' exists and is accessible..."
 if ! gcloud projects describe "${PROJECT_ID}" >/dev/null 2>&1; then
   echo "❌ ERROR: Project '${PROJECT_ID}' does not exist or you do not have permission to access it!"
@@ -136,13 +146,6 @@ if [[ -n "$PUB_KEY" ]]; then
   gcloud compute project-info add-metadata --project="${PROJECT_ID}" --metadata-from-file=ssh-keys=/tmp/gcp_ssh_key.pub --quiet 2>/dev/null || true
   rm -f /tmp/gcp_ssh_key.pub
   echo "✅ SSH public key injected into project '${PROJECT_ID}'."
-
-echo "🛡️ Pre-flight check: Disabling compute instance deletion protection across target deployment VMs (scoped mitigation)..."
-for inst in $(gcloud compute instances list --project="${PROJECT_ID}" --filter="name=(gem-admin-ws, gem-edge-router) OR name ~ ^${CLUSTER_NAME}-node-.*" --format="value(name)" 2>/dev/null); do
-  echo "  -> Removing deletion protection lock on target managed instance: $inst"
-  gcloud compute instances update "$inst" --project="${PROJECT_ID}" --zone="us-central1-a" --no-deletion-protection --quiet 2>/dev/null || true
-done
-echo "✅ Scoped deletion protection check complete. Unrelated project VMs untouched."
 else
   echo "⚠️ No local SSH public key found in ~/.ssh. Skipping SSH key injection."
 fi

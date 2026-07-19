@@ -1,10 +1,9 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Shield, Cloud, Server, Cpu, LogOut, Terminal, Layers, Activity, RefreshCw, Network, Bot, GitBranch, BarChart3, Palette } from 'lucide-react';
+import { Shield, Cloud, Server, Cpu, LogOut, Terminal, Layers, Activity, RefreshCw, Network, Bot, GitBranch } from 'lucide-react';
 import ProjectSelector from '@/components/ProjectSelector';
-import { usePortalConfig } from '@/components/ConfigProvider';
-import ThemeStudioModal from '@/components/ThemeStudioModal';
+import OperationsIndicator from '@/components/OperationsIndicator';
 
 interface NavbarProps {
   activeTab: string;
@@ -13,6 +12,7 @@ interface NavbarProps {
   setClusterName: (name: string) => void;
   projectId: string;
   setProjectId: (id: string) => void;
+  onSelectJobId?: (jobId: string) => void;
 }
 
 export default function Navbar({
@@ -22,11 +22,10 @@ export default function Navbar({
   setClusterName,
   projectId,
   setProjectId,
+  onSelectJobId,
 }: NavbarProps) {
   const [auth, setAuth] = useState<any>(null);
   const [isEditingEnv, setIsEditingEnv] = useState(false);
-  const [isStudioOpen, setIsStudioOpen] = useState(false);
-  const { config } = usePortalConfig();
 
   useEffect(() => {
     fetch('/api/auth')
@@ -35,44 +34,26 @@ export default function Navbar({
       .catch(console.error);
   }, []);
 
-  const allNavItems = [
-    { id: 'dashboard', label: 'Overview Dashboard', icon: Activity },
+  const navItems = [
+    { id: 'fleet', label: 'Fleet Hub', icon: Server },
     { id: 'provision', label: 'Cluster Provisioner', icon: Terminal },
-    { id: 'vms', label: 'GDC VM Runtime', icon: Cpu },
-    { id: 'workloads', label: 'K8s Workloads', icon: Layers },
-    { id: 'networks', label: 'VLAN & PCI Networks', icon: Network },
-    { id: 'configsync', label: 'GitOps Config Sync', icon: GitBranch },
-    { id: 'performance', label: 'Performance & Metrics', icon: BarChart3 },
-    { id: 'sentinel', label: 'AI Sentinel Engine', icon: Bot },
   ];
 
-  const navItems = allNavItems.filter(item => (config.enabledTabs || []).includes(item.id));
-
   return (
-    <header className="sticky top-0 z-50 glass-panel border-b border-slate-800 px-4 md:px-8 py-4 mb-6 shadow-lg">
-      <ThemeStudioModal isOpen={isStudioOpen} onClose={() => setIsStudioOpen(false)} />
-      <div className="w-full flex items-center justify-between">
+    <header className="sticky top-0 z-50 glass-panel border-b border-slate-800 px-4 md:px-8 lg:px-12 py-3.5 mb-6 shadow-lg">
+      <div className="w-full max-w-[1920px] mx-auto flex items-center justify-between">
         {/* Brand */}
-        <div className="flex items-center gap-4">
-          <div className="h-16 flex items-center justify-center pr-1">
-            {config.logoUrl ? (
-              <img src={config.logoUrl} alt={config.customerName} className="h-14 md:h-16 w-auto object-contain drop-shadow-md" />
-            ) : (
-              <img src="/kroger-logo.svg" alt="Kroger" className="h-14 md:h-16 w-auto object-contain drop-shadow-md" />
-            )}
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-sky-400 to-indigo-600 flex items-center justify-center shadow-lg shadow-sky-500/20">
+            <Cloud className="w-6 h-6 text-white" />
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <h1 className="font-bold text-lg tracking-tight text-white flex items-center gap-1.5 font-sans">
-                {config.customerName || "GDC Virtual Factory"} <span className="text-xs px-2 py-0.5 rounded-full bg-blue-500/20 text-blue-400 font-semibold border border-blue-500/30">Edge SO</span>
+              <h1 className="font-bold text-lg tracking-tight text-white flex items-center gap-1.5">
+                Google Distributed Cloud <span className="text-xs px-2 py-0.5 rounded-full bg-sky-500/20 text-sky-400 font-medium border border-sky-500/30">Hybrid SO</span>
               </h1>
             </div>
-            <p className="text-xs text-slate-400">
-              {config.operatingMode === 'emulate' && "🎭 Emulate Mode (Offline Sandbox) • "}
-              {config.operatingMode === 'argolis' && "☁️ Argolis Cloud Sandbox Mode • "}
-              {config.operatingMode === 'live' && "🏢 Live Production Mode • "}
-              Automated Workload & VM Operations
-            </p>
+            <p className="text-xs text-slate-400">Virtual Environment Workload & VM Portal</p>
           </div>
         </div>
 
@@ -87,7 +68,7 @@ export default function Navbar({
                 onClick={() => setActiveTab(item.id)}
                 className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
                   isActive
-                    ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-md shadow-blue-500/25'
+                    ? 'bg-gradient-to-r from-sky-500 to-indigo-500 text-white shadow-md shadow-sky-500/25'
                     : 'text-slate-400 hover:text-white hover:bg-slate-800/50'
                 }`}
               >
@@ -98,8 +79,9 @@ export default function Navbar({
           })}
         </nav>
 
-        {/* Auth, Studio & Environment Switcher */}
+        {/* Auth, Operations Indicator & Environment Switcher */}
         <div className="flex items-center gap-4">
+          <OperationsIndicator activeTab={activeTab} setActiveTab={setActiveTab} onSelectJobId={onSelectJobId} />
           <div className="hidden lg:flex items-center gap-3 border-r border-slate-800 pr-4">
             <div className="w-48">
               <ProjectSelector projectId={projectId} setProjectId={setProjectId} />
@@ -122,31 +104,20 @@ export default function Navbar({
               </div>
             ) : (
               <div
-                onClick={() => setIsEditingEnv(true)}
+                onClick={() => { if (clusterName) setIsEditingEnv(true); }}
                 className="cursor-pointer group flex flex-col items-end"
-                title="Click to edit cluster name"
+                title={clusterName ? "Click to edit cluster name" : "No cluster active"}
               >
                 <div className="flex items-center gap-1.5 text-xs text-sky-400 font-semibold group-hover:text-sky-300">
                   <Server className="w-3.5 h-3.5" />
-                  <span>{clusterName}</span>
+                  <span>{clusterName || 'Select a Cluster'}</span>
                 </div>
                 <span className="text-[10px] text-slate-400 group-hover:text-slate-300">
-                  Click to rename cluster
+                  {clusterName ? 'Click to rename cluster' : 'Go to Fleet Hub to select'}
                 </span>
               </div>
             )}
           </div>
-
-          {/* Studio Trigger */}
-          <button
-            type="button"
-            onClick={() => setIsStudioOpen(true)}
-            className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-gradient-to-r from-sky-500/20 to-emerald-500/20 hover:from-sky-500/30 hover:to-emerald-500/30 border border-sky-500/30 text-white text-xs font-bold transition shadow-sm"
-            title="Open GDC Edge Studio & Customer Portal Generator"
-          >
-            <Palette className="w-4 h-4 text-sky-400" />
-            <span className="hidden sm:inline">Theme Studio</span>
-          </button>
 
           {/* User Badge */}
           {auth?.user && (
@@ -167,6 +138,26 @@ export default function Navbar({
           )}
         </div>
       </div>
+
+      {/* Unauthenticated Warning Banner */}
+      {auth && auth.authenticated === false && (
+        <div className="bg-amber-950/90 border-b border-amber-500/50 px-4 py-2.5 text-xs text-amber-100 flex items-center justify-between shadow-md">
+          <div className="flex items-center gap-2.5">
+            <Shield className="w-4 h-4 text-amber-400 shrink-0 font-bold" />
+            <span className="leading-snug">
+              <strong className="text-white font-bold">GCP Authentication Required:</strong> No active <code className="text-amber-300 font-bold">gcloud</code> session found on host. Please run 
+              <code className="bg-slate-950 text-amber-400 border border-amber-500/40 px-2.5 py-0.5 rounded-md mx-1 font-mono font-bold text-[11px] shadow-sm">gcloud auth login && gcloud auth application-default login</code> 
+              in your terminal.
+            </span>
+          </div>
+          <button 
+            onClick={() => fetch('/api/auth').then(res => res.json()).then(setAuth)}
+            className="px-3 py-1 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold rounded-lg text-xs flex items-center gap-1.5 transition-colors shadow-sm shrink-0"
+          >
+            <RefreshCw className="w-3 h-3" /> Re-check Auth
+          </button>
+        </div>
+      )}
     </header>
   );
 }

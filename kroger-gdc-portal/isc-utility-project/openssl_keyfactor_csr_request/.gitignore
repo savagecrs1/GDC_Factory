@@ -1,0 +1,12 @@
+# Generated / sensitive crypto material — do not commit
+*.key
+*.pem
+*.p12
+*.pfx
+*.csr
+*.cer
+*.crt
+
+# Local OpenSSL / enrollment outputs
+**/newreq.*
+**/newcert.*

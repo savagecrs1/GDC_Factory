@@ -3,8 +3,8 @@ import path from 'path';
 import fs from 'fs';
 import { analyzeError } from './ai-watchdog';
 
-// Ensure standard CLI paths are available for bash/terraform/ansible execution
-process.env.PATH = `${process.env.PATH || ''}:/Users/chrissavage/google-cloud-sdk/bin:/opt/homebrew/bin:/usr/local/bin`;
+const homeDir = process.env.HOME || process.env.USERPROFILE || '';
+process.env.PATH = `${process.env.PATH || ''}:${homeDir}/google-cloud-sdk/bin:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin`;
 
 export interface LogLine {
   id: string;
@@ -21,6 +21,16 @@ export interface DeploymentJob {
   logs: LogLine[];
   listeners: ((line: LogLine) => void)[];
   process?: ChildProcess;
+  params?: {
+    projectId: string;
+    clusterName: string;
+    deployEdgeRouter: boolean;
+    machineType: string;
+    ipMode: string;
+    billingAccountId: string;
+    preDeployWorkloads: string[];
+    secondaryNetworks?: any[];
+  };
 }
 
 // Global in-memory job store for SSE subscriptions
@@ -37,7 +47,13 @@ const jobs: Record<string, DeploymentJob> = {
 function saveJobToDisk(job: DeploymentJob) {
   try {
     const filePath = path.join('/tmp', `gdc_job_${job.id}.json`);
-    const cleanJob = { id: job.id, status: job.status, currentStep: job.currentStep, logs: job.logs };
+    const cleanJob = {
+      id: job.id,
+      status: job.status,
+      currentStep: job.currentStep,
+      logs: job.logs,
+      params: job.params
+    };
     fs.writeFileSync(filePath, JSON.stringify(cleanJob, null, 2), 'utf-8');
   } catch (e) {
     console.warn('Could not save job to disk:', e);
@@ -45,26 +61,38 @@ function saveJobToDisk(job: DeploymentJob) {
 }
 
 export function getJob(jobId = 'default'): DeploymentJob {
-  if (!jobs[jobId] || (jobs[jobId].status === 'idle' && jobs[jobId].logs.length === 0)) {
-    let restoredJob: Partial<DeploymentJob> = {};
-    try {
-      const filePath = path.join('/tmp', `gdc_job_${jobId}.json`);
-      if (fs.existsSync(filePath)) {
-        restoredJob = JSON.parse(fs.readFileSync(filePath, 'utf-8'));
-      }
-    } catch (e) {
-      console.warn('Could not restore job from disk:', e);
+  let restoredJob: Partial<DeploymentJob> = {};
+  try {
+    const filePath = path.join('/tmp', `gdc_job_${jobId}.json`);
+    if (fs.existsSync(filePath)) {
+      restoredJob = JSON.parse(fs.readFileSync(filePath, 'utf-8'));
     }
-    jobs[jobId] = {
-      id: jobId,
-      status: restoredJob.status || 'idle',
-      currentStep: restoredJob.currentStep || 'Ready',
-      logs: restoredJob.logs || [],
-      listeners: jobs[jobId]?.listeners || [],
-      process: jobs[jobId]?.process,
-    };
+  } catch (e) {
+    console.warn('Could not restore job from disk:', e);
   }
+  jobs[jobId] = {
+    id: jobId,
+    status: restoredJob.status || jobs[jobId]?.status || 'idle',
+    currentStep: restoredJob.currentStep || jobs[jobId]?.currentStep || 'Ready',
+    logs: restoredJob.logs || jobs[jobId]?.logs || [],
+    listeners: jobs[jobId]?.listeners || [],
+    process: jobs[jobId]?.process,
+    params: restoredJob.params || jobs[jobId]?.params,
+  };
   return jobs[jobId];
+}
+
+export function getAllJobs(): DeploymentJob[] {
+  try {
+    const files = fs.readdirSync('/tmp').filter(f => f.startsWith('gdc_job_') && f.endsWith('.json'));
+    for (const file of files) {
+      const jobId = file.replace('gdc_job_', '').replace('.json', '');
+      getJob(jobId);
+    }
+  } catch (e) {
+    console.warn('Could not read jobs directory:', e);
+  }
+  return Object.values(jobs).filter(j => j.id !== 'default' || j.status !== 'idle');
 }
 
 export function subscribeToJob(jobId = 'default', listener: (line: LogLine) => void) {
@@ -76,11 +104,31 @@ export function subscribeToJob(jobId = 'default', listener: (line: LogLine) => v
 }
 
 export function appendLog(job: DeploymentJob, level: LogLine['level'], message: string, step?: string) {
+  // Strip ANSI control codes, carriage returns, backspaces, and escaped \b chars
+  let cleanMessage = message
+    .replace(/[\u001b\u009b][[()#;?]*(?:[0-9]{1,4}(?:;[0-9]{0,4})*)?[0-9A-ORZcf-nqry=><]/g, '')
+    .replace(/\\b|[\b\r]/g, '')
+    .trim();
+
+  if (!cleanMessage) return;
+
+  // Deduplicate Anthos/bmctl readiness polling spam
+  if (cleanMessage.includes('Requeueing') || cleanMessage.includes('Waiting for cluster to become ready')) {
+    const lastLog = job.logs[job.logs.length - 1];
+    if (lastLog && (lastLog.message.includes('Waiting for cluster to become ready') || lastLog.message.includes('Requeueing'))) {
+      lastLog.timestamp = new Date().toISOString();
+      lastLog.message = cleanMessage;
+      job.listeners.forEach((listener) => listener(lastLog));
+      saveJobToDisk(job);
+      return;
+    }
+  }
+
   const line: LogLine = {
     id: Math.random().toString(36).substring(2, 9),
     timestamp: new Date().toISOString(),
     level,
-    message: message.trim(),
+    message: cleanMessage,
     step: step || job.currentStep,
   };
   job.logs.push(line);
@@ -88,10 +136,20 @@ export function appendLog(job: DeploymentJob, level: LogLine['level'], message: 
   saveJobToDisk(job);
 }
 
+function getInstanceZone(name: string, project: string): string | null {
+  try {
+    const out = execSync(`gcloud compute instances list --filter="name=${name}" --project=${project} --format="value(zone)" --quiet`, { encoding: 'utf-8' }).trim();
+    return out || null;
+  } catch {
+    return null;
+  }
+}
+
 function resourceExistsInGcp(resourceType: 'instance' | 'bucket' | 'network', name: string, project: string): boolean {
   try {
     if (resourceType === 'instance') {
-      execSync(`gcloud compute instances describe ${name} --project=${project} --zone=us-central1-a --quiet`, { stdio: 'ignore' });
+      const zone = getInstanceZone(name, project);
+      return zone !== null;
     } else if (resourceType === 'bucket') {
       execSync(`gcloud storage buckets describe gs://${name} --quiet`, { stdio: 'ignore' });
     } else if (resourceType === 'network') {
@@ -110,53 +168,83 @@ export async function runDeploymentSequence(
   machineType: string = 'n2-standard-32',
   ipMode: string = 'internal',
   jobId = 'default',
-  billingAccountId = '0150AE-F3AB84-9BC087'
+  billingAccountId = '0150AE-F3AB84-9BC087',
+  preDeployWorkloads: string[] = [],
+  isResume: boolean = false,
+  secondaryNetworks?: any[]
 ) {
   const job = getJob(jobId);
   job.status = 'running';
-  job.logs = [];
+  
+  let resumeFrom = 0;
+  if (isResume) {
+    const stepStr = job.currentStep || '';
+    if (stepStr.includes('Step 1:')) resumeFrom = 1;
+    else if (stepStr.includes('Step 2a:')) resumeFrom = 2;
+    else if (stepStr.includes('Step 2b:')) resumeFrom = 3;
+    else if (stepStr.includes('Step 2c:')) resumeFrom = 4;
+    else if (stepStr.includes('Step 3:')) resumeFrom = 5;
+    else if (stepStr.includes('Step 4:')) resumeFrom = 6;
+    else if (stepStr.includes('Step 5:')) resumeFrom = 7;
+    else if (stepStr.includes('Step 6:')) resumeFrom = 8;
+    appendLog(job, 'info', `🔄 Resuming deployment sequence from: ${stepStr}`, 'Resuming');
+  } else {
+    job.logs = [];
+    job.params = { projectId, clusterName, deployEdgeRouter, machineType, ipMode, billingAccountId, preDeployWorkloads, secondaryNetworks };
+  }
+
   const rootDir = path.resolve(process.cwd(), '..');
   const saEmail = `tf-provisioner@${projectId}.iam.gserviceaccount.com`;
 
   try {
     // Step 1: Project Setup (IAM & API Enablement)
-    job.currentStep = 'Step 1: GCP Project & IAM Setup (project-setup.sh)';
-    appendLog(job, 'info', `Executing project-setup.sh for ${projectId} (Billing Account: ${billingAccountId})...`, job.currentStep);
-    await executeCommand('./project-setup.sh', [projectId], rootDir, { PROJECT_ID: projectId, BILLING_ACCOUNT_ID: billingAccountId }, job);
+    if (resumeFrom <= 1) {
+      job.currentStep = 'Step 1: GCP Project & IAM Setup (project-setup.sh)';
+      appendLog(job, 'info', `Executing project-setup.sh for ${projectId} (Billing Account: ${billingAccountId})...`, job.currentStep);
+      await executeCommand('./project-setup.sh', [projectId], rootDir, { PROJECT_ID: projectId, BILLING_ACCOUNT_ID: billingAccountId }, job);
+    }
 
     // Step 2a: Foundation Layer
-    job.currentStep = 'Step 2a: Deploying Foundation (terraform/foundation)';
-    appendLog(job, 'info', 'Initializing Terraform for foundation layer...', job.currentStep);
-    const tfFoundationDir = path.join(rootDir, 'terraform', 'foundation');
-    
-    await executeCommand('terraform', [
-      'init',
-      '-reconfigure',
-      `-backend-config=bucket=gem-${projectId}-tfstate`,
-      '-backend-config=prefix=foundation/state',
-      `-backend-config=impersonate_service_account=${saEmail}`
-    ], tfFoundationDir, { PROVISIONING_SA_EMAIL: saEmail }, job);
+    if (resumeFrom <= 2) {
+      job.currentStep = 'Step 2a: Deploying Foundation (terraform/foundation)';
+      appendLog(job, 'info', 'Initializing Terraform for foundation layer...', job.currentStep);
+      const tfFoundationDir = path.join(rootDir, 'terraform', 'foundation');
+      
+      await executeCommand('terraform', [
+        'init',
+        '-reconfigure',
+        `-backend-config=bucket=gem-${projectId}-tfstate`,
+        '-backend-config=prefix=foundation/state',
+        `-backend-config=impersonate_service_account=${saEmail}`
+      ], tfFoundationDir, { PROVISIONING_SA_EMAIL: saEmail }, job);
 
-    appendLog(job, 'info', 'Applying Terraform foundation layer...', job.currentStep);
-    await executeCommand('terraform', ['apply', '-auto-approve'], tfFoundationDir, { PROVISIONING_SA_EMAIL: saEmail }, job);
+      appendLog(job, 'info', 'Applying Terraform foundation layer...', job.currentStep);
+      await executeCommand('terraform', ['apply', '-auto-approve'], tfFoundationDir, { PROVISIONING_SA_EMAIL: saEmail }, job);
+    }
 
     // Step 2b: Admin Workstation Layer
-    job.currentStep = 'Step 2b: Checking Admin Workstation (terraform/admin-workstation)';
-    const tfWsDir = path.join(rootDir, 'terraform', 'admin-workstation');
-    appendLog(job, 'info', 'Initializing Terraform for local admin workstation layer...', job.currentStep);
-    await executeCommand('terraform', [
-      'init',
-      '-reconfigure',
-      `-backend-config=bucket=gem-${projectId}-tfstate`,
-      '-backend-config=prefix=admin-workstation/state',
-      `-backend-config=impersonate_service_account=${saEmail}`
-    ], tfWsDir, { PROVISIONING_SA_EMAIL: saEmail }, job);
+    if (resumeFrom <= 3) {
+      job.currentStep = 'Step 2b: Checking Admin Workstation (terraform/admin-workstation)';
+      const tfWsDir = path.join(rootDir, 'terraform', 'admin-workstation');
+      if (resourceExistsInGcp('instance', 'gem-admin-ws', projectId)) {
+        appendLog(job, 'info', `✅ Admin Workstation "gem-admin-ws" already exists in ${projectId}. Skipping creation!`, job.currentStep);
+      } else {
+        appendLog(job, 'info', 'Initializing Terraform for local admin workstation layer...', job.currentStep);
+        await executeCommand('terraform', [
+          'init',
+          '-reconfigure',
+          `-backend-config=bucket=gem-${projectId}-tfstate`,
+          '-backend-config=prefix=admin-workstation/state',
+          `-backend-config=impersonate_service_account=${saEmail}`
+        ], tfWsDir, { PROVISIONING_SA_EMAIL: saEmail }, job);
 
-    appendLog(job, 'info', 'Applying Terraform admin workstation layer...', job.currentStep);
-    await executeCommand('terraform', ['apply', '-auto-approve'], tfWsDir, { PROVISIONING_SA_EMAIL: saEmail }, job);
+        appendLog(job, 'info', 'Applying Terraform admin workstation layer...', job.currentStep);
+        await executeCommand('terraform', ['apply', '-auto-approve', `-var=project_id=${projectId}`], tfWsDir, { PROVISIONING_SA_EMAIL: saEmail }, job);
+      }
+    }
 
     // Step 2c: Edge Router Layer (Optional)
-    if (deployEdgeRouter) {
+    if (deployEdgeRouter && resumeFrom <= 4) {
       job.currentStep = 'Step 2c: Deploying Edge Router (terraform/edge-router)';
       appendLog(job, 'info', 'Initializing Terraform for edge router layer...', job.currentStep);
       const tfEdgeDir = path.join(rootDir, 'terraform', 'edge-router');
@@ -170,56 +258,153 @@ export async function runDeploymentSequence(
       ], tfEdgeDir, { PROVISIONING_SA_EMAIL: saEmail }, job);
 
       appendLog(job, 'info', 'Applying Terraform edge router layer...', job.currentStep);
-      await executeCommand('terraform', ['apply', '-auto-approve'], tfEdgeDir, { PROVISIONING_SA_EMAIL: saEmail }, job);
+      await executeCommand('terraform', ['apply', '-auto-approve', `-var=project_id=${projectId}`], tfEdgeDir, { PROVISIONING_SA_EMAIL: saEmail }, job);
     }
 
     // Step 3: Cluster VMs Layer
-    job.currentStep = `Step 3: Provisioning Cluster VMs (${clusterName})`;
-    appendLog(job, 'info', `Initializing Terraform for cluster layer (${clusterName})...`, job.currentStep);
-    const tfClusterDir = path.join(rootDir, 'terraform', 'cluster');
-    
-    await executeCommand('terraform', [
-      'init',
-      '-reconfigure',
-      `-backend-config=bucket=gem-${projectId}-tfstate`,
-      `-backend-config=prefix=clusters/${clusterName}/state`,
-      `-backend-config=impersonate_service_account=${saEmail}`
-    ], tfClusterDir, { PROVISIONING_SA_EMAIL: saEmail }, job);
+    if (resumeFrom <= 5) {
+      job.currentStep = `Step 3: Provisioning Cluster VMs (${clusterName})`;
+      appendLog(job, 'info', `Initializing Terraform for cluster layer (${clusterName})...`, job.currentStep);
+      const tfClusterDir = path.join(rootDir, 'terraform', 'cluster');
+      
+      await executeCommand('terraform', [
+        'init',
+        '-reconfigure',
+        `-backend-config=bucket=gem-${projectId}-tfstate`,
+        `-backend-config=prefix=clusters/${clusterName}/state`,
+        `-backend-config=impersonate_service_account=${saEmail}`
+      ], tfClusterDir, { PROVISIONING_SA_EMAIL: saEmail }, job);
 
-    appendLog(job, 'info', `Applying Terraform cluster VMs (${machineType}, ${ipMode} IP mode)...`, job.currentStep);
-    await executeCommand('terraform', [
-      'apply',
-      '-auto-approve',
-      `-var=cluster_name=${clusterName}`,
-      `-var=machine_type=${machineType}`
-    ], tfClusterDir, { PROVISIONING_SA_EMAIL: saEmail }, job);
+      appendLog(job, 'info', `Applying Terraform cluster VMs (${machineType}, ${ipMode} IP mode)...`, job.currentStep);
+      await executeCommand('terraform', [
+        'apply',
+        '-auto-approve',
+        `-var=cluster_name=${clusterName}`,
+        `-var=machine_type=${machineType}`,
+        `-var=project_id=${projectId}`
+      ], tfClusterDir, { PROVISIONING_SA_EMAIL: saEmail }, job);
+    }
 
     // Step 4: Ansible Workstation Preparation
-    job.currentStep = 'Step 4: Configuring Workstation Software (ansible/admin-workstation.yaml)';
-    appendLog(job, 'info', 'Ensuring SSH key metadata propagation to gem-admin-ws via gcloud...', job.currentStep);
-    try {
-      await executeCommand('gcloud', ['compute', 'ssh', 'gem-admin-ws', `--project=${projectId}`, '--zone=us-central1-a', '--command=echo SSH metadata verified'], rootDir, {}, job);
-    } catch (e) {
-      appendLog(job, 'warn', 'SSH pre-flight check non-fatal warning, continuing to Ansible...', job.currentStep);
+    if (resumeFrom <= 6) {
+      job.currentStep = 'Step 4: Configuring Workstation Software (ansible/admin-workstation.yaml)';
+      appendLog(job, 'info', 'Running Ansible admin-workstation.yaml (installing Docker, Helm, bmctl)...', job.currentStep);
+      const ansibleDir = path.join(rootDir, 'ansible');
+      await executeCommand('ansible-playbook', ['admin-workstation.yaml'], ansibleDir, { GCP_PROJECT_ID: projectId, TARGET_CLUSTER_NAME: clusterName, ANSIBLE_SSH_ARGS: '-o ControlMaster=no' }, job);
     }
-    appendLog(job, 'info', 'Running Ansible admin-workstation.yaml (installing Docker, Helm, bmctl)...', job.currentStep);
-    const ansibleDir = path.join(rootDir, 'ansible');
-    await executeCommand('ansible-playbook', ['admin-workstation.yaml'], ansibleDir, { GCP_PROJECT_ID: projectId, TARGET_CLUSTER_NAME: clusterName }, job);
 
     // Step 5: Ansible bmctl Cluster Creation
-    job.currentStep = `Step 5: Deploying Anthos Bare Metal Cluster via bmctl (create-cluster.yaml)`;
-    appendLog(job, 'info', `Running Ansible create-cluster.yaml for ${clusterName}...`, job.currentStep);
-    await executeCommand('ansible-playbook', ['create-cluster.yaml', '-e', `tf_cluster_name=${clusterName}`], ansibleDir, { GCP_PROJECT_ID: projectId, TARGET_CLUSTER_NAME: clusterName }, job);
+    if (resumeFrom <= 7) {
+      job.currentStep = `Step 5: Deploying Anthos Bare Metal Cluster via bmctl (create-cluster.yaml)`;
+      appendLog(job, 'info', `Running Ansible create-cluster.yaml for ${clusterName}...`, job.currentStep);
+      const ansibleDir = path.join(rootDir, 'ansible');
+      
+      const ansibleArgs = ['create-cluster.yaml', '-e', `tf_cluster_name=${clusterName}`];
+      
+      const activeSecNets = secondaryNetworks || job.params?.secondaryNetworks;
+      if (activeSecNets && activeSecNets.length > 0) {
+        const extraVarsFile = `/tmp/ansible_vars_${clusterName}.json`;
+        try {
+          fs.writeFileSync(extraVarsFile, JSON.stringify({ secondary_networks: activeSecNets }, null, 2), 'utf-8');
+          ansibleArgs.push('-e', `@${extraVarsFile}`);
+          appendLog(job, 'info', `Injecting customized secondary networks extra vars file: ${extraVarsFile}`, job.currentStep);
+        } catch (e: any) {
+          appendLog(job, 'warn', `Failed to write extra vars file: ${e.message}. Falling back to default inventory vars.`, job.currentStep);
+        }
+      }
 
+      await executeCommand('ansible-playbook', ansibleArgs, ansibleDir, { GCP_PROJECT_ID: projectId, TARGET_CLUSTER_NAME: clusterName, ANSIBLE_SSH_ARGS: '-o ControlMaster=no' }, job);
+    }
+
+    // Step 6: Deploying Workloads (Optional)
+    if (preDeployWorkloads && preDeployWorkloads.length > 0 && resumeFrom <= 8) {
+      job.currentStep = 'Step 6: Deploying Workload Presets';
+      appendLog(job, 'info', `Deploying workloads: ${preDeployWorkloads.join(', ')}...`, job.currentStep);
+      for (const wlId of preDeployWorkloads) {
+        appendLog(job, 'info', `Applying Kubernetes manifest for preset workload "${wlId}"...`, job.currentStep);
+        
+        let wlName = wlId;
+        let image = 'nginx:alpine';
+        let replicas = 3;
+        let port = 80;
+
+        if (wlId === 'kroger-pos-engine') {
+          wlName = 'kroger-pos-engine';
+          image = 'nginx:alpine';
+          replicas = 3;
+          port = 8080;
+        } else if (wlId === 'aisle-spill-vision') {
+          wlName = 'aisle-spill-vision';
+          image = 'traefik/whoami';
+          replicas = 2;
+          port = 80;
+        } else if (wlId === 'smart-cart-gateway') {
+          wlName = 'smart-cart-gateway';
+          image = 'nginxdemos/hello';
+          replicas = 5;
+          port = 80;
+        } else if (wlId === 'clicklist-curbside') {
+          wlName = 'clicklist-curbside';
+          image = 'gcr.io/google-samples/microservices-demo/frontend:v0.8.0';
+          replicas = 2;
+          port = 8080;
+        } else if (wlId === 'cooler-temp-monitor') {
+          wlName = 'cooler-temp-monitor';
+          image = 'redis:7.0-alpine';
+          replicas = 1;
+          port = 6379;
+        } else if (wlId === 'edge-web') {
+          wlName = 'edge-web';
+          image = 'nginx:alpine';
+          replicas = 3;
+          port = 80;
+        } else if (wlId === 'whoami-service') {
+          wlName = 'whoami-service';
+          image = 'traefik/whoami';
+          replicas = 3;
+          port = 80;
+        } else if (wlId === 'hello-edge') {
+          wlName = 'hello-edge';
+          image = 'nginxdemos/hello';
+          replicas = 2;
+          port = 80;
+        } else if (wlId === 'gcp-boutique') {
+          wlName = 'gcp-boutique';
+          image = 'gcr.io/google-samples/microservices-demo/frontend:v0.8.0';
+          replicas = 2;
+          port = 8080;
+        } else if (wlId === 'edge-redis') {
+          wlName = 'edge-redis';
+          image = 'redis:7.0-alpine';
+          replicas = 1;
+          port = 6379;
+        }
+
+        const kubeconfig = `/home/gem/bmctl-workspace/${clusterName}/${clusterName}-kubeconfig`;
+        const cmd = `sudo kubectl --kubeconfig=${kubeconfig} create deployment ${wlName} --image=${image} --replicas=${replicas} && sudo kubectl --kubeconfig=${kubeconfig} expose deployment ${wlName} --port=${port}`;
+        
+        const wsZone = getInstanceZone('gem-admin-ws', projectId) || 'us-central1-a';
+        appendLog(job, 'info', `SSHing to gem-admin-ws (zone: ${wsZone}) to execute: ${cmd}`, job.currentStep);
+        await executeCommand('gcloud', [
+          'compute', 'ssh', 'gem-admin-ws',
+          '--project', projectId,
+          '--zone', wsZone,
+          '--command', `"${cmd}"`
+        ], rootDir, {}, job);
+        
+        appendLog(job, 'success', `✅ Workload "${wlName}" successfully pre-deployed!`, job.currentStep);
+      }
+    }
     job.status = 'success';
     job.currentStep = 'Completed Successfully';
     appendLog(job, 'success', `🎉 Virtual GDC Cluster "${clusterName}" deployed and registered successfully!`, 'Completed');
   } catch (error: any) {
+    const failedStep = job.currentStep;
     job.status = 'failed';
-    job.currentStep = 'Failed';
-    appendLog(job, 'error', `Deployment Error: ${error.message || error}`, 'Failed');
+    job.currentStep = failedStep;
+    appendLog(job, 'error', `Deployment Error: ${error.message || error}`, failedStep);
     try {
-      analyzeError(job.currentStep || 'Infrastructure Provisioning', job.logs.map(l => l.message), projectId);
+      analyzeError(failedStep || 'Infrastructure Provisioning', job.logs.map(l => l.message), projectId);
     } catch (e) {
       console.error('Watchdog analysis error:', e);
     }
@@ -235,6 +420,18 @@ export async function runDestroySequence(
   jobId = 'default'
 ) {
   const job = getJob(jobId);
+  try {
+    const deployFilePath = path.join('/tmp', `gdc_job_${jobId}_deploy.json`);
+    fs.writeFileSync(deployFilePath, JSON.stringify({
+      id: job.id,
+      status: job.status,
+      currentStep: job.currentStep,
+      logs: job.logs,
+      params: job.params
+    }, null, 2));
+  } catch (e) {
+    console.warn('Could not archive deployment logs:', e);
+  }
   job.status = 'running';
   job.logs = [];
   const rootDir = path.resolve(process.cwd(), '..');
@@ -249,14 +446,6 @@ export async function runDestroySequence(
       console.warn('Could not clear configsync store:', e);
     }
 
-    // Unregister GKE Connect membership so subsequent loop iterations don't fail with E000025
-    try {
-      appendLog(job, 'info', `Unregistering GKE Connect membership for ${clusterName}...`, 'Step 1: Destroying Cluster VMs');
-      execSync(`gcloud container hub memberships delete ${clusterName} --quiet --project=${projectId} 2>/dev/null || gcloud container hub memberships unregister ${clusterName} --gke-cluster=us-central1/${clusterName} --quiet --project=${projectId} 2>/dev/null || true`);
-    } catch (e) {
-      console.warn('Could not unregister hub membership:', e);
-    }
-
     // Step 1: Destroy Cluster VMs
     job.currentStep = `Step 1: Destroying Cluster VMs for ${clusterName}`;
     const tfClusterDir = path.join(rootDir, 'terraform', 'cluster');
@@ -268,7 +457,7 @@ export async function runDestroySequence(
       `-backend-config=prefix=clusters/${clusterName}/state`,
       `-backend-config=impersonate_service_account=${saEmail}`
     ], tfClusterDir, { PROVISIONING_SA_EMAIL: saEmail }, job);
-    await executeCommand('terraform', ['destroy', '-auto-approve', `-var=cluster_name=${clusterName}`, `-var=machine_type=${machineType}`], tfClusterDir, { PROVISIONING_SA_EMAIL: saEmail }, job);
+    await executeCommand('terraform', ['destroy', '-auto-approve', `-var=cluster_name=${clusterName}`, `-var=machine_type=${machineType}`, `-var=project_id=${projectId}`], tfClusterDir, { PROVISIONING_SA_EMAIL: saEmail }, job);
 
     // Step 2: Destroy Edge Router (if present)
     if (deployEdgeRouter) {
@@ -282,7 +471,7 @@ export async function runDestroySequence(
         `-backend-config=prefix=edge-router/state`,
         `-backend-config=impersonate_service_account=${saEmail}`
       ], tfEdgeDir, { PROVISIONING_SA_EMAIL: saEmail }, job);
-      await executeCommand('terraform', ['destroy', '-auto-approve'], tfEdgeDir, { PROVISIONING_SA_EMAIL: saEmail }, job);
+      await executeCommand('terraform', ['destroy', '-auto-approve', `-var=project_id=${projectId}`], tfEdgeDir, { PROVISIONING_SA_EMAIL: saEmail }, job);
     }
 
     // Step 3: Destroy Admin Workstation
@@ -296,7 +485,7 @@ export async function runDestroySequence(
       `-backend-config=prefix=admin-workstation/state`,
       `-backend-config=impersonate_service_account=${saEmail}`
     ], tfWsDir, { PROVISIONING_SA_EMAIL: saEmail }, job);
-    await executeCommand('terraform', ['destroy', '-auto-approve'], tfWsDir, { PROVISIONING_SA_EMAIL: saEmail }, job);
+    await executeCommand('terraform', ['destroy', '-auto-approve', `-var=project_id=${projectId}`], tfWsDir, { PROVISIONING_SA_EMAIL: saEmail }, job);
 
     // Step 4: Destroy Foundation (only if no other cluster VMs exist in project)
     job.currentStep = 'Step 4: Checking Shared Foundation Footprint';
@@ -305,7 +494,10 @@ export async function runDestroySequence(
       remainingInstances = execSync(`gcloud compute instances list --project=${projectId} --format="value(name)" 2>/dev/null`, { encoding: 'utf-8' });
     } catch (e) {}
 
-    const hasOtherNodes = remainingInstances.trim().length > 0;
+    const remainingVMs = remainingInstances.split('\n')
+      .map(name => name.trim())
+      .filter(name => name && name !== 'gem-admin-ws' && name !== 'gem-edge-router');
+    const hasOtherNodes = remainingVMs.length > 0;
     if (hasOtherNodes) {
       appendLog(job, 'info', `🛡️ Shared VPC Subnet protection: detected other active virtual machines in project "${projectId}". Skipping shared Foundation destruction so remaining clusters stay online.`, job.currentStep);
     } else {
@@ -319,7 +511,7 @@ export async function runDestroySequence(
         '-backend-config=prefix=foundation/state',
         `-backend-config=impersonate_service_account=${saEmail}`
       ], tfFoundationDir, { PROVISIONING_SA_EMAIL: saEmail }, job);
-      await executeCommand('terraform', ['destroy', '-auto-approve'], tfFoundationDir, { PROVISIONING_SA_EMAIL: saEmail }, job);
+      await executeCommand('terraform', ['destroy', '-auto-approve', `-var=project_id=${projectId}`], tfFoundationDir, { PROVISIONING_SA_EMAIL: saEmail }, job);
     }
 
     job.status = 'success';

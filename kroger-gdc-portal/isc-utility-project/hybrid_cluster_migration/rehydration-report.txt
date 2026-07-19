@@ -1,0 +1,399 @@
+logs
+>> Restarting deployments in dns-config
+STEP 1: Cleaning problematic pods
+STEP 2: Infra recovery
+>> Scaling deployments in config-management-system to 1
+>> Restarting deployments in config-management-system
+Sleeping for 300s to sync Config-management-system
+>> Scaling deployments in namespace-labeler to 2
+>> Restarting deployments in namespace-labeler
+>> Restarting deployments in rabbitmq-system
+>> Restarting statefulsets in elastic-system
+>> Restarting deployments in mongodb
+>> Restarting deployments in es
+>> Scaling deployments in kroger-issuer to 1
+>> Restarting deployments in kroger-issuer
+>> Scaling deployments in kong-system-default to 1
+>> Restarting deployments in kong-system-default
+>> Scaling deployments in kong-system to 1
+>> Restarting deployments in kong-system
+>> Scaling deployments in kong-system-pci to 1
+>> Restarting deployments in kong-system-pci
+>> Scaling deployments in kong-system-fuel to 1
+>> Restarting deployments in kong-system-fuel
+Deleting bad gateway 'kong-proxy-gateway-default' in kong-system-default
+Deleting bad gateway 'kong-proxy-gateway' in kong-system
+Deleting bad gateway 'kong-proxy-gateway-pci' in kong-system-pci
+Deleting bad gateway 'kong-proxy-gateway-fuel' in kong-system-fuel
+Processing namespace: ping-auth
+Deleting pods in ping-auth with timeout 40s
+Skipping Error pod pingtoolkit-78646446b7-b9tgq
+Force deleting 3 pods in ping-auth
+Processing namespace: ngpos-shared
+Deleting pods in ngpos-shared with timeout 40s
+Force deleting 21 pods in ngpos-shared
+Processing namespace: ngpos-shared-pci
+Deleting pods in ngpos-shared-pci with timeout 40s
+Force deleting 13 pods in ngpos-shared-pci
+Processing namespace: ngpos-payments-pci
+Deleting pods in ngpos-payments-pci with timeout 40s
+All pods deleted in ngpos-payments-pci
+Processing namespace: prom-monitoring-pci
+Deleting pods in prom-monitoring-pci with timeout 40s
+Skipping Error pod ngpos-mongodb-svc-prometheus-mongodb-exporter-77dbcb4589-bn956
+Skipping Job pod prometheus-kube-pci-admission-create-9v2jx
+Skipping Job pod prometheus-kube-pci-admission-create-ljwn5
+Skipping Job pod prometheus-kube-pci-admission-patch-f5n84
+Skipping Job pod prometheus-kube-pci-admission-patch-ldf6k
+Force deleting 5 pods in prom-monitoring-pci
+Processing namespace: ngpos-fuel-pci-l1
+Deleting pods in ngpos-fuel-pci-l1 with timeout 40s
+Force deleting 2 pods in ngpos-fuel-pci-l1
+Processing namespace: ngpos-apex
+Deleting pods in ngpos-apex with timeout 40s
+All pods deleted in ngpos-apex
+Processing namespace: ngpos-dev
+Deleting pods in ngpos-dev with timeout 40s
+All pods deleted in ngpos-dev
+Processing namespace: ngpos-isa
+Deleting pods in ngpos-isa with timeout 40s
+All pods deleted in ngpos-isa
+Processing namespace: ngpos-mx
+Deleting pods in ngpos-mx with timeout 40s
+All pods deleted in ngpos-mx
+Processing namespace: ngpos-mxc
+Deleting pods in ngpos-mxc with timeout 40s
+All pods deleted in ngpos-mxc
+Processing namespace: ngpos-payments
+Deleting pods in ngpos-payments with timeout 40s
+All pods deleted in ngpos-payments
+Processing namespace: ngpos-platform
+Deleting pods in ngpos-platform with timeout 40s
+Skipping Error pod pos-elera-orchestration-api-5b9d85bd8d-9bcl6
+Skipping Error pod pos-elera-orchestration-api-5b9d85bd8d-mpkf2
+Skipping Error pod pos-elera-orchestration-api-5b9d85bd8d-nbvp8
+Skipping Error pod pos-external-validation-service-69897f44dc-ljnwh
+Skipping Error pod pos-external-validation-service-69897f44dc-n5lq4
+Force deleting 40 pods in ngpos-platform
+Processing namespace: ngpos-tax
+Deleting pods in ngpos-tax with timeout 40s
+Skipping Job pod deta-c-tax-calc-lite-chart-cron-restart-29683110-4t4nt
+Force deleting 6 pods in ngpos-tax
+Processing namespace: prom-monitoring
+Deleting pods in prom-monitoring with timeout 40s
+Skipping Error pod ngpos-mongodb-platform-prometheus-mongodb-exporter-7f7ff94fnjll
+Skipping Error pod ngpos-mongodb-prometheus-mongodb-exporter-699458f57-jqkmp
+Skipping Job pod prometheus-stack-kube-prom-admission-create-lmjz9
+Skipping Job pod prometheus-stack-kube-prom-admission-create-qrlq5
+Skipping Job pod prometheus-stack-kube-prom-admission-patch-vqdmx
+Force deleting 5 pods in prom-monitoring
+Processing namespace: local-image-registry
+Deleting pods in local-image-registry with timeout 40s
+All pods deleted in local-image-registry
+Processing namespace: edsmongodb
+Deleting pods in edsmongodb with timeout 40s
+Force deleting 1 pods in edsmongodb
+Processing namespace: ngpos-fuel
+Deleting pods in ngpos-fuel with timeout 40s
+All pods deleted in ngpos-fuel
+Processing namespace: mx-offers
+Deleting pods in mx-offers with timeout 40s
+Skipping Job pod hazelcast-bootstrap-29683110-hgbts
+Force deleting 4 pods in mx-offers
+Processing namespace: ngpos-fuel-pci-l0
+Deleting pods in ngpos-fuel-pci-l0 with timeout 40s
+Force deleting 16 pods in ngpos-fuel-pci-l0
+Processing namespace: filebeat
+Deleting pods in filebeat with timeout 40s
+All pods deleted in filebeat
+Processing namespace: prom-monitoring-fuel
+Deleting pods in prom-monitoring-fuel with timeout 40s
+Skipping Job pod prometheus-kube-fuel-admission-create-84mmt
+Skipping Job pod prometheus-kube-fuel-admission-create-nzvvz
+Skipping Job pod prometheus-kube-fuel-admission-patch-mfk4g
+Skipping Job pod prometheus-kube-fuel-admission-patch-xf7h8
+Force deleting 3 pods in prom-monitoring-fuel
+STEP 7: Scaling workloads (grouped)
+Scaling deployment in kong-system to 1 (count=2)
+Scaling deployment in dns-config to 2 (count=1)
+Scaling deployment in kong-system-fuel to 1 (count=2)
+Scaling deployment in kong-system-pci to 1 (count=2)
+Scaling deployment in kong-system-default to 1 (count=1)
+Scaling deployment in mx-offers to 1 (count=2)
+Scaling statefulset in mx-offers to 2 (count=1)
+Scaling deployment in ngpos-apex to 2 (count=3)
+Scaling deployment in ngpos-fuel to 2 (count=17)
+Scaling deployment in ngpos-fuel to 1 (count=4)
+Scaling statefulset in ngpos-fuel to 1 (count=1)
+Scaling deployment in ngpos-fuel-pci-l0 to 2 (count=3)
+Scaling deployment in ngpos-fuel-pci-l0 to 1 (count=10)
+Scaling deployment in ngpos-fuel-pci-l1 to 2 (count=1)
+Scaling deployment in ngpos-isa to 2 (count=2)
+Scaling deployment in ngpos-mx to 2 (count=3)
+Scaling deployment in ngpos-mx to 3 (count=2)
+Scaling deployment in ngpos-payments to 1 (count=1)
+Scaling deployment in ngpos-payments to 2 (count=1)
+Scaling deployment in ngpos-payments-pci to 2 (count=1)
+Scaling statefulset in ngpos-payments-pci to 8 (count=1)
+Scaling deployment in ngpos-platform to 3 (count=6)
+Scaling deployment in ngpos-platform to 2 (count=12)
+Scaling deployment in ngpos-platform to 1 (count=1)
+Scaling statefulset in ngpos-platform to 1 (count=1)
+Scaling deployment in ngpos-shared to 1 (count=8)
+Scaling deployment in ngpos-shared to 0 (count=1)
+Scaling deployment in ngpos-shared to 2 (count=1)
+Scaling statefulset in ngpos-shared to 1 (count=3)
+Scaling statefulset in ngpos-shared to 3 (count=4)
+Scaling statefulset in ngpos-shared to 0 (count=2)
+Scaling deployment in ngpos-shared-pci to 1 (count=4)
+Scaling deployment in ngpos-shared-pci to 0 (count=1)
+Scaling deployment in ngpos-shared-pci to 2 (count=1)
+Scaling statefulset in ngpos-shared-pci to 1 (count=3)
+Scaling statefulset in ngpos-shared-pci to 3 (count=2)
+Scaling statefulset in ngpos-shared-pci to 0 (count=1)
+Scaling deployment in ngpos-tax to 1 (count=6)
+Scaling deployment in prom-monitoring to 1 (count=6)
+Scaling statefulset in prom-monitoring to 1 (count=1)
+>> Restarting deployments in config-management-system
+>> Scaling deployments in kong-system-default to 1
+>> Scaling deployments in kong-system to 1
+>> Scaling deployments in kong-system-pci to 1
+>> Scaling deployments in kong-system-fuel to 1
+STEP 9: Final health check
+cluster-ci003                   bm-system-192.168.120.12-machine-29683241-6445c                   0/1     Error                        0                 23m
+cluster-ci003                   bm-system-192.168.120.12-machine-29683241-9rpn6                   0/1     Error                        0                 24m
+cluster-ci003                   bm-system-192.168.120.12-machine-29683241-s8nl5                   0/1     Error                        0                 23m
+cluster-ci003                   bm-system-192.168.120.13-machine-29683242-frkgb                   0/1     Error                        0                 23m
+cluster-ci003                   bm-system-192.168.120.13-machine-29683242-ft5mz                   0/1     Error                        0                 22m
+cluster-ci003                   bm-system-192.168.120.13-machine-29683242-wv7f5                   0/1     Error                        0                 22m
+cluster-ci003                   bm-system-192.168.120.14-machine-29683243-7h6mr                   0/1     Error                        0                 21m
+cluster-ci003                   bm-system-192.168.120.14-machine-29683243-bkw64                   0/1     Error                        0                 21m
+cluster-ci003                   bm-system-192.168.120.14-machine-29683243-klkwn                   0/1     Error                        0                 22m
+default                         dig-test-7f6fbfb5bc-jszhw                                         0/1     CrashLoopBackOff             793 (4m16s ago)   3d19h
+default                         dig-test-7f6fbfb5bc-rs8zp                                         0/1     Error                        603               28d
+edsmongodb                      oh-cincy-btc-dev-ci009-2                                          0/1     Pending                      0                 7m10s
+mx-offers                       discounts-interface-5d79b86499-q6rb7                              1/2     CrashLoopBackOff             5 (9s ago)        7m13s
+mx-offers                       hazelcast-bootstrap-29683110-hgbts                                0/1     Error                        0                 155m
+ngpos-platform                  elera-platform-nginx-75fcd899c4-gg47w                             1/2     CrashLoopBackOff             6 (4m58s ago)     11m
+ngpos-platform                  elera-platform-nginx-75fcd899c4-lvs78                             1/2     CrashLoopBackOff             7 (17s ago)       11m
+ngpos-platform                  pos-elera-orchestration-api-5b9d85bd8d-9bcl6                      1/2     CreateContainerConfigError   0                 14m
+ngpos-platform                  pos-elera-orchestration-api-5b9d85bd8d-mpkf2                      1/2     CreateContainerConfigError   0                 14m
+ngpos-platform                  pos-elera-orchestration-api-5b9d85bd8d-nbvp8                      1/2     CreateContainerConfigError   0                 14m
+ngpos-platform                  pos-external-validation-service-69897f44dc-ljnwh                  1/2     CreateContainerConfigError   0                 14m
+ngpos-platform                  pos-external-validation-service-69897f44dc-n5lq4                  1/2     CreateContainerConfigError   0                 14m
+ngpos-platform                  vendo-web-7cb89c674f-dbjr4                                        1/2     CrashLoopBackOff             6 (4m36s ago)     11m
+ngpos-platform                  vendo-web-7cb89c674f-zzdmh                                        1/2     CrashLoopBackOff             6 (4m4s ago)      11m
+ngpos-shared-pci                ngpos-core-config-controller-5866dc8d5d-bjljw                     3/4     CrashLoopBackOff             8 (42s ago)       16m
+ngpos-shared                    ngpos-core-config-controller-ffc64f5cf-r4xc2                      3/4     CrashLoopBackOff             8 (74s ago)       18m
+ngpos-tax                       deta-c-tax-calc-lite-chart-d9946c987-9x5jp                        1/2     CrashLoopBackOff             4 (52s ago)       10m
+ping-auth                       pingtoolkit-78646446b7-b9tgq                                      0/1     CreateContainerConfigError   0                 20m
+prom-monitoring-pci             ngpos-mongodb-svc-prometheus-mongodb-exporter-77dbcb4589-bn956    0/1     CreateContainerConfigError   0                 16m
+prom-monitoring                 ngpos-mongodb-platform-prometheus-mongodb-exporter-7f7ff94fnjll   0/1     CreateContainerConfigError   0                 10m
+prom-monitoring                 ngpos-mongodb-prometheus-mongodb-exporter-699458f57-jqkmp         0/1     CreateContainerConfigError   0                 10m
+reloader                        reloader-64c968b498-x4mfj                                         0/1     Error                        0                 32d
+vm-system                       virt-operator-6557546bc6-nvtzx                                    0/2     Error                        10                32d
+==== REHYDRATION COMPLETE ====
+STEP 1: Cleaning problematic pods
+Checking namespace labeler webhook exist before its deployments
+>> Restarting deployments in dns-config
+STEP 2: Infra recovery
+>> Scaling deployments in config-management-system to 1
+>> Restarting deployments in config-management-system
+>> Scaling deployments in namespace-labeler to 2
+>> Restarting deployments in namespace-labeler
+>> Restarting deployments in rabbitmq-system
+STEP 1: Cleaning problematic pods
+Checking namespace labeler webhook exist before its deployments
+>> Restarting deployments in dns-config
+STEP 2: Infra recovery
+>> Scaling deployments in config-management-system to 1
+>> Restarting deployments in config-management-system
+>> Scaling deployments in namespace-labeler to 2
+>> Restarting deployments in namespace-labeler
+>> Restarting deployments in rabbitmq-system
+>> Restarting statefulsets in elastic-system
+>> Restarting deployments in mongodb
+>> Restarting deployments in es
+>> Scaling deployments in kroger-issuer to 1
+>> Restarting deployments in kroger-issuer
+checking if namespace-labeler webhook exists
+STEP 1: Cleaning problematic pods
+Checking namespace labeler webhook exist before its deployments
+>> Restarting deployments in dns-config
+STEP 2: Infra recovery
+>> Scaling deployments in config-management-system to 1
+>> Restarting deployments in config-management-system
+>> Scaling deployments in namespace-labeler to 2
+>> Restarting deployments in namespace-labeler
+>> Restarting deployments in rabbitmq-system
+>> Restarting statefulsets in elastic-system
+>> Restarting deployments in mongodb
+>> Restarting deployments in es
+>> Scaling deployments in kroger-issuer to 1
+>> Restarting deployments in kroger-issuer
+checking if namespace-labeler webhook exists
+namespace-labeler Webhook exists
+>> Scaling deployments in kong-system-default to 1
+>> Restarting deployments in kong-system-default
+>> Scaling deployments in kong-system to 1
+>> Restarting deployments in kong-system
+>> Scaling deployments in kong-system-pci to 1
+>> Restarting deployments in kong-system-pci
+>> Scaling deployments in kong-system-fuel to 1
+>> Restarting deployments in kong-system-fuel
+Deleting bad gateway 'kong-proxy-gateway-default' in kong-system-default
+Deleting bad gateway 'kong-proxy-gateway' in kong-system
+Deleting bad gateway 'kong-proxy-gateway-pci' in kong-system-pci
+Deleting bad gateway 'kong-proxy-gateway-fuel' in kong-system-fuel
+Processing namespace: ping-auth
+Deleting pods in ping-auth with timeout 40s
+Skipping Error pod pingtoolkit-78646446b7-zzslh
+Force deleting 3 pods in ping-auth
+Processing namespace: ngpos-shared
+Deleting pods in ngpos-shared with timeout 40s
+Force deleting 17 pods in ngpos-shared
+Processing namespace: ngpos-shared-pci
+Deleting pods in ngpos-shared-pci with timeout 40s
+Force deleting 13 pods in ngpos-shared-pci
+Processing namespace: ngpos-payments-pci
+Deleting pods in ngpos-payments-pci with timeout 40s
+All pods deleted in ngpos-payments-pci
+Processing namespace: prom-monitoring-pci
+Deleting pods in prom-monitoring-pci with timeout 40s
+All pods deleted in prom-monitoring-pci
+Processing namespace: ngpos-fuel-pci-l1
+Deleting pods in ngpos-fuel-pci-l1 with timeout 40s
+Force deleting 2 pods in ngpos-fuel-pci-l1
+Processing namespace: ngpos-apex
+Deleting pods in ngpos-apex with timeout 40s
+All pods deleted in ngpos-apex
+Processing namespace: ngpos-dev
+Deleting pods in ngpos-dev with timeout 40s
+All pods deleted in ngpos-dev
+Processing namespace: ngpos-isa
+Deleting pods in ngpos-isa with timeout 40s
+All pods deleted in ngpos-isa
+Processing namespace: ngpos-mx
+Deleting pods in ngpos-mx with timeout 40s
+All pods deleted in ngpos-mx
+Processing namespace: ngpos-mxc
+Deleting pods in ngpos-mxc with timeout 40s
+All pods deleted in ngpos-mxc
+Processing namespace: ngpos-payments
+Deleting pods in ngpos-payments with timeout 40s
+All pods deleted in ngpos-payments
+Processing namespace: ngpos-platform
+Deleting pods in ngpos-platform with timeout 40s
+Skipping Error pod pos-elera-orchestration-api-5b9d85bd8d-vhnl9
+Skipping Error pod pos-elera-orchestration-api-5b9d85bd8d-w4k2s
+Skipping Error pod pos-elera-orchestration-api-5b9d85bd8d-wxrts
+Skipping Error pod pos-external-validation-service-69897f44dc-fx2tl
+Skipping Error pod pos-external-validation-service-69897f44dc-v5zdx
+Force deleting 39 pods in ngpos-platform
+Processing namespace: ngpos-tax
+Deleting pods in ngpos-tax with timeout 40s
+Force deleting 6 pods in ngpos-tax
+Processing namespace: prom-monitoring
+Deleting pods in prom-monitoring with timeout 40s
+Skipping Error pod ngpos-mongodb-prometheus-mongodb-exporter-699458f57-9t6nd
+Force deleting 3 pods in prom-monitoring
+Processing namespace: local-image-registry
+Deleting pods in local-image-registry with timeout 40s
+All pods deleted in local-image-registry
+Processing namespace: edsmongodb
+Deleting pods in edsmongodb with timeout 40s
+Force deleting 1 pods in edsmongodb
+Processing namespace: ngpos-fuel
+Deleting pods in ngpos-fuel with timeout 40s
+All pods deleted in ngpos-fuel
+Processing namespace: mx-offers
+Deleting pods in mx-offers with timeout 40s
+Skipping Job pod hazelcast-bootstrap-29683410-6k4nq
+Force deleting 4 pods in mx-offers
+Processing namespace: ngpos-fuel-pci-l0
+Deleting pods in ngpos-fuel-pci-l0 with timeout 40s
+Force deleting 16 pods in ngpos-fuel-pci-l0
+Processing namespace: filebeat
+Deleting pods in filebeat with timeout 40s
+All pods deleted in filebeat
+Processing namespace: prom-monitoring-fuel
+Deleting pods in prom-monitoring-fuel with timeout 40s
+Force deleting 3 pods in prom-monitoring-fuel
+STEP 7: Scaling workloads (grouped)
+Scaling deployment in kong-system to 1 (count=2)
+Scaling deployment in dns-config to 2 (count=1)
+Scaling deployment in kong-system-fuel to 1 (count=2)
+Scaling deployment in kong-system-pci to 1 (count=2)
+Scaling deployment in kong-system-default to 1 (count=1)
+Scaling deployment in mx-offers to 1 (count=2)
+Scaling statefulset in mx-offers to 2 (count=1)
+Scaling deployment in ngpos-apex to 2 (count=3)
+Scaling deployment in ngpos-fuel to 2 (count=17)
+Scaling deployment in ngpos-fuel to 1 (count=4)
+Scaling statefulset in ngpos-fuel to 1 (count=1)
+Scaling deployment in ngpos-fuel-pci-l0 to 2 (count=3)
+Scaling deployment in ngpos-fuel-pci-l0 to 1 (count=10)
+Scaling deployment in ngpos-fuel-pci-l1 to 2 (count=1)
+Scaling deployment in ngpos-isa to 2 (count=2)
+Scaling deployment in ngpos-mx to 2 (count=3)
+Scaling deployment in ngpos-mx to 3 (count=2)
+Scaling deployment in ngpos-payments to 1 (count=1)
+Scaling deployment in ngpos-payments to 2 (count=1)
+Scaling deployment in ngpos-payments-pci to 2 (count=1)
+Scaling statefulset in ngpos-payments-pci to 8 (count=1)
+Scaling deployment in ngpos-platform to 3 (count=6)
+Scaling deployment in ngpos-platform to 2 (count=12)
+Scaling deployment in ngpos-platform to 1 (count=1)
+Scaling statefulset in ngpos-platform to 1 (count=1)
+Scaling deployment in ngpos-shared to 1 (count=8)
+Scaling deployment in ngpos-shared to 0 (count=1)
+Scaling deployment in ngpos-shared to 2 (count=1)
+Scaling statefulset in ngpos-shared to 1 (count=3)
+Scaling statefulset in ngpos-shared to 3 (count=4)
+Scaling statefulset in ngpos-shared to 0 (count=2)
+Scaling deployment in ngpos-shared-pci to 1 (count=4)
+Scaling deployment in ngpos-shared-pci to 0 (count=1)
+Scaling deployment in ngpos-shared-pci to 2 (count=1)
+Scaling statefulset in ngpos-shared-pci to 1 (count=3)
+Scaling statefulset in ngpos-shared-pci to 3 (count=2)
+Scaling statefulset in ngpos-shared-pci to 0 (count=1)
+Scaling deployment in ngpos-tax to 1 (count=6)
+Scaling deployment in prom-monitoring to 1 (count=6)
+Scaling statefulset in prom-monitoring to 1 (count=1)
+>> Restarting deployments in config-management-system
+>> Scaling deployments in kong-system-default to 1
+>> Scaling deployments in kong-system to 1
+>> Scaling deployments in kong-system-pci to 1
+>> Scaling deployments in kong-system-fuel to 1
+STEP 9: Final health check
+cluster-ci003                   bm-system-192.168.120.12-machine-29683421-4pfsq                   0/1     Error                        0                 10m
+cluster-ci003                   bm-system-192.168.120.12-machine-29683421-nkmt9                   0/1     Error                        0                 9m58s
+cluster-ci003                   bm-system-192.168.120.12-machine-29683421-wnm88                   0/1     Error                        0                 9m17s
+cluster-ci003                   bm-system-192.168.120.13-machine-29683422-4dnpg                   0/1     Error                        0                 9m26s
+cluster-ci003                   bm-system-192.168.120.13-machine-29683422-4lqm6                   0/1     Error                        0                 8m
+cluster-ci003                   bm-system-192.168.120.13-machine-29683422-vx7px                   0/1     Error                        0                 8m44s
+cluster-ci003                   bm-system-192.168.120.14-machine-29683423-ctc9x                   0/1     Error                        0                 8m26s
+cluster-ci003                   bm-system-192.168.120.14-machine-29683423-kr4rr                   0/1     Error                        0                 7m52s
+cluster-ci003                   bm-system-192.168.120.14-machine-29683423-xnsqz                   0/1     Error                        0                 7m12s
+default                         dig-test-7f6fbfb5bc-jszhw                                         0/1     CrashLoopBackOff             817 (3m58s ago)   3d22h
+default                         dig-test-7f6fbfb5bc-rs8zp                                         0/1     Error                        603               28d
+edsmongodb                      oh-cincy-btc-dev-ci009-2                                          0/1     Pending                      0                 6m24s
+mx-offers                       hazelcast-bootstrap-29683410-6k4nq                                0/1     Error                        0                 21m
+ngpos-platform                  elera-platform-nginx-75fcd899c4-dwnnt                             1/2     CrashLoopBackOff             6 (3m22s ago)     9m44s
+ngpos-platform                  elera-platform-nginx-75fcd899c4-vr4dz                             1/2     CrashLoopBackOff             6 (3m29s ago)     9m44s
+ngpos-platform                  pos-elera-orchestration-api-5b9d85bd8d-vhnl9                      1/2     CreateContainerConfigError   0                 12m
+ngpos-platform                  pos-elera-orchestration-api-5b9d85bd8d-w4k2s                      1/2     CreateContainerConfigError   0                 12m
+ngpos-platform                  pos-elera-orchestration-api-5b9d85bd8d-wxrts                      1/2     CreateContainerConfigError   0                 12m
+ngpos-platform                  pos-external-validation-service-69897f44dc-fx2tl                  1/2     CreateContainerConfigError   0                 12m
+ngpos-platform                  pos-external-validation-service-69897f44dc-v5zdx                  1/2     CreateContainerConfigError   0                 12m
+ngpos-platform                  vendo-web-7cb89c674f-7rffv                                        1/2     CrashLoopBackOff             6 (2m55s ago)     9m38s
+ngpos-platform                  vendo-web-7cb89c674f-pwhfh                                        1/2     CrashLoopBackOff             6 (2m34s ago)     9m38s
+ngpos-shared-pci                ngpos-core-config-controller-5866dc8d5d-jvjv8                     3/4     CrashLoopBackOff             7 (2m30s ago)     13m
+ngpos-shared                    ngpos-core-config-controller-ffc64f5cf-wmwb9                      3/4     CrashLoopBackOff             7 (3m39s ago)     15m
+ping-auth                       pingtoolkit-78646446b7-zzslh                                      0/1     CreateContainerConfigError   0                 17m
+prom-monitoring-pci             ngpos-mongodb-svc-prometheus-mongodb-exporter-77dbcb4589-hczhb    0/1     CreateContainerConfigError   0                 7m10s
+prom-monitoring                 ngpos-mongodb-platform-prometheus-mongodb-exporter-7f7ff942x5h4   0/1     CreateContainerConfigError   0                 7m16s
+prom-monitoring                 ngpos-mongodb-prometheus-mongodb-exporter-699458f57-9t6nd         0/1     CreateContainerConfigError   0                 8m22s
+reloader                        reloader-64c968b498-x4mfj                                         0/1     Error                        0                 33d
+vm-system                       virt-operator-6557546bc6-nvtzx                                    0/2     Error                        10                33d
+==== REHYDRATION COMPLETE ====
