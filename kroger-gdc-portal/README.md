@@ -6,7 +6,7 @@ This project provisions a Google Distributed Cloud Software-Only (GDCSO) Hybrid 
 
 This project uses an enterprise **Two-Tier (Foundation / Cluster) Architecture** to ensure you can scale to hundreds of ephemeral clusters without destroying your shared management infrastructure.
 
-1. **The Foundation (`terraform/bootstrap`):** This layer provisions the permanent, shared infrastructure: the core VPC network, Cloud NAT, Service Accounts, and a dedicated, decoupled Admin Workstation (`gem-admin-ws`). This workstation is used to safely orchestrate Anthos installations.
+1. **The Foundation (`terraform/foundation`):** This layer provisions the permanent, shared infrastructure: the core VPC network, Cloud NAT, Service Accounts, and a dedicated, decoupled Admin Workstation (`gem-admin-ws`). This workstation is used to safely orchestrate Anthos installations.
 2. **Ephemeral Clusters (`terraform/`):** This layer is used as a template to rapidly stamp out ephemeral 3-node GDCSO cluster footprints (`node1`, `node2`, `node3`). It uses data sources to automatically attach these new nodes to the shared foundation.
 3. **The Edge Router (`terraform/edge-router`):** This layer provides an optional, dedicated ingress VM (`e2-small`) that participates in all emulated secondary networks (VXLANs). It allows you to route traffic from your local workstation directly into isolated cluster VLANs (like MetalLB VIPs) using tools like Traefik or a SOCKS5 proxy, bypassing the Kubernetes control plane.
 
@@ -191,9 +191,9 @@ The configuration is split into two distinct playbooks to support the Two-Tier a
 ### Foundation Phase
 This playbook installs the required binaries (`kubectl`, `bmctl`, Docker), sets up the user environment, and configures the Edge Router. **You only need to run this step once per GCP project.**
 
-1. Navigate to the Ansible directory:
+1. Navigate to the Ansible directory (stepping out of the `terraform/cluster` directory):
    ```bash
-   cd ../ansible
+   cd ../../ansible
    ```
 2. Run the foundation playbook:
    ```bash
@@ -269,9 +269,9 @@ To safely delete an individual cluster, you must first unregister it from Google
    *This command runs `bmctl reset` from the Admin Workstation to unregister the cluster from GKE Hub and clean up its nodes.*
 
 2. **Step 2: Destroy with Terraform**
-   Navigate to the `terraform` directory and destroy the specific cluster's VMs:
+   Navigate to the cluster subdirectory and destroy the specific cluster's VMs:
    ```bash
-   cd ../terraform
+   cd ../terraform/cluster
 
    # Re-initialize to the correct state for this specific cluster using the designated state bucket
    terraform init -reconfigure \
