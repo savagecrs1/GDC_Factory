@@ -562,8 +562,23 @@ function executeCommand(
       });
     });
 
-    child.on('close', (code) => {
+    const cleanupProcess = () => {
       job.process = undefined;
+      try {
+        if (child.stdout) {
+          child.stdout.removeAllListeners();
+          child.stdout.destroy();
+        }
+        if (child.stderr) {
+          child.stderr.removeAllListeners();
+          child.stderr.destroy();
+        }
+        child.unref();
+      } catch (e) {}
+    };
+
+    child.on('close', (code) => {
+      cleanupProcess();
       if (code === 0) {
         appendLog(job, 'success', `Command completed successfully with exit code 0`);
         resolve();
@@ -573,7 +588,7 @@ function executeCommand(
     });
 
     child.on('error', (err) => {
-      job.process = undefined;
+      cleanupProcess();
       reject(err);
     });
   });

@@ -551,6 +551,10 @@ export function startTestHarnessDaemon(config: TestHarnessConfig): TestHarnessRe
     });
 
     child.unref();
+    try {
+      fs.closeSync(out);
+      fs.closeSync(err);
+    } catch (e) {}
     console.log(`Detached background E2E daemon spawned (PID: ${child.pid}).`);
   } catch (e: any) {
     console.error("Failed to start detached background daemon:", e);
