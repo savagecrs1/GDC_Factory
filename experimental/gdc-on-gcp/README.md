@@ -10,10 +10,37 @@ This project uses an enterprise **Two-Tier (Foundation / Cluster) Architecture**
 2. **Ephemeral Clusters (`terraform/`):** This layer is used as a template to rapidly stamp out ephemeral 3-node GDCSO cluster footprints (`node1`, `node2`, `node3`). It uses data sources to automatically attach these new nodes to the shared foundation.
 3. **The Edge Router (`terraform/edge-router`):** This layer provides an optional, dedicated ingress VM (`e2-small`) that participates in all emulated secondary networks (VXLANs). It allows you to route traffic from your local workstation directly into isolated cluster VLANs (like MetalLB VIPs) using tools like Traefik or a SOCKS5 proxy, bypassing the Kubernetes control plane.
 
+### 💻 GDC Hardware Profiles vs. GCP Machine Size Equivalents
+
+| GDC Physical Hardware | GDC Node Profile | Physical Specs (Per Node) | GCP Machine Type Equivalent | GCP Instance Specs | Recommended Use Case |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| **Dell PowerEdge XR11** | **Medium** | 32 vCPU, 128 GB RAM | **`n2-standard-32`** | 32 vCPU, 128 GB RAM | **1:1 Direct Match** for GDC XR11 Medium Edge Nodes. |
+| **Dell PowerEdge XR11** | **Scaled Dev** | 16 vCPU, 64 GB RAM | **`n2-standard-16`** | 16 vCPU, 64 GB RAM | 50% scale profile for quota-constrained dev labs. |
+| **Dell 8K / XR8000** | **Medium** | 64 vCPU, 256 GB RAM | **`n2-standard-64`** | 64 vCPU, 256 GB RAM | **1:1 Direct Match** for Dell 8K / XR8000 GDC Sleds. |
+| **Dell 8K / XR8000** | **Medium (High-Mem)** | 32 vCPU, 256 GB RAM | **`n2-highmem-32`** | 32 vCPU, 256 GB RAM | Memory-heavy workloads (AI/ML models, data pipelines). |
+| **Virtual Sandbox** | **Micro / Lab** | 8 vCPU, 32 GB RAM | **`n2-standard-8`** | 8 vCPU, 32 GB RAM | Low-quota dev testing & rapid CI/CD validation. |
+
 ## Prerequisites
 - Google Cloud SDK (`gcloud`) installed and authenticated.
 - HashiCorp Terraform CLI (`terraform`) installed.
 - Ansible (`ansible`, `ansible-playbook`) installed.
+
+### Required GCP Project Configurations & IAM Permissions
+
+Before executing the setup scripts, ensure the following cloud-side prerequisites are met within your target GCP Project:
+
+1. **User IAM Context:** The identity running the initial `./project-setup.sh` script must possess `Owner` privileges or a combination of the following administrative roles on the target project:
+   - **Project IAM Admin** (`roles/resourcemanager.projectIamAdmin`)
+   - **Service Account Admin** (`roles/iam.serviceAccountAdmin`)
+   - **Storage Admin** (`roles/storage.admin`)
+2. **Active Billing:** The project must be linked to an active billing account to support GCE local SSD and nested virtualization SKU allocations.
+3. **Organization Policy Exemptions:** If deploying within an enterprise folder, ensure the following constraints are relaxed or permit external resource access:
+   - `constraints/compute.trustedImageProjects` (must allow GDC system image projects)
+   - `constraints/gcp.restrictServiceUsage` (must permit `edgecontainer.googleapis.com` and `gkeconnect.googleapis.com`)
+   - `constraints/iam.disableServiceAccountKeyCreation`
+   - `constraints/compute.requireOsLogin`
+   - `constraints/compute.vmCanIpForward`
+   - `constraints/compute.requireShieldedVm`
 
 ---
 
@@ -44,7 +71,7 @@ Deploy the permanent networking and the dedicated Admin Workstation (`gem-admin-
    export PROVISIONING_SA_EMAIL="tf-provisioner@${PROJECT_ID}.iam.gserviceaccount.com"
 
    terraform init \
-     -backend-config="bucket=gdc-on-gcp-${PROJECT_ID}-tfstate" \
+     -backend-config="bucket=gem-${PROJECT_ID}-tfstate" \
      -backend-config="prefix=terraform/bootstrap/state" \
      -backend-config="impersonate_service_account=${PROVISIONING_SA_EMAIL}"
 
@@ -64,7 +91,7 @@ If you plan on accessing secondary networks (Island Mode) from your local workst
    export PROVISIONING_SA_EMAIL="tf-provisioner@${PROJECT_ID}.iam.gserviceaccount.com"
 
    terraform init \
-     -backend-config="bucket=gdc-on-gcp-${PROJECT_ID}-tfstate" \
+     -backend-config="bucket=gem-${PROJECT_ID}-tfstate" \
      -backend-config="prefix=terraform/edge-router/state" \
      -backend-config="impersonate_service_account=${PROVISIONING_SA_EMAIL}"
 
@@ -90,7 +117,7 @@ Before running Terraform, set an environment variable with your desired cluster 
    export PROVISIONING_SA_EMAIL="tf-provisioner@${PROJECT_ID}.iam.gserviceaccount.com"
 
    terraform init -reconfigure \
-     -backend-config="bucket=gdc-on-gcp-${PROJECT_ID}-tfstate" \
+     -backend-config="bucket=gem-${PROJECT_ID}-tfstate" \
      -backend-config="prefix=clusters/${CLUSTER_NAME}/state" \
      -backend-config="impersonate_service_account=${PROVISIONING_SA_EMAIL}"
    ```
@@ -152,9 +179,9 @@ kubectl get nodes --kubeconfig /home/gdc/bmctl-workspace/${CLUSTER_NAME}/${CLUST
 
 You can also access the cluster from your local machine using standard GCP IAM identities via the GKE Connect Gateway. This requires impersonating the `gem-cluster-admin` service account.
 
-1. Configure `gcloud` to impersonate the cluster admin service account:
+1. Configure `gcloud` to impersonate the cluster admin service account for your active project:
    ```bash
-   gcloud config set auth/impersonate_service_account gem-cluster-admin@gdc-on-gcp2.iam.gserviceaccount.com
+   gcloud config set auth/impersonate_service_account gem-cluster-admin@${PROJECT_ID}.iam.gserviceaccount.com
    ```
 2. Get the cluster credentials:
    ```bash
@@ -188,9 +215,9 @@ To safely delete an individual cluster, you must first unregister it from Google
    ```bash
    cd ../terraform
 
-   # Re-initialize to the correct state for this specific cluster
+   # Re-initialize to the correct state for this specific cluster using the designated state bucket
    terraform init -reconfigure \
-     -backend-config="bucket=gdc-on-gcp-${PROJECT_ID}-tfstate" \
+     -backend-config="bucket=gem-${PROJECT_ID}-tfstate" \
      -backend-config="prefix=clusters/${CLUSTER_NAME}/state" \
      -backend-config="impersonate_service_account=${PROVISIONING_SA_EMAIL}"
 

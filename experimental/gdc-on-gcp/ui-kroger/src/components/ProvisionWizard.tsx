@@ -224,11 +224,14 @@ export default function ProvisionWizard({
               <option value="e2-standard-4">e2-standard-4 (4 vCPU, 16 GB RAM - Micro Sandbox)</option>
               <option value="e2-standard-8">e2-standard-8 (8 vCPU, 32 GB RAM - Compact Dev Lab)</option>
               <option value="n2-standard-8">n2-standard-8 (8 vCPU, 32 GB RAM - Standard Compact)</option>
-              <option value="n2-standard-16">n2-standard-16 (16 vCPU, 64 GB RAM - Compact Lab)</option>
-              <option value="n2-standard-32">n2-standard-32 (32 vCPU, 128 GB RAM - Standard Hybrid SO)</option>
-              <option value="n2-standard-64">n2-standard-64 (64 vCPU, 256 GB RAM - High Performance)</option>
-              <option value="n2-highmem-32">n2-highmem-32 (32 vCPU, 256 GB RAM - AI/ML Intensive)</option>
+              <option value="n2-standard-16">n2-standard-16 (16 vCPU, 64 GB RAM - 50% XR11 Dev Footprint)</option>
+              <option value="n2-standard-32">n2-standard-32 (32 vCPU, 128 GB RAM - Dell XR11 GDC Medium Equivalent)</option>
+              <option value="n2-standard-64">n2-standard-64 (64 vCPU, 256 GB RAM - Dell 8K / XR8000 GDC Medium Equivalent)</option>
+              <option value="n2-highmem-32">n2-highmem-32 (32 vCPU, 256 GB RAM - Dell 8K High-Memory Equivalent)</option>
             </select>
+            <p className="text-[10px] text-slate-400 mt-1">
+              💡 <span className="font-semibold text-slate-300">Dell XR11 Medium</span>: <code className="text-sky-300 font-mono">n2-standard-32</code> (32 vCPU, 128GB) | <span className="font-semibold text-slate-300">Dell 8K Medium</span>: <code className="text-sky-300 font-mono">n2-standard-64</code> (64 vCPU, 256GB)
+            </p>
           </div>
 
           <div>

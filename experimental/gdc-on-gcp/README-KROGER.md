@@ -49,6 +49,20 @@ This portal natively supports the three-tier network architecture validated with
 
 ---
 
+## 💻 GDC Hardware Profiles vs. GCP Machine Equivalents
+
+To accurately emulate Google Distributed Cloud (GDC) hardware footprints on Google Compute Engine (GCE), refer to the following mapping between physical edge servers and GCP virtual machine sizes:
+
+| GDC Physical Hardware | GDC Node Profile | Physical Specs (Per Node) | GCP Machine Type Equivalent | GCP Instance Specs | Use Case |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| **Dell PowerEdge XR11** | **Medium** | 32 vCPU, 128 GB RAM | **`n2-standard-32`** | 32 vCPU, 128 GB RAM | **1:1 Direct Match** for GDC XR11 Medium Edge Nodes. |
+| **Dell PowerEdge XR11** | **Scaled Dev** | 16 vCPU, 64 GB RAM | **`n2-standard-16`** | 16 vCPU, 64 GB RAM | 50% scale profile for quota-constrained dev labs. |
+| **Dell 8K / XR8000** | **Medium** | 64 vCPU, 256 GB RAM | **`n2-standard-64`** | 64 vCPU, 256 GB RAM | **1:1 Direct Match** for Dell 8K / XR8000 GDC Sleds. |
+| **Dell 8K / XR8000** | **Medium (High-Mem)** | 32 vCPU, 256 GB RAM | **`n2-highmem-32`** | 32 vCPU, 256 GB RAM | Memory-intensive store AI/ML & data analytics. |
+| **Virtual Sandbox** | **Micro / Lab** | 8 vCPU, 32 GB RAM | **`n2-standard-8`** | 8 vCPU, 32 GB RAM | Low-quota dev testing & lightweight validation. |
+
+---
+
 ## 🛠️ Step-by-Step Provisioning Guide
 
 1. **Open the Portal**: Navigate to `http://localhost:3001`.
