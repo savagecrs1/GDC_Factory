@@ -111,10 +111,32 @@ fi
 
 echo -e "\n${BOLD}======================================================${RESET}"
 if [ $ERRORS -eq 0 ]; then
-  echo -e " ${GREEN}${BOLD}SUCCESS:${RESET} Your environment & GCP project are fully configured for GDC Virtual Factory!"
+  echo -e " ${GREEN}${BOLD}SUCCESS:${RESET} Your local environment & GCP project are fully configured for GDC Virtual Factory!"
   echo -e " To launch the portal:"
   echo -e "   ./launch-kroger.sh"
 else
-  echo -e " ${RED}${BOLD}ATTENTION:${RESET} Found ${ERRORS} issue(s). Please resolve the items above before starting."
+  echo -e " ${RED}${BOLD}ATTENTION:${RESET} Found ${ERRORS} critical error(s) / warning(s).\n"
+  
+  echo -e "${BOLD}📌 Self-Service Local Fixes:${RESET}"
+  echo -e "  • Missing gcloud/terraform/ansible: Install via Homebrew ('brew install terraform ansible node') or Google Cloud SDK."
+  echo -e "  • Missing Auth / Credentials: Run 'gcloud auth login' AND 'gcloud auth application-default login'."
+  echo -e "  • Missing GKE Auth Plugin: Run 'gcloud components install gke-gcloud-auth-plugin'.\n"
+
+  echo -e "${BOLD}📋 Escalation Request to your GCP Cloud / Security Team:${RESET}"
+  echo -e "  If you encountered IAM, Billing, or Organization Policy warnings above, copy and send the snippet below to your GCP Organization Administrator:\n"
+  echo -e "  --------------------------------------------------------------------------------"
+  echo -e "  Hi GCP Cloud Team,"
+  echo -e "  I am setting up a Google Distributed Cloud (GDC) emulator on GCP project '${TARGET_PROJ:-<YOUR_PROJECT_ID>}'."
+  echo -e "  Please verify and grant the following cloud configurations:"
+  echo -e "  1. User IAM Roles for '${ACTIVE_ACCT:-<YOUR_ACCOUNT_EMAIL>}':"
+  echo -e "     - roles/resourcemanager.projectIamAdmin"
+  echo -e "     - roles/iam.serviceAccountAdmin"
+  echo -e "     - roles/storage.admin"
+  echo -e "  2. Active Billing: Ensure an active billing account is linked to project '${TARGET_PROJ:-<YOUR_PROJECT_ID>}'."
+  echo -e "  3. Organization Policy Constraints (Relax/Exempt on project '${TARGET_PROJ:-<YOUR_PROJECT_ID>}'):"
+  echo -e "     - constraints/compute.vmCanIpForward (ALLOW - required for Anthos VxLAN networking)"
+  echo -e "     - constraints/compute.requireOsLogin (DISABLE - required for GDC node SSH keys)"
+  echo -e "     - constraints/compute.trustedImageProjects (ALLOW GDC system image projects)"
+  echo -e "  --------------------------------------------------------------------------------"
 fi
 echo -e "${BOLD}======================================================${RESET}\n"
