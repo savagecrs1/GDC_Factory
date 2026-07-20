@@ -45,7 +45,7 @@ Before executing the setup scripts, ensure the following cloud-side prerequisite
    - `constraints/compute.vmCanIpForward`
    - `constraints/compute.requireShieldedVm`
 
-> 💡 **Quick Pre-flight Check**: Run `./verify-setup.sh` in the project root to automatically check all host dependencies and authentication before starting.
+> 💡 **Automated Pre-flight & IAM Verification**: Run `./verify-setup.sh [PROJECT_ID]` in `kroger-gdc-portal` before deploying. This script automatically checks CLI tool dependencies, active `gcloud` authentication, user IAM roles, billing account linkage, and GCP Organization Policy constraints on your target project.
 
 ---
 

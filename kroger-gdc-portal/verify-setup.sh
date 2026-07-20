@@ -64,13 +64,57 @@ else
   echo -e "  [${YELLOW}!${RESET}] ${BOLD}No active gcloud project set.${RESET} Run 'gcloud config set project <your-project-id>'."
 fi
 
+# Target project for cloud checks (command-line arg or active gcloud project)
+TARGET_PROJ="${1:-$ACTIVE_PROJ}"
+
+if [ -n "$TARGET_PROJ" ] && [ "$TARGET_PROJ" != "(unset)" ] && [ -n "$ACTIVE_ACCT" ] && [ "$ACTIVE_ACCT" != "(unset)" ]; then
+  echo -e "\n${BOLD}4. Checking Cloud Prerequisites on Project (${TARGET_PROJ}):${RESET}"
+  
+  # A. IAM Roles Verification
+  echo -e "  🔍 Inspecting IAM policies for ${ACTIVE_ACCT}..."
+  IAM_ROLES=$(gcloud projects get-iam-policy "${TARGET_PROJ}" --flatten="bindings[].members" --format="value(bindings.role)" --filter="bindings.members:${ACTIVE_ACCT}" 2>/dev/null || echo "")
+  
+  if echo "$IAM_ROLES" | grep -qE "roles/owner|roles/editor"; then
+    echo -e "  [${GREEN}✓${RESET}] ${BOLD}IAM Role${RESET}: Owner/Editor privilege detected"
+  else
+    for role in "roles/resourcemanager.projectIamAdmin" "roles/iam.serviceAccountAdmin" "roles/storage.admin"; do
+      if echo "$IAM_ROLES" | grep -q "$role"; then
+        echo -e "  [${GREEN}✓${RESET}] ${BOLD}IAM Role${RESET}: Found ${role}"
+      else
+        echo -e "  [${YELLOW}!${RESET}] ${BOLD}IAM Warning${RESET}: Missing ${role} (Ensure identity has required admin privileges)"
+      fi
+    done
+  fi
+
+  # B. Billing Linkage Verification
+  BILLING_STATUS=$(gcloud beta billing projects describe "${TARGET_PROJ}" --format="value(billingEnabled)" 2>/dev/null || echo "unknown")
+  if [ "$BILLING_STATUS" = "True" ] || [ "$BILLING_STATUS" = "true" ]; then
+    echo -e "  [${GREEN}✓${RESET}] ${BOLD}Billing Linkage${RESET}: Active billing account linked"
+  elif [ "$BILLING_STATUS" = "False" ] || [ "$BILLING_STATUS" = "false" ]; then
+    echo -e "  [${RED}✗${RESET}] ${BOLD}Billing Error${RESET}: No active billing account linked to project '${TARGET_PROJ}'!"
+    ERRORS=$((ERRORS + 1))
+  else
+    echo -e "  [${YELLOW}!${RESET}] ${BOLD}Billing Status${RESET}: Could not verify billing permissions (Check billing admin access)"
+  fi
+
+  # C. Key Organization Policy Constraint Verification
+  echo -e "  🔍 Auditing key GCP Organization Policy constraints..."
+  for constraint in "compute.vmCanIpForward" "compute.requireOsLogin" "compute.trustedImageProjects"; do
+    POLICY_VAL=$(gcloud resource-manager org-policies describe "constraints/${constraint}" --project="${TARGET_PROJ}" --format="value(booleanPolicy.enforced)" 2>/dev/null || echo "not_enforced")
+    if [ "$POLICY_VAL" = "true" ] || [ "$POLICY_VAL" = "True" ]; then
+      echo -e "  [${YELLOW}!${RESET}] ${BOLD}Org Policy Warning${RESET}: '${constraint}' is ENFORCED. May block GDC VM IP forwarding or SSH."
+    else
+      echo -e "  [${GREEN}✓${RESET}] ${BOLD}Org Policy${RESET}: '${constraint}' compliant / relaxed"
+    fi
+  done
+fi
+
 echo -e "\n${BOLD}======================================================${RESET}"
 if [ $ERRORS -eq 0 ]; then
-  echo -e " ${GREEN}${BOLD}SUCCESS:${RESET} Your environment is fully configured for GDC Virtual Factory!"
-  echo -e " To start the portals:"
-  echo -e "   cd ui-kroger && npm install && npm run dev -- -p 3001"
-  echo -e "   cd ui && npm install && npm run dev -- -p 3002"
+  echo -e " ${GREEN}${BOLD}SUCCESS:${RESET} Your environment & GCP project are fully configured for GDC Virtual Factory!"
+  echo -e " To launch the portal:"
+  echo -e "   ./launch-kroger.sh"
 else
-  echo -e " ${RED}${BOLD}ATTENTION:${RESET} Found ${ERRORS} missing requirement(s). Please resolve the errors above."
+  echo -e " ${RED}${BOLD}ATTENTION:${RESET} Found ${ERRORS} issue(s). Please resolve the items above before starting."
 fi
 echo -e "${BOLD}======================================================${RESET}\n"
