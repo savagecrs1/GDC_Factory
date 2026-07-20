@@ -61,7 +61,9 @@ This portal natively supports the three-tier network architecture validated with
 
 ---
 
-## 🚀 Getting Started: Setting Up & Testing the Kroger UI
+## 🚀 Getting Started: Web UI (Primary Recommended Workflow)
+
+> 🌟 **Primary Interface**: The **Web UI (`http://localhost:3001`)** is the primary, recommended interface for enterprise customers, Solutions Architects, and store operations teams. It provides a visual 1-click experience for cluster provisioning, network IPAM configuration, GitOps policy management, and automated troubleshooting without touching the command line.
 
 ### Option A: Local Script Launcher (Recommended)
 ```bash
@@ -77,30 +79,63 @@ Open **http://localhost:3001** in your web browser.
 
 ---
 
-### 🧪 How to Test the Kroger UI Features
+### 🖥️ Provisioning & Operating via the Kroger Web Portal
 
 1. **Select Target GCP Project**:
-   - In the top header bar, select your **GCP Project ID** (e.g. `kroger-store-test1` or `core-edge-dm1`).
+   - In the top header bar, select or enter your **GCP Project ID** (e.g., `kroger-store-1042` or `core-edge-dm1`).
 
-2. **Run 1-Click E2E Test Suite (Recommended First Test)**:
-   - Click the **🚀 E2E Test Harness** button in the top right navigation bar.
-   - Click **Start End-to-End Suite**.
-   - Watch the stepper execute all 5 phases:
-     * **Phase 1**: Infrastructure Provisioning
-     * **Phase 2**: VM & Workload Ingestion
-     * **Phase 3**: Stress & Database Benchmarks
-     * **Phase 4**: AI Sentinel Watchdog Audit
-     * **Phase 5**: **Automated Teardown** (automatically decommissions all GCP resources when complete).
+2. **Provision Virtual GDC Environment**:
+   - Navigate to the **Cluster Provisioning Wizard** tab.
+   - Select your hardware footprint profile (e.g., **`n2-standard-32`** for Dell XR11 Medium or **`n2-standard-64`** for Dell 8K Medium).
+   - Enter your GCP Billing Account ID and cluster name.
+   - Click **`Deploy Virtual GDC Environment`**. The visual stepper streams live Terraform and Ansible execution output in real time.
 
-3. **Test Manual Teardown & Cluster Management**:
-   - On the main **Cluster Environment Health** banner, click the red **Tear Down Cluster** button (`Trash2` icon) to test manual cluster decommissioning.
+3. **Configure Secondary Store VLANs & IPAM (Multus CNI)**:
+   - Navigate to the **Network Manager** tab.
+   - Configure secondary VLAN subnets (**VLAN 3130** Non-PCI and **VLAN 3430** PCI) with custom IPAM, gateways, and MetalLB VIP pools.
+   - Click **Apply Network Configuration** to dynamically attach Multus secondary interfaces.
 
-4. **Test Real-Time Operations Console**:
-   - Click the **Operations Console** pill (`Active: X`) in the top navigation bar to open the live background log streaming panel.
+4. **GitOps Continuous Reconciliation (ConfigSync)**:
+   - Navigate to the **ConfigSync Manager** tab.
+   - Register Git repositories and declare root sync paths (e.g., `/profiles/store-standard`).
+   - Monitor real-time RootSync/RepoSync CRD reconciliation status (`SYNCED`), active Git commit hashes, and enforced Kubernetes policies across store nodes.
+
+5. **Advanced E2E Automated Validation & Teardown Harness**:
+   - Click the **🚀 E2E Test Harness** button in the top navigation bar to test multi-deployment automated workflows.
+   - Click **Start End-to-End Suite** to execute full 5-phase validation (Infrastructure Provisioning -> VM Ingestion -> Stress Benchmarks -> AI Sentinel Audit -> Automated Teardown).
 
 ---
 
-## CLI Deployment Workflow
+## 🔄 ConfigSync & Declarative GitOps Management
+
+This platform emulates **Google Distributed Cloud (GDC) ConfigSync** (powered by GKE Enterprise / Anthos Config Management):
+
+- **Declarative Source of Truth**: All store configurations (Namespaces, RoleBindings, NetworkPolicies, ConfigMaps, and TopoLVM StorageClasses) are declared in Git repositories.
+- **RootSync & RepoSync CRDs**: The **ConfigSync Manager** (`ConfigSyncManager.tsx`) manages RootSync resources to apply platform-level policies and RepoSync resources for application-level deployment.
+- **Authentication Modes**: Supports unauthenticated public repos (`none`), SSH private keys (`ssh`), and Personal Access Tokens (`token`).
+- **Real-Time Reconciliation**: Monitors commit hashes and reports status (`SYNCED`, `STALLED`, `PENDING`) with automated rollback if Git configurations violate store security policies.
+
+---
+
+## 📚 Official Google Cloud Reference Documentation
+
+For deeper architectural context on the Google Cloud services and GDC edge components replicated by this platform, refer to the official documentation:
+
+* 🏢 **Google Distributed Cloud (GDC)**:
+  * [Google Distributed Cloud Overview](https://cloud.google.com/distributed-cloud)
+  * [GDC Connected Bare Metal Documentation](https://cloud.google.com/distributed-cloud/bare-metal/docs)
+* 🔄 **GKE ConfigSync & GitOps**:
+  * [ConfigSync Overview & RootSync/RepoSync CRDs](https://cloud.google.com/kubernetes-engine/enterprise/config-sync/docs/overview)
+  * [ConfigSync Quickstart Guide](https://cloud.google.com/kubernetes-engine/enterprise/config-sync/docs/how-to/quickstart-config-sync)
+* 🌐 **GKE Connect Gateway & Multus CNI**:
+  * [GKE Connect Gateway Overview](https://cloud.google.com/kubernetes-engine/enterprise/multicluster-management/gateway)
+  * [GKE Enterprise Multus CNI Secondary Interfaces](https://cloud.google.com/kubernetes-engine/enterprise/multicluster-management/docs/how-to/multus)
+
+---
+
+## ⚡ CLI Deployment Workflow (Headless CI/CD & Debugging)
+
+> 💡 **Note**: The CLI workflow below is optional and provided for headless CI/CD pipelines (GitHub Actions, GitLab CI) and manual break-glass debugging. The Web UI executes these exact steps under the hood.
 
 ### 1. Setup Provisioning Service Account & State
 
