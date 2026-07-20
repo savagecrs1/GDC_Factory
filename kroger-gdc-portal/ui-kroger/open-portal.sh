@@ -23,7 +23,7 @@ echo "🚀 Starting encrypted IAP tunnel in background..."
 gcloud compute start-iap-tunnel "${VM_NAME}" "${PORT}" \
   --local-host-port="localhost:${PORT}" \
   --project="${PROJECT_ID}" \
-  --zone="${ZONE}" &
+  --zone="${ZONE}" > /dev/null 2>&1 &
 TUNNEL_PID=$!
 
 # Trap Ctrl+C to clean up tunnel when script exits

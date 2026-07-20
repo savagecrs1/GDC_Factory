@@ -23,4 +23,5 @@ if [ ! -d "node_modules" ]; then
 fi
 
 # Launch Next.js dev server on port 3001
-./node_modules/.bin/next dev -p 3001
+./node_modules/.bin/next dev -p 3001 &
+
