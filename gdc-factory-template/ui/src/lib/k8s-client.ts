@@ -4,8 +4,7 @@ import path from 'path';
 import os from 'os';
 import { execSync } from 'child_process';
 
-// Ensure standard CLI paths (including gcloud and brew) are available to child exec plugins
-process.env.PATH = `${process.env.PATH || ''}:/Users/chrissavage/google-cloud-sdk/bin:/opt/homebrew/bin:/usr/local/bin`;
+process.env.PATH = `${process.env.PATH || ''}:${path.join(os.homedir(), 'google-cloud-sdk/bin')}:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin`;
 
 // Cache last switched context to avoid redundant gcloud commands
 let lastSwitchedKey = '';

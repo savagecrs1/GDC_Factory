@@ -21,18 +21,20 @@ export async function POST(request: Request) {
     const targetGcpProject = (projectId === 'core-edge-dm1' || !projectId || projectId === 'undefined') ? 'vdc-18818' : projectId;
     const controlPlaneNode = `${targetGcpProject}-cluster-1-node-1`;
 
+    const homeDir = process.env.HOME || process.env.USERPROFILE || '';
+    const sdkBin = `${homeDir}/google-cloud-sdk/bin`;
     if (targetType === 'node') {
       // SSH into physical GCE cluster node over IAP
       const escapedCmd = command.replace(/'/g, "'\\''");
-      fullCmd = `export PATH="$PATH:/opt/homebrew/bin:/usr/local/bin:/Users/chrissavage/google-cloud-sdk/bin"; gcloud compute ssh ${targetName} --project=${targetGcpProject} --zone=${zone} --tunnel-through-iap --command='${escapedCmd}'`;
+      fullCmd = `export PATH="$PATH:/opt/homebrew/bin:/usr/local/bin:${sdkBin}"; gcloud compute ssh ${targetName} --project=${targetGcpProject} --zone=${zone} --tunnel-through-iap --command='${escapedCmd}'`;
     } else if (targetType === 'vm') {
       // Execute command inside KubeVirt VM domain pod via physical cluster node-1
       const k8sCmd = `POD=$(sudo kubectl --kubeconfig /etc/kubernetes/admin.conf get pod -n ${namespace} -l kubevirt.io/domain=${targetName} -o jsonpath='{.items[0].metadata.name}' 2>/dev/null); if [ -n "$POD" ]; then sudo kubectl --kubeconfig /etc/kubernetes/admin.conf exec -i -n ${namespace} "$POD" -c compute -- ${command}; else echo "❌ Error: KubeVirt VM pod for '${targetName}' not found in namespace '${namespace}'."; fi`;
-      fullCmd = `export PATH="$PATH:/opt/homebrew/bin:/usr/local/bin:/Users/chrissavage/google-cloud-sdk/bin"; gcloud compute ssh ${controlPlaneNode} --project=${targetGcpProject} --zone=${zone} --tunnel-through-iap --command='${k8sCmd.replace(/'/g, "'\\''")}'`;
+      fullCmd = `export PATH="$PATH:/opt/homebrew/bin:/usr/local/bin:${sdkBin}"; gcloud compute ssh ${controlPlaneNode} --project=${targetGcpProject} --zone=${zone} --tunnel-through-iap --command='${k8sCmd.replace(/'/g, "'\\''")}'`;
     } else {
       // Exec into Kubernetes pod via control plane node-1
       const escapedCmd = command.replace(/'/g, "'\\''");
-      fullCmd = `export PATH="$PATH:/opt/homebrew/bin:/usr/local/bin:/Users/chrissavage/google-cloud-sdk/bin"; gcloud compute ssh ${controlPlaneNode} --project=${targetGcpProject} --zone=${zone} --tunnel-through-iap --command='sudo kubectl --kubeconfig /etc/kubernetes/admin.conf exec -i -n ${namespace} ${targetName} -- ${escapedCmd}'`;
+      fullCmd = `export PATH="$PATH:/opt/homebrew/bin:/usr/local/bin:${sdkBin}"; gcloud compute ssh ${controlPlaneNode} --project=${targetGcpProject} --zone=${zone} --tunnel-through-iap --command='sudo kubectl --kubeconfig /etc/kubernetes/admin.conf exec -i -n ${namespace} ${targetName} -- ${escapedCmd}'`;
     }
 
     try {

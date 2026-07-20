@@ -8,7 +8,8 @@ export const dynamic = 'force-dynamic';
 
 export async function GET() {
   try {
-    const envPath = `${process.env.PATH || ''}:/Users/chrissavage/google-cloud-sdk/bin:/opt/homebrew/bin:/usr/local/bin`;
+    const homeDir = process.env.HOME || process.env.USERPROFILE || '';
+    const envPath = `${process.env.PATH || ''}:${homeDir}/google-cloud-sdk/bin:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin`;
     const { stdout } = await execAsync('gcloud projects list --limit=50 --format="json(projectId, name)"', {
       env: { ...process.env, PATH: envPath }
     });
@@ -39,7 +40,8 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Project ID is required' }, { status: 400 });
     }
 
-    const envPath = `${process.env.PATH || ''}:/Users/chrissavage/google-cloud-sdk/bin:/opt/homebrew/bin:/usr/local/bin`;
+    const homeDir = process.env.HOME || process.env.USERPROFILE || '';
+    const envPath = `${process.env.PATH || ''}:${homeDir}/google-cloud-sdk/bin:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin`;
     const displayName = name || projectId;
 
     const cmd = `gcloud projects create "${projectId}" --name="${displayName}"`;

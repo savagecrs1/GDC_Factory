@@ -11,7 +11,8 @@ export async function GET(request: Request) {
   const projectId = searchParams.get('projectId') || 'core-edge-dm1';
 
   try {
-    const envPath = `${process.env.PATH || ''}:/Users/chrissavage/google-cloud-sdk/bin:/opt/homebrew/bin:/usr/local/bin`;
+    const homeDir = process.env.HOME || process.env.USERPROFILE || '';
+    const envPath = `${process.env.PATH || ''}:${homeDir}/google-cloud-sdk/bin:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin`;
     const cmd = `gcloud container fleet memberships list --project="${projectId}" --format="json(name, location)" --quiet`;
     const { stdout } = await execAsync(cmd, {
       env: { ...process.env, PATH: envPath }

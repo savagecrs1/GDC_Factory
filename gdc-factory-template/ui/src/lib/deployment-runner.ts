@@ -3,8 +3,8 @@ import path from 'path';
 import fs from 'fs';
 import { analyzeError } from './ai-watchdog';
 
-// Ensure standard CLI paths are available for bash/terraform/ansible execution
-process.env.PATH = `${process.env.PATH || ''}:/Users/chrissavage/google-cloud-sdk/bin:/opt/homebrew/bin:/usr/local/bin`;
+const homeDir = process.env.HOME || process.env.USERPROFILE || '';
+process.env.PATH = `${process.env.PATH || ''}:${homeDir}/google-cloud-sdk/bin:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin`;
 
 export interface LogLine {
   id: string;
